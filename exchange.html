@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VOUCH — Exchange</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=Hanken+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0A1610; --bg-2:#0E1D15; --panel:#13271C; --panel-2:#172E22; --elev:#16302455;
+  --line:#234234; --line-soft:#1C3527;
+  --paper:#ECEEE7; --muted:#90A89A; --faint:#5E7568;
+  --emerald:#23A86E; --emerald-br:#3FD98C; --emerald-glow:rgba(63,217,140,.3); --emerald-tint:#16382680;
+  --coral:#FF6B4A; --coral-glow:rgba(255,107,74,.35); --gold:#E2B45A; --blue:#5AA9E2;
+  --display:'Bricolage Grotesque',sans-serif; --body:'Hanken Grotesk',sans-serif; --mono:'Space Mono',monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--paper);font-family:var(--body);-webkit-font-smoothing:antialiased;line-height:1.5;min-height:100vh}
+body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;background:
+  radial-gradient(680px 480px at 12% -5%,var(--emerald-glow),transparent 60%),
+  radial-gradient(600px 460px at 92% 8%,var(--coral-glow),transparent 60%)}
+::selection{background:var(--coral);color:#0A1610}
+a{color:inherit;text-decoration:none}
+.mono{font-family:var(--mono)}
+button{font-family:inherit}
+.app{position:relative;z-index:1}
+
+/* ===== TOP BAR ===== */
+.topbar{position:sticky;top:0;z-index:40;background:rgba(10,22,16,.78);backdrop-filter:blur(16px);border-bottom:1px solid var(--line)}
+.tb-in{max-width:1240px;margin:0 auto;display:flex;align-items:center;gap:22px;padding:13px clamp(16px,3vw,32px)}
+.logo{display:flex;align-items:center;gap:9px;font-family:var(--display);font-weight:800;font-size:20px;letter-spacing:-.02em}
+.logo .mark{width:23px;height:23px;border-radius:7px;background:var(--paper);position:relative;display:grid;place-items:center}
+.logo .mark::before{content:'';width:8px;height:8px;border-radius:50%;border:2.4px solid var(--coral);box-sizing:border-box}
+.logo .mark::after{content:'';position:absolute;width:8px;height:8px;border-radius:50%;border:2.4px solid var(--emerald);transform:translateX(5px)}
+.logo .tag{font-family:var(--mono);font-size:10px;font-weight:400;color:var(--faint);border:1px solid var(--line);padding:2px 7px;border-radius:5px;letter-spacing:.08em;margin-left:2px}
+.tabs{display:flex;gap:4px;margin-left:8px}
+.tabs button{background:none;border:none;color:var(--muted);font-size:14px;font-weight:600;padding:8px 14px;border-radius:9px;cursor:pointer;transition:.2s}
+.tabs button:hover{color:var(--paper)}
+.tabs button.on{background:var(--panel);color:var(--paper)}
+.tb-right{margin-left:auto;display:flex;align-items:center;gap:12px}
+.pricepill{font-family:var(--mono);font-size:12.5px;display:flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--line);padding:7px 12px;border-radius:9px}
+.pricepill .sym{color:var(--gold);font-weight:700}
+.pricepill .val{font-weight:700}
+.pricepill .chg.up{color:var(--emerald-br)}.pricepill .chg.down{color:var(--coral)}
+.balpill{font-family:var(--mono);font-size:12.5px;background:var(--emerald-tint);border:1px solid rgba(63,217,140,.3);color:var(--emerald-br);padding:7px 12px;border-radius:9px;font-weight:700}
+.me{width:34px;height:34px;border-radius:10px;background:var(--coral);display:grid;place-items:center;font-family:var(--display);font-weight:700;color:#fff;font-size:14px}
+@media(max-width:780px){.logo .tag{display:none}.pricepill .chg{display:none}}
+@media(max-width:600px){.tabs button{padding:8px 10px;font-size:13px}.balpill{display:none}}
+
+/* ===== PAGE ===== */
+.page{max-width:1240px;margin:0 auto;padding:clamp(20px,3vw,34px) clamp(16px,3vw,32px) 80px}
+.page-title{font-family:var(--display);font-weight:700;font-size:clamp(24px,3vw,32px);letter-spacing:-.02em}
+.page-sub{color:var(--muted);font-size:14.5px;margin-top:5px;margin-bottom:24px}
+
+/* ===== CONTROLS ===== */
+.controls{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-bottom:18px}
+.seg{display:inline-flex;background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:4px;gap:2px}
+.seg button{background:none;border:none;font-weight:700;font-size:14px;padding:9px 20px;border-radius:8px;cursor:pointer;color:var(--muted);transition:.2s}
+.seg button.on.buy{background:var(--emerald);color:#04130C}
+.seg button.on.sell{background:var(--coral);color:#fff}
+.ctrl{position:relative}
+.ctrl select,.ctrl input{background:var(--panel);border:1px solid var(--line);border-radius:11px;color:var(--paper);font-family:var(--body);font-size:14px;padding:11px 14px;outline:none;transition:.2s}
+.ctrl select{cursor:pointer;-webkit-appearance:none;appearance:none;padding-right:34px}
+.ctrl.sel::after{content:'▾';position:absolute;right:13px;top:50%;transform:translateY(-50%);color:var(--faint);pointer-events:none;font-size:11px}
+.ctrl input{min-width:180px}
+.ctrl input::placeholder{color:var(--faint)}
+.ctrl select:focus,.ctrl input:focus{border-color:var(--emerald-br);box-shadow:0 0 0 3px var(--emerald-tint)}
+.spacer{flex:1}
+.sort-lbl{font-family:var(--mono);font-size:11px;color:var(--faint);margin-right:-4px}
+
+/* ===== OFFERS ===== */
+.offers-head{display:grid;grid-template-columns:1.7fr 1.2fr 1.5fr 1fr auto;gap:16px;padding:0 20px 10px;font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--faint)}
+.offers{display:flex;flex-direction:column;gap:9px}
+.offer{display:grid;grid-template-columns:1.7fr 1.2fr 1.5fr 1fr auto;gap:16px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:15px 20px;transition:.2s}
+.offer:hover{border-color:var(--emerald-br);box-shadow:0 16px 38px -26px var(--emerald-glow)}
+.o-trader{display:flex;align-items:center;gap:12px;min-width:0}
+.o-av{width:42px;height:42px;border-radius:11px;display:grid;place-items:center;font-family:var(--display);font-weight:700;font-size:15px;color:#fff;flex-shrink:0;position:relative}
+.o-av .on{position:absolute;right:-2px;bottom:-2px;width:11px;height:11px;border-radius:50%;background:var(--emerald-br);border:2.5px solid var(--panel)}
+.o-trader .nm{font-weight:600;font-size:14.5px;display:flex;align-items:center;gap:6px}
+.vbadge{color:var(--emerald-br)}
+.o-trader .meta{font-family:var(--mono);font-size:11px;color:var(--faint);margin-top:2px}
+.o-price .p{font-family:var(--display);font-weight:700;font-size:20px}
+.o-price .unit{font-family:var(--mono);font-size:11px;color:var(--faint)}
+.o-meth{display:flex;flex-wrap:wrap;gap:6px}
+.meth{font-family:var(--mono);font-size:10.5px;padding:4px 9px;border-radius:6px;background:var(--bg-2);border:1px solid var(--line-soft);color:var(--muted);white-space:nowrap}
+.o-lim{font-family:var(--mono);font-size:12px;color:var(--muted)}
+.o-lim .l{color:var(--faint);font-size:10px;display:block}
+.btn{font-family:var(--body);font-weight:700;font-size:14px;border-radius:10px;cursor:pointer;border:1.5px solid transparent;transition:.2s;display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:11px 22px;white-space:nowrap}
+.btn .ar{transition:transform .2s}.btn:hover .ar{transform:translateX(3px)}
+.btn-buy{background:var(--emerald);color:#04130C}.btn-buy:hover{background:var(--emerald-br);transform:translateY(-1px)}
+.btn-sell{background:var(--coral);color:#fff}.btn-sell:hover{filter:brightness(1.08);transform:translateY(-1px)}
+.btn-line{border-color:var(--line);color:var(--paper)}.btn-line:hover{border-color:var(--emerald-br);color:var(--emerald-br)}
+.btn-ghost{background:none;color:var(--muted)}.btn-ghost:hover{color:var(--paper)}
+.empty{text-align:center;padding:50px;color:var(--faint);font-family:var(--mono);font-size:13px}
+@media(max-width:820px){.offers-head{display:none}.offer{grid-template-columns:1fr 1fr;gap:13px}.o-act{grid-column:1/-1}.o-act .btn{width:100%}}
+
+/* ===== WALLET ===== */
+.wallet-top{display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end;margin-bottom:24px}
+.wallet-total{background:linear-gradient(160deg,var(--panel-2),var(--panel));border:1px solid var(--line);border-radius:16px;padding:22px 26px}
+.wallet-total .l{font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--faint)}
+.wallet-total .v{font-family:var(--display);font-weight:800;font-size:36px;letter-spacing:-.02em;margin-top:6px}
+.assets{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
+.asset{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px 20px;display:flex;align-items:center;gap:14px}
+.asset .ic{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;font-family:var(--display);font-weight:800;font-size:18px}
+.asset .nm{font-weight:600}.asset .sym{font-family:var(--mono);font-size:11px;color:var(--faint)}
+.asset .amt{margin-left:auto;text-align:right}
+.asset .amt .a{font-family:var(--mono);font-weight:700;font-size:15px}
+.asset .amt .f{font-family:var(--mono);font-size:11px;color:var(--faint);margin-top:2px}
+
+/* ===== ORDERS ===== */
+.orders{display:flex;flex-direction:column;gap:9px}
+.order{display:grid;grid-template-columns:auto 1.4fr 1.2fr 1fr auto;gap:16px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:13px;padding:15px 20px}
+.o-side{font-family:var(--mono);font-size:11px;font-weight:700;padding:5px 11px;border-radius:7px}
+.o-side.buy{background:var(--emerald-tint);color:var(--emerald-br)}
+.o-side.sell{background:rgba(255,107,74,.15);color:var(--coral)}
+.order .who{font-weight:600;font-size:14px}.order .when{font-family:var(--mono);font-size:11px;color:var(--faint);margin-top:2px}
+.order .amt{font-family:var(--mono);font-size:14px}.order .amt .f{color:var(--faint);font-size:11px}
+.order .pm{font-family:var(--mono);font-size:11px;color:var(--muted)}
+.status{font-family:var(--mono);font-size:11px;font-weight:700;display:inline-flex;align-items:center;gap:6px}
+.status .d{width:7px;height:7px;border-radius:50%}
+.status.completed{color:var(--emerald-br)}.status.completed .d{background:var(--emerald-br)}
+.status.open{color:var(--gold)}.status.open .d{background:var(--gold);animation:blink 1.4s infinite}
+.status.cancelled{color:var(--faint)}.status.cancelled .d{background:var(--faint)}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+@media(max-width:820px){.order{grid-template-columns:auto 1fr auto}.order .pm,.order .amt{display:none}}
+
+/* ===== TRADE MODAL ===== */
+.scrim{position:fixed;inset:0;z-index:80;background:rgba(4,12,8,.72);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;padding:20px}
+.scrim.open{display:flex}
+.modal{width:min(96vw,860px);max-height:92vh;background:var(--bg-2);border:1px solid var(--line);border-radius:20px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 60px 120px -40px rgba(0,0,0,.85)}
+.m-head{display:flex;align-items:center;gap:13px;padding:18px 22px;border-bottom:1px solid var(--line);flex-shrink:0}
+.m-head .av{width:40px;height:40px;border-radius:11px;display:grid;place-items:center;font-family:var(--display);font-weight:700;color:#fff;font-size:15px}
+.m-head .t{font-family:var(--display);font-weight:700;font-size:17px}
+.m-head .s{font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:1px}
+.m-close{margin-left:auto;background:none;border:1px solid var(--line);color:var(--muted);width:34px;height:34px;border-radius:9px;cursor:pointer;font-size:18px;transition:.2s}
+.m-close:hover{border-color:var(--coral);color:var(--coral)}
+.stepper{display:flex;padding:16px 22px;gap:0;border-bottom:1px solid var(--line);flex-shrink:0}
+.st{flex:1;text-align:center;position:relative}
+.st .d{width:13px;height:13px;border-radius:50%;background:var(--line);margin:0 auto 7px;border:2px solid var(--bg-2);transition:.3s}
+.st .t{font-family:var(--mono);font-size:10px;color:var(--faint);transition:.3s}
+.st::before{content:'';position:absolute;top:6px;left:-50%;width:100%;height:2px;background:var(--line);z-index:0}
+.st:first-child::before{display:none}
+.st.done .d{background:var(--emerald-br)}.st.active .d{background:var(--coral);box-shadow:0 0 0 4px var(--coral-glow);transform:scale(1.15)}
+.st.active .t,.st.done .t{color:var(--paper);font-weight:700}
+.m-body{display:grid;grid-template-columns:1.1fr .9fr;flex:1;min-height:0}
+.m-left{padding:22px;overflow-y:auto;border-right:1px solid var(--line)}
+.m-right{display:flex;flex-direction:column;min-height:0;background:rgba(15,29,21,.5)}
+@media(max-width:720px){.m-body{grid-template-columns:1fr}.m-right{display:none}.m-right.show{display:flex;height:300px}}
+
+/* order form */
+.amt-box{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px}
+.amt-box .top{display:flex;justify-content:space-between;font-family:var(--mono);font-size:11px;color:var(--faint);margin-bottom:8px}
+.amt-input{display:flex;align-items:center;gap:10px}
+.amt-input input{flex:1;background:none;border:none;color:var(--paper);font-family:var(--display);font-weight:700;font-size:30px;outline:none;width:100%;min-width:0}
+.unit-tog{display:flex;background:var(--bg-2);border:1px solid var(--line);border-radius:9px;padding:3px;gap:2px}
+.unit-tog button{background:none;border:none;color:var(--muted);font-family:var(--mono);font-size:12px;font-weight:700;padding:6px 11px;border-radius:6px;cursor:pointer}
+.unit-tog button.on{background:var(--emerald);color:#04130C}
+.conv{text-align:center;font-family:var(--mono);font-size:12px;color:var(--muted);margin:12px 0}
+.conv b{color:var(--paper)}
+.quick{display:flex;gap:7px;margin-top:12px}
+.quick button{flex:1;background:var(--bg-2);border:1px solid var(--line);color:var(--muted);font-family:var(--mono);font-size:11px;padding:8px;border-radius:8px;cursor:pointer;transition:.2s}
+.quick button:hover{border-color:var(--emerald-br);color:var(--emerald-br)}
+.summary{margin:18px 0;display:flex;flex-direction:column;gap:9px}
+.sline{display:flex;justify-content:space-between;font-size:13.5px}
+.sline .k{color:var(--muted)}.sline .v{font-family:var(--mono);font-weight:600}
+.sline.big .k{color:var(--paper);font-weight:600}.sline.big .v{font-size:16px;color:var(--emerald-br)}
+.hint{font-size:12px;color:var(--faint);margin-top:6px}
+.hint.bad{color:var(--coral)}
+.full{width:100%;padding:15px;font-size:15.5px;margin-top:6px}
+
+/* pay step */
+.banner{display:flex;align-items:center;gap:11px;background:var(--emerald-tint);border:1px solid rgba(63,217,140,.3);border-radius:12px;padding:13px 15px;font-size:13.5px;font-weight:600;margin-bottom:18px}
+.banner .ic{width:30px;height:30px;border-radius:8px;background:var(--emerald);display:grid;place-items:center;flex-shrink:0}
+.timer{text-align:center;margin:6px 0 18px}
+.timer .c{font-family:var(--display);font-weight:800;font-size:34px;letter-spacing:.02em}
+.timer .l{font-family:var(--mono);font-size:11px;color:var(--faint)}
+.pay-details{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:6px 18px;margin-bottom:18px}
+.pd{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--line-soft);font-size:13.5px}
+.pd:last-child{border-bottom:none}
+.pd .k{color:var(--faint);font-family:var(--mono);font-size:11px}
+.pd .v{font-family:var(--mono);font-weight:600;display:flex;align-items:center;gap:8px}
+.copy{background:var(--bg-2);border:1px solid var(--line);color:var(--muted);cursor:pointer;font-family:var(--mono);font-size:10px;padding:3px 7px;border-radius:5px;transition:.2s}
+.copy:hover{color:var(--emerald-br);border-color:var(--emerald-br)}
+.warn{font-size:12px;color:var(--gold);background:rgba(226,180,90,.1);border:1px solid rgba(226,180,90,.25);border-radius:10px;padding:11px 14px;margin-bottom:16px;line-height:1.5}
+
+/* confirming + done */
+.center-state{text-align:center;padding:30px 10px}
+.spin{width:44px;height:44px;border:4px solid var(--line);border-top-color:var(--emerald-br);border-radius:50%;margin:0 auto 18px;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.center-state h3{font-family:var(--display);font-weight:700;font-size:20px}
+.center-state p{color:var(--muted);font-size:14px;margin-top:8px}
+.done-ic{width:64px;height:64px;border-radius:50%;background:var(--emerald);display:grid;place-items:center;margin:0 auto 18px;font-size:32px;color:#04130C;box-shadow:0 0 40px -6px var(--emerald-glow)}
+.got{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;margin:18px 0;font-family:var(--display);font-weight:700;font-size:22px}
+.got small{display:block;font-family:var(--mono);font-size:11px;color:var(--faint);font-weight:400;margin-top:4px}
+
+/* chat */
+.cw-head{display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid var(--line);flex-shrink:0}
+.cw-head .h{font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:.04em}
+.cw-head .esc{margin-left:auto;font-family:var(--mono);font-size:10px;color:var(--emerald-br);display:flex;align-items:center;gap:5px}
+.cw-body{flex:1;overflow-y:auto;padding:16px 16px;display:flex;flex-direction:column;gap:10px}
+.msg{max-width:82%;padding:9px 13px;border-radius:13px;font-size:13.5px;line-height:1.42}
+.msg.them{background:#1b3528;align-self:flex-start;border-bottom-left-radius:4px}
+.msg.me{background:var(--emerald);color:#04130C;align-self:flex-end;border-bottom-right-radius:4px;font-weight:500}
+.msg .time{font-family:var(--mono);font-size:9px;opacity:.6;margin-top:3px;display:block}
+.sys{align-self:center;font-family:var(--mono);font-size:10.5px;color:var(--muted);background:var(--bg);border:1px solid var(--line);padding:6px 12px;border-radius:18px;display:inline-flex;align-items:center;gap:6px;text-align:center}
+.sys .d{width:6px;height:6px;border-radius:50%;background:var(--gold);flex-shrink:0}.sys.ok .d{background:var(--emerald-br)}
+.cw-input{display:flex;gap:9px;padding:13px;border-top:1px solid var(--line);flex-shrink:0}
+.cw-input input{flex:1;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 13px;color:var(--paper);font-family:var(--body);font-size:13.5px;outline:none}
+.cw-input input:focus{border-color:var(--emerald-br)}
+.cw-input .send{width:40px;height:40px;border-radius:10px;background:var(--coral);border:none;display:grid;place-items:center;cursor:pointer;flex-shrink:0;transition:.2s}
+.cw-input .send:hover{filter:brightness(1.1)}
+
+/* toast */
+.toasts{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);z-index:120;display:flex;flex-direction:column;gap:9px;align-items:center}
+.toast{background:var(--panel-2);border:1px solid var(--line);border-radius:11px;padding:12px 18px;font-size:13.5px;font-weight:600;box-shadow:0 20px 40px -16px rgba(0,0,0,.7);display:flex;align-items:center;gap:10px;animation:tin .3s}
+.toast .d{width:8px;height:8px;border-radius:50%;background:var(--emerald-br)}
+.toast.warn .d{background:var(--gold)}
+@keyframes tin{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important}}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- TOP BAR -->
+<div class="topbar"><div class="tb-in">
+  <a href="index.html" class="logo"><span class="mark"></span>vouch<span class="tag">EXCHANGE</span></a>
+  <div class="tabs" id="tabs">
+    <button data-tab="market" class="on">Marketplace</button>
+    <button data-tab="orders">My orders</button>
+    <button data-tab="wallet">Wallet</button>
+  </div>
+  <div class="tb-right">
+    <div class="pricepill"><span class="sym" id="ppSym">₿</span><span class="val" id="ppVal">—</span><span class="chg up" id="ppChg">—</span></div>
+    <div class="balpill" id="balPill">—</div>
+    <a href="admin.html" class="me" title="Admin dashboard">Y</a>
+  </div>
+</div></div>
+
+<div class="page" id="page"></div>
+</div>
+
+<!-- TRADE MODAL -->
+<div class="scrim" id="scrim">
+  <div class="modal" id="modal">
+    <div class="m-head" id="mHead"></div>
+    <div class="stepper" id="stepper"></div>
+    <div class="m-body">
+      <div class="m-left" id="mLeft"></div>
+      <div class="m-right" id="mRight">
+        <div class="cw-head"><span class="h" id="chatWith">Trade chat</span><span class="esc"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="#3FD98C" stroke-width="2"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg> Escrow</span></div>
+        <div class="cw-body" id="chatBody"></div>
+        <div class="cw-input"><input id="chatInput" placeholder="Message…" autocomplete="off"><button class="send" id="chatSend"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg></button></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toasts" id="toasts"></div>
+
+<script>
+"use strict";
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const $=s=>document.querySelector(s), el=(t,c)=>{const e=document.createElement(t);if(c)e.className=c;return e;};
+
+/* ===== ASSETS & MARKET ===== */
+const CRYPTOS={
+  BTC:{name:'Bitcoin',glyph:'₿',color:'#E2B45A',bg:'radial-gradient(circle at 35% 30%,#3a2a12,#1a1207)',dec:6,price:67200},
+  ETH:{name:'Ethereum',glyph:'Ξ',color:'#5AA9E2',bg:'radial-gradient(circle at 35% 30%,#16283a,#0a121d)',dec:4,price:2418},
+  USDT:{name:'Tether',glyph:'₮',color:'#3FD98C',bg:'radial-gradient(circle at 35% 30%,#16382a,#0a1d15)',dec:2,price:1.0},
+};
+const METHODS=['Bank transfer','Revolut','Wise','PayPal','Cash'];
+
+/* ===== TRADERS / OFFERS ===== */
+const TRADERS=[
+  {trader:'marcus_k',verified:true,online:true,color:'#23A86E',rating:4.9,trades:1842,side:'sell',spread:0.45,methods:['Bank transfer','Revolut'],min:200,max:8000,window:15},
+  {trader:'lina.fx',verified:true,online:true,color:'#FF6B4A',rating:5.0,trades:967,side:'sell',spread:0.78,methods:['Wise','PayPal'],min:100,max:5000,window:20},
+  {trader:'kwame_a',verified:false,online:false,color:'#E2B45A',rating:4.7,trades:312,side:'sell',spread:0.20,methods:['Cash','Bank transfer'],min:50,max:2000,window:30},
+  {trader:'sora_btc',verified:true,online:true,color:'#5AA9E2',rating:4.95,trades:5104,side:'sell',spread:0.62,methods:['Revolut','Wise','PayPal'],min:500,max:20000,window:15},
+  {trader:'aisha_t',verified:true,online:true,color:'#7A4FB0',rating:4.88,trades:1290,side:'sell',spread:0.55,methods:['Revolut'],min:100,max:6000,window:15},
+  {trader:'nadia_p',verified:true,online:true,color:'#7A4FB0',rating:4.85,trades:744,side:'buy',spread:-0.33,methods:['Bank transfer'],min:300,max:12000,window:15},
+  {trader:'deji_o',verified:true,online:true,color:'#23A86E',rating:4.9,trades:2210,side:'buy',spread:-0.48,methods:['Revolut','Cash'],min:100,max:4000,window:20},
+  {trader:'mei_trades',verified:false,online:false,color:'#FF6B4A',rating:4.6,trades:189,side:'buy',spread:-0.70,methods:['PayPal'],min:50,max:1500,window:30},
+  {trader:'oscar.h',verified:true,online:true,color:'#E2B45A',rating:4.92,trades:3380,side:'buy',spread:-0.25,methods:['Bank transfer','Wise'],min:250,max:15000,window:15},
+];
+
+/* ===== STATE ===== */
+const S={
+  tab:'market', side:'buy', crypto:'BTC', search:'', method:'all', sort:'price',
+  prices:{BTC:67200,ETH:2418,USDT:1.0}, prev:{BTC:67200,ETH:2418,USDT:1.0},
+  wallet:{USD:5200, BTC:0.182, ETH:1.4, USDT:850},
+  orders:[
+    {id:'VCH-2261',side:'buy',crypto:'BTC',cryptoAmt:0.043,fiat:2880,who:'sora_btc',method:'Revolut',status:'completed',time:'Yesterday · 18:22'},
+    {id:'VCH-2240',side:'sell',crypto:'ETH',cryptoAmt:0.5,fiat:1209,who:'oscar.h',method:'Bank transfer',status:'completed',time:'Jun 13 · 11:05'},
+    {id:'VCH-2233',side:'buy',crypto:'BTC',cryptoAmt:0.015,fiat:1010,who:'kwame_a',method:'Cash',status:'cancelled',time:'Jun 12 · 09:40'},
+  ],
+  trade:null,
+};
+
+/* ===== HELPERS ===== */
+const fmtFiat=n=>'$'+n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+const fmtFiat0=n=>'$'+Math.round(n).toLocaleString('en-US');
+const fmtCrypto=(n,c)=>n.toLocaleString('en-US',{maximumFractionDigits:CRYPTOS[c].dec});
+const initials=n=>n.replace(/[._]/g,' ').split(' ').filter(Boolean).slice(0,2).map(w=>w[0].toUpperCase()).join('');
+function offerPrice(o){return S.prices[S.crypto]*(1+o.spread/100);}
+function walletValue(){let t=0;t+=S.wallet.USD;for(const c in CRYPTOS)t+=(S.wallet[c]||0)*S.prices[c];return t;}
+function toast(msg,warn){const t=el('div','toast'+(warn?' warn':''));t.innerHTML='<span class="d"></span>'+msg;$('#toasts').appendChild(t);setTimeout(()=>{t.style.opacity='0';t.style.transition='opacity .3s';setTimeout(()=>t.remove(),300);},2600);}
+function now(){const d=new Date();return d.getHours().toString().padStart(2,'0')+':'+d.getMinutes().toString().padStart(2,'0');}
+
+/* ===== TOP BAR LIVE ===== */
+function renderTopbar(){
+  const c=S.crypto, p=S.prices[c], pv=S.prev[c];
+  $('#ppSym').textContent=CRYPTOS[c].glyph; $('#ppSym').style.color=CRYPTOS[c].color;
+  $('#ppVal').textContent=fmtFiat0(p);
+  const ch=((p-pv)/pv*100);
+  const chEl=$('#ppChg'); chEl.textContent=(ch>=0?'+':'')+ch.toFixed(2)+'%';
+  chEl.className='chg '+(ch>=0?'up':'down');
+  $('#balPill').textContent=fmtFiat0(walletValue())+' total';
+}
+
+/* ===== TABS ===== */
+$('#tabs').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
+  S.tab=b.dataset.tab;[...$('#tabs').children].forEach(x=>x.classList.toggle('on',x===b));render();});
+
+/* ===== RENDER ROUTER ===== */
+function render(){
+  if(S.tab==='market')renderMarket();
+  else if(S.tab==='orders')renderOrders();
+  else renderWallet();
+}
+
+/* ===== MARKETPLACE ===== */
+function renderMarket(){
+  const page=$('#page');
+  page.innerHTML=`
+    <div class="page-title">Marketplace</div>
+    <div class="page-sub">Buy and sell crypto directly with people — every trade protected by escrow.</div>
+    <div class="controls">
+      <div class="seg" id="sideSeg">
+        <button data-side="buy" class="${S.side==='buy'?'on buy':''}">Buy</button>
+        <button data-side="sell" class="${S.side==='sell'?'on sell':''}">Sell</button>
+      </div>
+      <div class="ctrl sel"><select id="cryptoSel">${Object.keys(CRYPTOS).map(c=>`<option value="${c}" ${c===S.crypto?'selected':''}>${c} · ${CRYPTOS[c].name}</option>`).join('')}</select></div>
+      <div class="ctrl"><input id="search" placeholder="Search trader…" value="${S.search}"></div>
+      <div class="ctrl sel"><select id="methodSel"><option value="all">All payment methods</option>${METHODS.map(m=>`<option value="${m}" ${m===S.method?'selected':''}>${m}</option>`).join('')}</select></div>
+      <div class="spacer"></div>
+      <span class="sort-lbl">Sort</span>
+      <div class="ctrl sel"><select id="sortSel">
+        <option value="price" ${S.sort==='price'?'selected':''}>Best price</option>
+        <option value="rating" ${S.sort==='rating'?'selected':''}>Highest rating</option>
+        <option value="trades" ${S.sort==='trades'?'selected':''}>Most trades</option>
+      </select></div>
+    </div>
+    <div class="offers-head"><span>Trader</span><span>Price</span><span>Payment</span><span>Limits</span><span></span></div>
+    <div class="offers" id="offers"></div>`;
+  $('#sideSeg').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;S.side=b.dataset.side;renderMarket();});
+  $('#cryptoSel').addEventListener('change',e=>{S.crypto=e.target.value;renderTopbar();renderMarket();});
+  $('#search').addEventListener('input',e=>{S.search=e.target.value;renderOffers();});
+  $('#methodSel').addEventListener('change',e=>{S.method=e.target.value;renderOffers();});
+  $('#sortSel').addEventListener('change',e=>{S.sort=e.target.value;renderOffers();});
+  renderOffers();
+}
+function getOffers(){
+  const want=S.side==='buy'?'sell':'buy';
+  let list=TRADERS.filter(o=>o.side===want);
+  if(S.method!=='all')list=list.filter(o=>o.methods.includes(S.method));
+  if(S.search.trim())list=list.filter(o=>o.trader.toLowerCase().includes(S.search.trim().toLowerCase()));
+  list.sort((a,b)=>{
+    if(S.sort==='rating')return b.rating-a.rating;
+    if(S.sort==='trades')return b.trades-a.trades;
+    return S.side==='buy'?offerPrice(a)-offerPrice(b):offerPrice(b)-offerPrice(a);
+  });
+  return list;
+}
+function renderOffers(){
+  const wrap=$('#offers');if(!wrap)return;
+  const list=getOffers();
+  if(!list.length){wrap.innerHTML='<div class="empty">No offers match your filters. Try another payment method or search.</div>';return;}
+  wrap.innerHTML=list.map(o=>{
+    const price=offerPrice(o);
+    const cls=S.side==='buy'?'btn-buy':'btn-sell';
+    const label=(S.side==='buy'?'Buy ':'Sell ')+S.crypto;
+    return `<div class="offer">
+      <div class="o-trader">
+        <div class="o-av" style="background:${o.color}">${initials(o.trader)}${o.online?'<span class="on"></span>':''}</div>
+        <div><div class="nm">${o.trader} ${o.verified?'<span class="vbadge" title="Verified">✓</span>':''}</div>
+          <div class="meta">★ ${o.rating.toFixed(2)} · ${o.trades.toLocaleString()} trades</div></div>
+      </div>
+      <div class="o-price"><div class="p">${fmtFiat0(price)}</div><div class="unit">per ${S.crypto}</div></div>
+      <div class="o-meth">${o.methods.map(m=>`<span class="meth">${m}</span>`).join('')}</div>
+      <div class="o-lim"><span class="l">LIMIT</span>${fmtFiat0(o.min)}–${fmtFiat0(o.max)}</div>
+      <div class="o-act"><button class="btn ${cls}" data-trader="${o.trader}">${label} <span class="ar">→</span></button></div>
+    </div>`;
+  }).join('');
+  wrap.querySelectorAll('button[data-trader]').forEach(b=>b.addEventListener('click',()=>openTrade(b.dataset.trader)));
+}
+
+/* ===== ORDERS ===== */
+function renderOrders(){
+  const page=$('#page');
+  page.innerHTML=`<div class="page-title">My orders</div><div class="page-sub">Your trade history and open positions.</div><div class="orders" id="ordersList"></div>`;
+  const wrap=$('#ordersList');
+  if(!S.orders.length){wrap.innerHTML='<div class="empty">No orders yet. Head to the marketplace to make your first trade.</div>';return;}
+  wrap.innerHTML=S.orders.map(o=>`<div class="order">
+    <span class="o-side ${o.side}">${o.side.toUpperCase()}</span>
+    <div><div class="who">${o.crypto} · ${o.who}</div><div class="when">${o.id} · ${o.time}</div></div>
+    <div class="amt">${fmtCrypto(o.cryptoAmt,o.crypto)} ${o.crypto}<div class="f">${fmtFiat0(o.fiat)}</div></div>
+    <div class="pm">${o.method}</div>
+    <div><span class="status ${o.status}"><span class="d"></span>${o.status[0].toUpperCase()+o.status.slice(1)}</span></div>
+  </div>`).join('');
+}
+
+/* ===== WALLET ===== */
+function renderWallet(){
+  const page=$('#page');
+  const assets=[{k:'USD',name:'US Dollar',sym:'$',color:'#90A89A',bg:'#1b3528'},
+    ...Object.keys(CRYPTOS).map(c=>({k:c,name:CRYPTOS[c].name,sym:CRYPTOS[c].glyph,color:CRYPTOS[c].color,bg:CRYPTOS[c].bg}))];
+  page.innerHTML=`<div class="page-title">Wallet</div><div class="page-sub">Balances update automatically as your escrow trades settle.</div>
+    <div class="wallet-top"><div class="wallet-total"><div class="l">Total balance</div><div class="v">${fmtFiat(walletValue())}</div></div></div>
+    <div class="assets">${assets.map(a=>{
+      const bal=S.wallet[a.k]||0; const val=a.k==='USD'?bal:bal*S.prices[a.k];
+      const amtStr=a.k==='USD'?fmtFiat(bal):fmtCrypto(bal,a.k)+' '+a.k;
+      return `<div class="asset"><div class="ic" style="background:${a.bg};color:${a.color}">${a.sym}</div>
+        <div><div class="nm">${a.name}</div><div class="sym">${a.k}</div></div>
+        <div class="amt"><div class="a">${amtStr}</div><div class="f">${fmtFiat(val)}</div></div></div>`;
+    }).join('')}</div>`;
+}
+
+/* ========== TRADE FLOW ========== */
+const STEPS=['Order','Payment','Confirm','Done'];
+function openTrade(traderName){
+  const o=TRADERS.find(t=>t.trader===traderName);
+  const price=offerPrice(o);
+  S.trade={offer:o,price,crypto:S.crypto,side:S.side,step:0,unit:'fiat',fiat:Math.min(o.max, Math.max(o.min, 500)),
+    method:o.methods[0],ref:'VCH'+Math.floor(2000+Math.random()*8000),msgs:[],timer:o.window*60,timerInt:null,id:'VCH-'+Math.floor(2300+Math.random()*200)};
+  $('#scrim').classList.add('open');
+  $('#chatWith').textContent='Chat with '+o.trader;
+  renderTradeHead(); renderStepper(); renderTradeStep(); renderChat();
+}
+function closeTrade(){
+  if(S.trade&&S.trade.timerInt)clearInterval(S.trade.timerInt);
+  $('#scrim').classList.remove('open'); S.trade=null;
+}
+$('#scrim').addEventListener('click',e=>{if(e.target===$('#scrim'))closeTrade();});
+function renderTradeHead(){
+  const t=S.trade,o=t.offer;
+  $('#mHead').innerHTML=`<div class="av" style="background:${o.color}">${initials(o.trader)}</div>
+    <div><div class="t">${t.side==='buy'?'Buy':'Sell'} ${t.crypto} ${t.side==='buy'?'from':'to'} ${o.trader}</div>
+    <div class="s">★ ${o.rating.toFixed(2)} · ${o.trades.toLocaleString()} trades · ${fmtFiat0(t.price)}/${t.crypto}</div></div>
+    <button class="m-close" id="mClose">×</button>`;
+  $('#mClose').addEventListener('click',closeTrade);
+}
+function renderStepper(){
+  $('#stepper').innerHTML=STEPS.map((s,i)=>`<div class="st ${i<S.trade.step?'done':''} ${i===S.trade.step?'active':''}"><div class="d"></div><div class="t">${s}</div></div>`).join('');
+}
+function renderTradeStep(){
+  const t=S.trade;
+  if(t.step===0)stepOrder();
+  else if(t.step===1)stepPay();
+  else if(t.step===2)stepConfirm();
+  else stepDone();
+}
+
+/* --- step 0: order form --- */
+function stepOrder(){
+  const t=S.trade;
+  const cryptoAmt=t.fiat/t.price;
+  const verb=t.side==='buy'?'pay':'receive';
+  const recv=t.side==='buy'?'receive':'pay';
+  $('#mLeft').innerHTML=`
+    <div class="amt-box">
+      <div class="top"><span>You ${verb}</span><span>Limit ${fmtFiat0(t.offer.min)}–${fmtFiat0(t.offer.max)}</span></div>
+      <div class="amt-input">
+        <input id="amtInput" type="text" inputmode="decimal" value="${t.unit==='fiat'?t.fiat:cryptoAmt.toFixed(CRYPTOS[t.crypto].dec)}">
+        <div class="unit-tog" id="unitTog">
+          <button data-u="fiat" class="${t.unit==='fiat'?'on':''}">USD</button>
+          <button data-u="crypto" class="${t.unit==='crypto'?'on':''}">${t.crypto}</button>
+        </div>
+      </div>
+    </div>
+    <div class="conv">≈ <b>${t.unit==='fiat'?fmtCrypto(cryptoAmt,t.crypto)+' '+t.crypto:fmtFiat(t.fiat)}</b> at ${fmtFiat0(t.price)}/${t.crypto}</div>
+    <div class="quick" id="quick">
+      <button data-q="min">Min</button><button data-q="0.25">25%</button><button data-q="0.5">50%</button><button data-q="max">Max</button>
+    </div>
+    <div class="summary">
+      <div class="sline"><span class="k">Price</span><span class="v">${fmtFiat0(t.price)} / ${t.crypto}</span></div>
+      <div class="sline"><span class="k">Payment method</span><span class="v">${t.method}</span></div>
+      <div class="sline"><span class="k">Buyer fee</span><span class="v" style="color:var(--emerald-br)">FREE</span></div>
+      <div class="sline big"><span class="k">You ${recv}</span><span class="v" id="recvVal">${t.side==='buy'?fmtCrypto(cryptoAmt,t.crypto)+' '+t.crypto:fmtFiat(t.fiat)}</span></div>
+    </div>
+    <div class="hint" id="hint">Funds lock in escrow the moment you open the trade.</div>
+    <button class="btn btn-buy full" id="placeBtn">Open trade &amp; lock escrow</button>`;
+  const input=$('#amtInput'), hint=$('#hint');
+  function sync(){
+    let v=parseFloat(input.value.replace(/,/g,''))||0;
+    if(t.unit==='fiat')t.fiat=v; else t.fiat=v*t.price;
+    const ca=t.fiat/t.price;
+    $('#recvVal').textContent=t.side==='buy'?fmtCrypto(ca,t.crypto)+' '+t.crypto:fmtFiat(t.fiat);
+    $('.conv').innerHTML='≈ <b>'+(t.unit==='fiat'?fmtCrypto(ca,t.crypto)+' '+t.crypto:fmtFiat(t.fiat))+'</b> at '+fmtFiat0(t.price)+'/'+t.crypto;
+    const within=t.fiat>=t.offer.min&&t.fiat<=t.offer.max;
+    const enoughSell=t.side==='sell'?ca<=(S.wallet[t.crypto]||0):true;
+    if(!within){hint.className='hint bad';hint.textContent=`Amount must be between ${fmtFiat0(t.offer.min)} and ${fmtFiat0(t.offer.max)}.`;}
+    else if(!enoughSell){hint.className='hint bad';hint.textContent=`Not enough ${t.crypto} in your wallet to sell that much.`;}
+    else{hint.className='hint';hint.textContent='Funds lock in escrow the moment you open the trade.';}
+    $('#placeBtn').disabled=!(within&&enoughSell);
+    $('#placeBtn').style.opacity=(within&&enoughSell)?'1':'.5';
+  }
+  input.addEventListener('input',sync);
+  $('#unitTog').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
+    const ca=t.fiat/t.price;t.unit=b.dataset.u;
+    input.value=t.unit==='fiat'?Math.round(t.fiat):ca.toFixed(CRYPTOS[t.crypto].dec);
+    [...e.currentTarget.children].forEach(x=>x.classList.toggle('on',x===b));sync();});
+  $('#quick').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
+    const q=b.dataset.q;
+    if(q==='min')t.fiat=t.offer.min; else if(q==='max')t.fiat=t.offer.max; else t.fiat=t.offer.max*parseFloat(q);
+    input.value=t.unit==='fiat'?Math.round(t.fiat):(t.fiat/t.price).toFixed(CRYPTOS[t.crypto].dec);sync();});
+  $('#placeBtn').addEventListener('click',placeOrder);
+  sync();
+}
+function placeOrder(){
+  const t=S.trade;
+  t.cryptoAmt=t.fiat/t.price;
+  t.step=1; renderStepper();
+  $('#mLeft').innerHTML='<div class="center-state"><div class="spin"></div><h3>Locking escrow…</h3><p>Moving '+fmtCrypto(t.cryptoAmt,t.crypto)+' '+t.crypto+' into protected escrow.</p></div>';
+  sysMsg('Escrow locked '+fmtCrypto(t.cryptoAmt,t.crypto)+' '+t.crypto,true);
+  setTimeout(()=>{ if(!S.trade||S.trade!==t)return;
+    themMsg(t.side==='buy'?"Hey! Send the payment to the details shown and drop the reference here 👍":"Hi! Once I send the payment I'll mark it — please have the "+t.crypto+" ready to release.");
+    t.step=1; renderStepper(); stepPay();
+  }, reduce?0:1000);
+}
+
+/* --- step 1: pay --- */
+function stepPay(){
+  const t=S.trade;
+  const payAmt=fmtFiat(t.fiat);
+  const payerIsYou=t.side==='buy';
+  $('#mLeft').innerHTML=`
+    <div class="banner"><div class="ic"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#04130C" stroke-width="2.4" stroke-linecap="round"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></div>
+      ${fmtCrypto(t.cryptoAmt,t.crypto)} ${t.crypto} is locked in escrow.</div>
+    <div class="timer"><div class="c" id="timerC">--:--</div><div class="l">${payerIsYou?'time left to pay':'waiting for buyer payment'}</div></div>
+    ${payerIsYou?`
+    <div class="warn">Pay <b>exactly ${payAmt}</b> by <b>${t.method}</b> and include the reference. Only mark as paid once the money has actually left your account.</div>
+    <div class="pay-details">
+      <div class="pd"><span class="k">AMOUNT</span><span class="v">${payAmt} <button class="copy" data-c="${t.fiat.toFixed(2)}">copy</button></span></div>
+      <div class="pd"><span class="k">METHOD</span><span class="v">${t.method}</span></div>
+      <div class="pd"><span class="k">ACCOUNT NAME</span><span class="v">${t.offer.trader.replace(/[._]/g,' ')}</span></div>
+      <div class="pd"><span class="k">ACCOUNT / TAG</span><span class="v">GB29 VCH7 ${Math.floor(1000+Math.random()*9000)} ${Math.floor(1000+Math.random()*9000)} <button class="copy" data-c="GB29VCH7">copy</button></span></div>
+      <div class="pd"><span class="k">REFERENCE</span><span class="v">${t.ref} <button class="copy" data-c="${t.ref}">copy</button></span></div>
+    </div>
+    <button class="btn btn-buy full" id="paidBtn">I've sent the payment</button>
+    <button class="btn btn-ghost full" id="cancelBtn" style="margin-top:8px">Cancel trade</button>`
+    :`
+    <div class="warn">Wait for ${t.offer.trader} to send <b>${payAmt}</b> by <b>${t.method}</b>. Your ${t.crypto} stays locked in escrow until you confirm the money arrived — don't release before then.</div>
+    <button class="btn btn-buy full" id="paidBtn">Buyer paid — release ${t.crypto}</button>
+    <button class="btn btn-ghost full" id="cancelBtn" style="margin-top:8px">Cancel trade</button>`}`;
+  $('#mLeft').querySelectorAll('.copy').forEach(b=>b.addEventListener('click',()=>{
+    navigator.clipboard&&navigator.clipboard.writeText(b.dataset.c).catch(()=>{});
+    b.textContent='copied'; setTimeout(()=>b.textContent='copy',1200);}));
+  $('#paidBtn').addEventListener('click',markPaid);
+  $('#cancelBtn').addEventListener('click',cancelTrade);
+  clearInterval(t.timerInt);
+  function tick(){
+    const m=Math.floor(t.timer/60), s=t.timer%60;
+    const c=$('#timerC'); if(!c){clearInterval(t.timerInt);return;}
+    c.textContent=m+':'+s.toString().padStart(2,'0');
+    c.style.color=t.timer<120?'var(--coral)':'var(--paper)';
+    if(t.timer<=0){clearInterval(t.timerInt); toast('Payment window expired — trade cancelled',true); recordOrder('cancelled'); closeTrade(); return;}
+    t.timer--;
+  }
+  tick(); if(!reduce)t.timerInt=setInterval(tick,1000);
+}
+function markPaid(){
+  const t=S.trade; clearInterval(t.timerInt);
+  if(t.side==='buy'){
+    sysMsg('Buyer marked payment as sent');
+    themMsg('Got it — let me confirm it landed, releasing now 🚀');
+  }else{
+    sysMsg('Seller confirming payment received');
+  }
+  t.step=2; renderStepper(); stepConfirm();
+}
+function cancelTrade(){
+  clearInterval(S.trade.timerInt);
+  sysMsg('Trade cancelled — escrow returned to seller');
+  recordOrder('cancelled');
+  toast('Trade cancelled',true);
+  closeTrade();
+}
+
+/* --- step 2: confirming --- */
+function stepConfirm(){
+  const t=S.trade;
+  $('#mLeft').innerHTML=`<div class="center-state"><div class="spin"></div>
+    <h3>${t.side==='buy'?'Waiting for '+t.offer.trader+' to release':'Releasing '+t.crypto+' from escrow'}</h3>
+    <p>${t.side==='buy'?'Payment confirmed on your side. Escrow releases as soon as the seller verifies it arrived.':'Confirming the payment and releasing the crypto to the buyer.'}</p></div>`;
+  setTimeout(()=>{ if(!S.trade||S.trade!==t)return;
+    if(t.side==='buy')themMsg('Confirmed ✓ Released the '+t.crypto+'. Thanks for trading!');
+    sysMsg('Escrow released — '+fmtCrypto(t.cryptoAmt,t.crypto)+' '+t.crypto+(t.side==='buy'?' sent to buyer':' sent to buyer'),true);
+    settle();
+  }, reduce?0:3200);
+}
+function settle(){
+  const t=S.trade;
+  if(t.side==='buy'){ S.wallet[t.crypto]=(S.wallet[t.crypto]||0)+t.cryptoAmt; S.wallet.USD-=t.fiat; }
+  else { S.wallet[t.crypto]=(S.wallet[t.crypto]||0)-t.cryptoAmt; S.wallet.USD+=t.fiat; }
+  recordOrder('completed');
+  renderTopbar();
+  t.step=3; renderStepper(); stepDone();
+  toast((t.side==='buy'?'Bought ':'Sold ')+fmtCrypto(t.cryptoAmt,t.crypto)+' '+t.crypto+' · escrow released');
+}
+function stepDone(){
+  const t=S.trade;
+  $('#mLeft').innerHTML=`<div class="center-state">
+    <div class="done-ic">✓</div>
+    <h3>Trade complete</h3>
+    <p>Escrow released safely. ${t.offer.trader} has been rated automatically.</p>
+    <div class="got">${t.side==='buy'?'+ ':'− '}${fmtCrypto(t.cryptoAmt,t.crypto)} ${t.crypto}<small>${t.side==='buy'?'added to':'sold from'} your wallet · ${fmtFiat(t.fiat)}</small></div>
+    <button class="btn btn-buy full" id="walletBtn">View wallet</button>
+    <button class="btn btn-line full" id="moreBtn" style="margin-top:8px">Make another trade</button>
+  </div>`;
+  $('#walletBtn').addEventListener('click',()=>{closeTrade();S.tab='wallet';[...$('#tabs').children].forEach(x=>x.classList.toggle('on',x.dataset.tab==='wallet'));render();});
+  $('#moreBtn').addEventListener('click',()=>{closeTrade();S.tab='market';[...$('#tabs').children].forEach(x=>x.classList.toggle('on',x.dataset.tab==='market'));render();});
+}
+function recordOrder(status){
+  const t=S.trade;
+  S.orders.unshift({id:t.id,side:t.side,crypto:t.crypto,cryptoAmt:t.cryptoAmt||0,fiat:t.fiat,who:t.offer.trader,method:t.method,status,time:'Just now · '+now()});
+}
+
+/* ===== CHAT ===== */
+function renderChat(){
+  const body=$('#chatBody'); body.innerHTML='';
+  S.trade.msgs.forEach(m=>appendMsg(m,true));
+  body.scrollTop=body.scrollHeight;
+}
+function appendMsg(m,silent){
+  const body=$('#chatBody'); if(!body)return;
+  let node;
+  if(m.t==='sys'){node=el('div','sys'+(m.ok?' ok':''));node.innerHTML='<span class="d"></span>'+m.x;}
+  else{node=el('div','msg '+m.t);node.innerHTML=m.x+'<span class="time">'+(m.time||now())+'</span>';}
+  body.appendChild(node); body.scrollTop=body.scrollHeight;
+}
+function pushMsg(m){ if(!S.trade)return; m.time=m.time||now(); S.trade.msgs.push(m); appendMsg(m); }
+function sysMsg(x,ok){pushMsg({t:'sys',x,ok});}
+function themMsg(x){pushMsg({t:'them',x});}
+$('#chatSend').addEventListener('click',sendChat);
+$('#chatInput').addEventListener('keydown',e=>{if(e.key==='Enter')sendChat();});
+function sendChat(){
+  const inp=$('#chatInput'); if(!inp||!S.trade)return;
+  const v=inp.value.trim(); if(!v)return;
+  pushMsg({t:'me',x:v}); inp.value='';
+  if(!reduce)setTimeout(()=>{ if(S.trade)themMsg(pickReply(v)); }, 900+Math.random()*700);
+}
+function pickReply(v){
+  const lc=v.toLowerCase();
+  if(lc.includes('?'))return "Good question — everything's handled through escrow, so you're covered either way.";
+  if(lc.includes('thank'))return "No problem at all, pleasure trading with you! 🙌";
+  if(lc.includes('paid')||lc.includes('sent'))return "Perfect, checking my account now…";
+  const g=["👍","On it.","Sounds good.","Cool, ready when you are.","Sure thing."];
+  return g[Math.floor(Math.random()*g.length)];
+}
+
+/* ===== LIVE PRICE TICK ===== */
+function tickPrices(){
+  for(const c in CRYPTOS){
+    S.prev[c]=S.prices[c];
+    const drift=(Math.random()-0.5)*0.003;
+    S.prices[c]=Math.max(0.01,S.prices[c]*(1+(c==='USDT'?drift*0.05:drift)));
+  }
+  renderTopbar();
+  if(S.tab==='market')renderOffers();
+}
+
+/* ===== INIT ===== */
+renderTopbar(); render();
+if(!reduce)setInterval(tickPrices,2800);
+</script>
+</body>
+</html>

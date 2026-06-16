@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VOUCH — Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=Hanken+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#08120D; --bg-2:#0B1812; --panel:#11241A; --panel-2:#152C20; --elev:#16302455;
+  --line:#1F3A2C; --line-soft:#19301F;
+  --paper:#ECEEE7; --muted:#8FA89A; --faint:#587063;
+  --emerald:#23A86E; --emerald-br:#3FD98C; --emerald-glow:rgba(63,217,140,.3); --emerald-tint:#16382680;
+  --coral:#FF6B4A; --coral-glow:rgba(255,107,74,.35); --gold:#E2B45A; --blue:#5AA9E2; --violet:#9B7AD6;
+  --display:'Bricolage Grotesque',sans-serif; --body:'Hanken Grotesk',sans-serif; --mono:'Space Mono',monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--paper);font-family:var(--body);-webkit-font-smoothing:antialiased;line-height:1.5}
+::selection{background:var(--coral);color:#08120D}
+a{color:inherit;text-decoration:none}
+button{font-family:inherit;cursor:pointer}
+.mono{font-family:var(--mono)}
+
+.layout{display:grid;grid-template-columns:236px 1fr;min-height:100vh}
+
+/* ===== SIDEBAR ===== */
+.side{background:var(--bg-2);border-right:1px solid var(--line);display:flex;flex-direction:column;position:sticky;top:0;height:100vh}
+.side-top{padding:20px 18px 14px}
+.logo{display:flex;align-items:center;gap:9px;font-family:var(--display);font-weight:800;font-size:20px;letter-spacing:-.02em}
+.logo .mark{width:23px;height:23px;border-radius:7px;background:var(--paper);position:relative;display:grid;place-items:center}
+.logo .mark::before{content:'';width:8px;height:8px;border-radius:50%;border:2.4px solid var(--coral);box-sizing:border-box}
+.logo .mark::after{content:'';position:absolute;width:8px;height:8px;border-radius:50%;border:2.4px solid var(--emerald);transform:translateX(5px)}
+.logo .tag{font-family:var(--mono);font-size:10px;font-weight:400;color:var(--gold);border:1px solid rgba(226,180,90,.3);padding:2px 7px;border-radius:5px;letter-spacing:.08em}
+.nav{flex:1;padding:8px 12px;display:flex;flex-direction:column;gap:2px;overflow-y:auto}
+.nav-item{display:flex;align-items:center;gap:11px;padding:11px 13px;border-radius:10px;color:var(--muted);font-size:14px;font-weight:600;transition:.18s;border:none;background:none;width:100%;text-align:left}
+.nav-item:hover{background:var(--panel);color:var(--paper)}
+.nav-item.on{background:var(--panel);color:var(--paper);box-shadow:inset 2px 0 0 var(--emerald-br)}
+.nav-item svg{width:18px;height:18px;flex-shrink:0;stroke:currentColor}
+.nav-item .badge{margin-left:auto;font-family:var(--mono);font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;background:var(--coral);color:#fff}
+.nav-item .badge.gold{background:var(--gold);color:#08120D}
+.nav-sec{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);padding:14px 13px 6px}
+.side-bot{padding:14px;border-top:1px solid var(--line);display:flex;align-items:center;gap:10px}
+.side-bot .av{width:34px;height:34px;border-radius:10px;background:var(--violet);display:grid;place-items:center;font-family:var(--display);font-weight:700;font-size:14px;color:#fff}
+.side-bot .nm{font-size:13px;font-weight:600}.side-bot .rl{font-family:var(--mono);font-size:10px;color:var(--faint)}
+.side-bot a{margin-left:auto;color:var(--faint);font-size:11px;font-family:var(--mono)}.side-bot a:hover{color:var(--emerald-br)}
+
+/* ===== MAIN ===== */
+.main{display:flex;flex-direction:column;min-width:0;background:
+  radial-gradient(600px 360px at 100% -5%,rgba(63,217,140,.06),transparent 60%)}
+.topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:16px;padding:16px clamp(18px,3vw,32px);background:rgba(8,18,13,.82);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+.pt{font-family:var(--display);font-weight:700;font-size:22px;letter-spacing:-.02em}
+.pt small{display:block;font-family:var(--body);font-size:12.5px;color:var(--muted);font-weight:400;letter-spacing:0;margin-top:1px}
+.tb-r{margin-left:auto;display:flex;align-items:center;gap:12px}
+.search{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:9px 13px;color:var(--paper);font-family:var(--body);font-size:13.5px;outline:none;width:200px}
+.search:focus{border-color:var(--emerald-br)}
+.live{font-family:var(--mono);font-size:11px;color:var(--emerald-br);display:flex;align-items:center;gap:7px;border:1px solid var(--line);padding:7px 11px;border-radius:9px}
+.live .p{width:7px;height:7px;border-radius:50%;background:var(--emerald-br);animation:blink 1.5s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
+.content{padding:clamp(18px,3vw,30px) clamp(18px,3vw,32px) 70px;overflow:auto}
+
+/* ===== KPI CARDS ===== */
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:18px 20px;position:relative;overflow:hidden}
+.kpi .l{font-family:var(--mono);font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--faint)}
+.kpi .v{font-family:var(--display);font-weight:800;font-size:27px;letter-spacing:-.02em;margin-top:8px}
+.kpi .t{font-family:var(--mono);font-size:11px;margin-top:7px;display:flex;align-items:center;gap:5px}
+.kpi .t.up{color:var(--emerald-br)}.kpi .t.down{color:var(--coral)}.kpi .t.flat{color:var(--muted)}
+.kpi .ic{position:absolute;right:16px;top:16px;width:34px;height:34px;border-radius:10px;display:grid;place-items:center;opacity:.9}
+.kpi .ic svg{width:17px;height:17px}
+@media(max-width:1100px){.kpis{grid-template-columns:repeat(2,1fr)}}
+
+/* ===== PANELS / CHARTS ===== */
+.grid2{display:grid;grid-template-columns:1.5fr 1fr;gap:14px;margin-bottom:22px}
+@media(max-width:980px){.grid2{grid-template-columns:1fr}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:20px}
+.card-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.card-h h3{font-family:var(--display);font-weight:700;font-size:16px}
+.card-h .sub{font-family:var(--mono);font-size:11px;color:var(--faint)}
+canvas{display:block;width:100%}
+.legend{display:flex;gap:16px;margin-top:12px;font-family:var(--mono);font-size:11px;color:var(--muted);flex-wrap:wrap}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend .sw{width:10px;height:10px;border-radius:3px}
+
+.statusbars{display:flex;flex-direction:column;gap:13px}
+.sb .top{display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px}
+.sb .top .n{font-family:var(--mono);font-weight:700}
+.sb .track{height:8px;background:var(--bg);border-radius:5px;overflow:hidden}
+.sb .fill{height:100%;border-radius:5px}
+
+.feed{display:flex;flex-direction:column;gap:1px}
+.fe{display:flex;align-items:flex-start;gap:11px;padding:11px 0;border-bottom:1px solid var(--line-soft);font-size:13.5px}
+.fe:last-child{border-bottom:none}
+.fe .dot{width:8px;height:8px;border-radius:50%;margin-top:6px;flex-shrink:0}
+.fe .tm{margin-left:auto;font-family:var(--mono);font-size:10.5px;color:var(--faint);white-space:nowrap}
+.fe b{font-weight:600}
+
+/* ===== TABLES ===== */
+.toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px}
+.ftabs{display:inline-flex;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:3px;gap:2px}
+.ftabs button{background:none;border:none;color:var(--muted);font-weight:600;font-size:13px;padding:8px 15px;border-radius:7px}
+.ftabs button.on{background:var(--panel-2);color:var(--paper)}
+.tbl{background:var(--panel);border:1px solid var(--line);border-radius:15px;overflow:hidden}
+table{width:100%;border-collapse:collapse}
+thead th{font-family:var(--mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);text-align:left;padding:13px 18px;border-bottom:1px solid var(--line);font-weight:500;white-space:nowrap}
+tbody td{padding:14px 18px;border-bottom:1px solid var(--line-soft);font-size:13.5px;vertical-align:middle}
+tbody tr:last-child td{border-bottom:none}
+tbody tr.click{cursor:pointer;transition:background .15s}
+tbody tr.click:hover{background:var(--panel-2)}
+.uav{width:32px;height:32px;border-radius:9px;display:inline-grid;place-items:center;font-family:var(--display);font-weight:700;font-size:12px;color:#fff;vertical-align:middle;margin-right:9px}
+.cell-u{display:flex;align-items:center}
+.cell-u .nm{font-weight:600}.cell-u .sub{font-family:var(--mono);font-size:11px;color:var(--faint)}
+.mono-c{font-family:var(--mono);font-size:13px}
+.pill{font-family:var(--mono);font-size:10.5px;font-weight:700;padding:4px 10px;border-radius:20px;display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+.pill .d{width:6px;height:6px;border-radius:50%}
+.pill.green{background:var(--emerald-tint);color:var(--emerald-br)}.pill.green .d{background:var(--emerald-br)}
+.pill.gold{background:rgba(226,180,90,.14);color:var(--gold)}.pill.gold .d{background:var(--gold)}
+.pill.coral{background:rgba(255,107,74,.14);color:var(--coral)}.pill.coral .d{background:var(--coral)}
+.pill.blue{background:rgba(90,169,226,.14);color:var(--blue)}.pill.blue .d{background:var(--blue)}
+.pill.grey{background:var(--bg);color:var(--muted)}.pill.grey .d{background:var(--muted)}
+.tbtn{font-family:var(--body);font-weight:700;font-size:12.5px;padding:7px 13px;border-radius:8px;border:1px solid transparent}
+.tbtn.g{background:var(--emerald);color:#04130C}.tbtn.g:hover{background:var(--emerald-br)}
+.tbtn.r{background:none;border-color:var(--line);color:var(--coral)}.tbtn.r:hover{border-color:var(--coral)}
+.tbtn.b{background:none;border-color:var(--line);color:var(--paper)}.tbtn.b:hover{border-color:var(--emerald-br);color:var(--emerald-br)}
+.tbtn:disabled{opacity:.4;pointer-events:none}
+.row-act{display:flex;gap:7px;justify-content:flex-end}
+.empty{text-align:center;padding:46px;color:var(--faint);font-family:var(--mono);font-size:13px}
+
+/* ===== DISPUTE DETAIL ===== */
+.back{display:inline-flex;align-items:center;gap:8px;color:var(--muted);font-family:var(--mono);font-size:12px;margin-bottom:16px;background:none;border:none}
+.back:hover{color:var(--paper)}
+.disp-grid{display:grid;grid-template-columns:1.3fr 1fr;gap:14px}
+@media(max-width:980px){.disp-grid{grid-template-columns:1fr}}
+.disp-summary{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line-soft);border-radius:12px;overflow:hidden;margin-bottom:16px}
+.ds{background:var(--panel);padding:14px 16px}
+.ds .k{font-family:var(--mono);font-size:10px;letter-spacing:.05em;text-transform:uppercase;color:var(--faint)}
+.ds .v{font-family:var(--mono);font-size:14px;margin-top:5px;font-weight:600}
+.claims{display:flex;flex-direction:column;gap:12px;margin-bottom:18px}
+.claim{border:1px solid var(--line);border-radius:12px;padding:15px}
+.claim.buyer{border-left:3px solid var(--coral)}
+.claim.seller{border-left:3px solid var(--emerald-br)}
+.claim .who{font-family:var(--mono);font-size:11px;font-weight:700;display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.claim.buyer .who{color:var(--coral)}.claim.seller .who{color:var(--emerald-br)}
+.claim p{font-size:13.5px;color:var(--muted);line-height:1.55}
+.evidence{display:flex;gap:9px;margin-top:11px;flex-wrap:wrap}
+.ev{font-family:var(--mono);font-size:11px;color:var(--blue);border:1px solid var(--line);border-radius:8px;padding:7px 11px;display:flex;align-items:center;gap:7px}
+.ev svg{width:13px;height:13px}
+.resolve{background:var(--panel-2);border:1px solid var(--line);border-radius:14px;padding:18px}
+.resolve h4{font-family:var(--display);font-weight:700;font-size:15px;margin-bottom:5px}
+.resolve .note{font-size:12.5px;color:var(--muted);margin-bottom:16px}
+.resolve-actions{display:flex;flex-direction:column;gap:9px}
+.rbtn{display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:11px;border:1px solid var(--line);background:var(--panel);text-align:left;transition:.18s;width:100%}
+.rbtn:hover{transform:translateY(-1px)}
+.rbtn .ric{width:36px;height:36px;border-radius:9px;display:grid;place-items:center;flex-shrink:0}
+.rbtn .rt{font-weight:700;font-size:14px}.rbtn .rd{font-size:12px;color:var(--muted);margin-top:2px}
+.rbtn.toBuyer:hover{border-color:var(--coral)}.rbtn.toBuyer .ric{background:rgba(255,107,74,.15);color:var(--coral)}
+.rbtn.toSeller:hover{border-color:var(--emerald-br)}.rbtn.toSeller .ric{background:var(--emerald-tint);color:var(--emerald-br)}
+.rbtn.info:hover{border-color:var(--blue)}.rbtn.info .ric{background:rgba(90,169,226,.15);color:var(--blue)}
+.transcript{max-height:300px;overflow-y:auto;display:flex;flex-direction:column;gap:9px;padding:4px}
+.tmsg{max-width:84%;padding:9px 13px;border-radius:12px;font-size:13px;line-height:1.4}
+.tmsg.b{background:rgba(255,107,74,.12);align-self:flex-start}
+.tmsg.s{background:var(--emerald-tint);align-self:flex-end}
+.tmsg.sys{align-self:center;font-family:var(--mono);font-size:10.5px;color:var(--muted);background:var(--bg);border:1px solid var(--line);padding:6px 12px;border-radius:18px}
+.tmsg .who{font-family:var(--mono);font-size:9.5px;opacity:.7;display:block;margin-bottom:3px}
+
+/* settings */
+.set-row{display:flex;align-items:center;justify-content:space-between;padding:16px 0;border-bottom:1px solid var(--line-soft)}
+.set-row:last-child{border-bottom:none}
+.set-row .k{font-weight:600;font-size:14px}.set-row .d{font-size:12.5px;color:var(--muted);margin-top:3px}
+.set-input{background:var(--bg);border:1px solid var(--line);border-radius:9px;color:var(--paper);font-family:var(--mono);font-size:13px;padding:9px 12px;width:110px;outline:none;text-align:right}
+.set-input:focus{border-color:var(--emerald-br)}
+.toggle-sw{width:46px;height:26px;border-radius:20px;background:var(--bg);border:1px solid var(--line);position:relative;transition:.2s}
+.toggle-sw::after{content:'';position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;background:var(--faint);transition:.2s}
+.toggle-sw.on{background:var(--emerald);border-color:var(--emerald)}.toggle-sw.on::after{left:22px;background:#04130C}
+
+/* toast */
+.toasts{position:fixed;bottom:22px;right:22px;z-index:120;display:flex;flex-direction:column;gap:9px;align-items:flex-end}
+.toast{background:var(--panel-2);border:1px solid var(--line);border-radius:11px;padding:12px 18px;font-size:13.5px;font-weight:600;box-shadow:0 20px 40px -16px rgba(0,0,0,.7);display:flex;align-items:center;gap:10px;animation:tin .3s}
+.toast .d{width:8px;height:8px;border-radius:50%;background:var(--emerald-br)}
+.toast.warn .d{background:var(--gold)}.toast.bad .d{background:var(--coral)}
+@keyframes tin{from{opacity:0;transform:translateX(14px)}to{opacity:1;transform:none}}
+
+@media(max-width:900px){
+  .layout{grid-template-columns:1fr}
+  .side{position:static;height:auto;flex-direction:column;border-right:none;border-bottom:1px solid var(--line)}
+  .nav{flex-direction:row;overflow-x:auto;padding:8px}.nav-sec{display:none}.nav-item{white-space:nowrap}
+  .side-bot{display:none}
+  .search{width:130px}
+}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="layout">
+  <!-- SIDEBAR -->
+  <aside class="side">
+    <div class="side-top"><a href="index.html" class="logo"><span class="mark"></span>vouch<span class="tag">ADMIN</span></a></div>
+    <nav class="nav" id="nav">
+      <div class="nav-sec">Operations</div>
+      <button class="nav-item on" data-v="overview"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>Overview</button>
+      <button class="nav-item" data-v="trades"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M3 17l6-6 4 4 8-8"/><path d="M21 7v6h-6"/></svg>Trades</button>
+      <button class="nav-item" data-v="disputes"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M12 9v4"/><path d="M12 17h.01"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>Disputes<span class="badge" id="bDisp">0</span></button>
+      <div class="nav-sec">People &amp; supply</div>
+      <button class="nav-item" data-v="users"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/></svg>Users &amp; KYC<span class="badge gold" id="bKyc">0</span></button>
+      <button class="nav-item" data-v="offers"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M20.6 3H15l-1 1v5l8 8 4-4-8-8z" transform="scale(.9)"/><path d="M3 7h7M3 12h12M3 17h9"/></svg>Offers</button>
+      <button class="nav-item" data-v="settings"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-2.7 1.1V21a2 2 0 1 1-4 0v-.1A1.6 1.6 0 0 0 7 19.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0-1-2.7H3a2 2 0 1 1 0-4h.1A1.6 1.6 0 0 0 4.7 7l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.8.3H9.4a1.6 1.6 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 2.7 1.1l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.8V9.4a1.6 1.6 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1z"/></svg>Settings</button>
+    </nav>
+    <div class="side-bot"><div class="av">AO</div><div><div class="nm">Ama Owusu</div><div class="rl">Operations admin</div></div><a href="index.html">↗ Site</a></div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+    <div class="topbar">
+      <div class="pt" id="ptitle">Overview<small id="psub">Platform health at a glance</small></div>
+      <div class="tb-r">
+        <input class="search" id="search" placeholder="Search…">
+        <span class="live"><span class="p"></span>LIVE</span>
+      </div>
+    </div>
+    <div class="content" id="content"></div>
+  </main>
+</div>
+<div class="toasts" id="toasts"></div>
+
+<script>
+"use strict";
+const $=s=>document.querySelector(s), el=(t,c)=>{const e=document.createElement(t);if(c)e.className=c;return e;};
+const fmt$=n=>'$'+Math.round(n).toLocaleString('en-US');
+const fmt$2=n=>'$'+n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+const initials=n=>n.replace(/[._]/g,' ').split(' ').filter(Boolean).slice(0,2).map(w=>w[0].toUpperCase()).join('');
+const COL=['#23A86E','#FF6B4A','#E2B45A','#5AA9E2','#9B7AD6'];
+const colorFor=n=>COL[[...n].reduce((a,c)=>a+c.charCodeAt(0),0)%COL.length];
+function toast(msg,kind){const t=el('div','toast'+(kind?' '+kind:''));t.innerHTML='<span class="d"></span>'+msg;$('#toasts').appendChild(t);setTimeout(()=>{t.style.opacity=0;t.style.transition='opacity .3s';setTimeout(()=>t.remove(),300);},2800);}
+
+/* ===== STATE ===== */
+const S={
+  view:'overview', search:'',
+  kpi:{volume:1842000, volTrend:+8.4, escrow:642300, escTrend:+2.1, users:48210, userTrend:+312, fees:9240, feeTrend:+5.6},
+  volSeries:[112,98,134,121,156,143,168,151,172,160,149,181,166,184],
+  trades:[
+    {id:'VCH-2291',buyer:'you',seller:'marcus_k',crypto:'BTC',amt:0.05,fiat:3360,method:'Revolut',status:'escrow',time:'2m ago'},
+    {id:'VCH-2290',buyer:'priya_v',seller:'sora_btc',crypto:'BTC',amt:0.12,fiat:8064,method:'Bank transfer',status:'paid',time:'6m ago'},
+    {id:'VCH-2288',buyer:'leo.m',seller:'lina.fx',crypto:'ETH',amt:1.5,fiat:3627,method:'Wise',status:'completed',time:'14m ago'},
+    {id:'VCH-2287',buyer:'nadia_p',seller:'oscar.h',crypto:'BTC',amt:0.2,fiat:13440,method:'Bank transfer',status:'disputed',time:'22m ago'},
+    {id:'VCH-2285',buyer:'sam_k',seller:'deji_o',crypto:'USDT',amt:1200,fiat:1200,method:'Revolut',status:'completed',time:'31m ago'},
+    {id:'VCH-2284',buyer:'mei_t',seller:'aisha_t',crypto:'ETH',amt:0.8,fiat:1934,method:'PayPal',status:'paid',time:'40m ago'},
+    {id:'VCH-2282',buyer:'you',seller:'kwame_a',crypto:'BTC',amt:0.03,fiat:2016,method:'Cash',status:'completed',time:'52m ago'},
+    {id:'VCH-2280',buyer:'tariq_h',seller:'sora_btc',crypto:'BTC',amt:0.5,fiat:33600,method:'Bank transfer',status:'completed',time:'1h ago'},
+  ],
+  disputes:[
+    {id:'DSP-118',tradeId:'VCH-2287',buyer:'nadia_p',seller:'oscar.h',crypto:'BTC',amt:0.2,fiat:13440,method:'Bank transfer',raisedBy:'buyer',age:'22m',status:'open',
+      claimBuyer:"I sent the full £10,600 by bank transfer over 30 minutes ago with the correct reference, but the seller still hasn't released the BTC. I've attached the bank confirmation.",
+      claimSeller:"Nothing has arrived in my account yet. The reference on the offer was VCH2287 — I can only release once I actually see the funds. Happy to wait but it's not here.",
+      evidence:['bank_receipt.pdf','statement_0613.png'],
+      chat:[['sys','Escrow locked 0.2 BTC'],['b','Payment sent, ref VCH2287 ✅'],['s','Not seeing it yet, can you check the reference?'],['b','It definitely went through, here is the receipt'],['sys','Buyer opened a dispute']]},
+    {id:'DSP-117',tradeId:'VCH-2276',buyer:'leo.m',seller:'mei_t',crypto:'ETH',amt:0.6,fiat:1450,method:'PayPal',raisedBy:'seller',age:'48m',status:'open',
+      claimBuyer:"I paid through PayPal friends & family like we agreed. Not sure what the issue is.",
+      claimSeller:"The PayPal payment is marked as a goods purchase, not friends & family — it can be reversed any time. That wasn't the deal. Requesting a refund of escrow.",
+      evidence:['paypal_txn.png'],
+      chat:[['sys','Escrow locked 0.6 ETH'],['b','Paid via PayPal'],['s','This is a goods payment, it can be charged back'],['sys','Seller opened a dispute']]},
+    {id:'DSP-116',tradeId:'VCH-2268',buyer:'sam_k',seller:'aisha_t',crypto:'BTC',amt:0.08,fiat:5376,method:'Revolut',raisedBy:'buyer',age:'2h',status:'open',
+      claimBuyer:"Seller is asking me to cancel after I already paid. I won't cancel — I want my BTC released.",
+      claimSeller:"Price moved a lot since we agreed, asking buyer to redo at current rate.",
+      evidence:['revolut_confirmation.png','chat_export.txt'],
+      chat:[['sys','Escrow locked 0.08 BTC'],['b','Sent the Revolut payment'],['s','Price moved, can we cancel and redo?'],['b','No, I already paid — release please'],['sys','Buyer opened a dispute']]},
+    {id:'DSP-115',tradeId:'VCH-2255',buyer:'tariq_h',seller:'deji_o',crypto:'USDT',amt:900,fiat:900,method:'Bank transfer',raisedBy:'buyer',age:'5h',status:'open',
+      claimBuyer:"Bank shows the transfer completed this morning. Seller went offline.",
+      claimSeller:"",
+      evidence:['transfer_complete.pdf'],
+      chat:[['sys','Escrow locked 900 USDT'],['b','Transfer done, see attached'],['sys','Buyer opened a dispute · seller unresponsive 3h']]},
+  ],
+  users:[
+    {name:'marcus_k',country:'United Kingdom',joined:'Mar 2021',kyc:'verified',trades:1842,rating:4.9,vol:'$3.4M'},
+    {name:'sora_btc',country:'Singapore',joined:'Jul 2019',kyc:'verified',trades:5104,rating:4.95,vol:'$11.2M'},
+    {name:'priya_v',country:'India',joined:'Jun 2026',kyc:'pending',trades:0,rating:0,vol:'$0'},
+    {name:'leo.m',country:'Spain',joined:'Jun 2026',kyc:'pending',trades:3,rating:5.0,vol:'$1.2K'},
+    {name:'oscar.h',country:'Germany',joined:'Feb 2022',kyc:'verified',trades:3380,rating:4.92,vol:'$7.8M'},
+    {name:'mei_t',country:'Malaysia',joined:'May 2026',kyc:'pending',trades:189,rating:4.6,vol:'$84K'},
+    {name:'dodgy_dave',country:'Unknown',joined:'Jun 2026',kyc:'unverified',trades:1,rating:2.1,vol:'$320'},
+    {name:'aisha_t',country:'UAE',joined:'Jan 2023',kyc:'verified',trades:1290,rating:4.88,vol:'$2.1M'},
+  ],
+  offers:[
+    {id:'OFR-771',trader:'marcus_k',side:'sell',crypto:'BTC',price:67504,methods:['Bank transfer','Revolut'],lim:'$200–8K',status:'active'},
+    {id:'OFR-770',trader:'lina.fx',side:'sell',crypto:'BTC',price:67730,methods:['Wise','PayPal'],lim:'$100–5K',status:'active'},
+    {id:'OFR-768',trader:'dodgy_dave',side:'sell',crypto:'BTC',price:61200,methods:['Cash'],lim:'$50–10K',status:'flagged'},
+    {id:'OFR-765',trader:'oscar.h',side:'buy',crypto:'BTC',price:66980,methods:['Bank transfer','Wise'],lim:'$250–15K',status:'active'},
+    {id:'OFR-763',trader:'deji_o',side:'buy',crypto:'ETH',price:2402,methods:['Revolut','Cash'],lim:'$100–4K',status:'active'},
+    {id:'OFR-760',trader:'mei_t',side:'sell',crypto:'ETH',price:2455,methods:['PayPal'],lim:'$50–1.5K',status:'flagged'},
+  ],
+  tradeFilter:'all', dispFilter:'open', userFilter:'all', activeDispute:null,
+};
+
+/* ===== BADGES ===== */
+function refreshBadges(){
+  const d=S.disputes.filter(x=>x.status==='open').length;
+  const k=S.users.filter(u=>u.kyc==='pending').length;
+  $('#bDisp').textContent=d; $('#bDisp').style.display=d?'':'none';
+  $('#bKyc').textContent=k; $('#bKyc').style.display=k?'':'none';
+}
+
+/* ===== NAV ===== */
+const TITLES={overview:['Overview','Platform health at a glance'],trades:['Trades','Monitor every escrow trade in real time'],
+  disputes:['Disputes','Resolve held-escrow conflicts'],users:['Users & KYC','Verify identities and manage accounts'],
+  offers:['Offers','Moderate the marketplace supply'],settings:['Settings','Platform configuration']};
+$('#nav').addEventListener('click',e=>{const b=e.target.closest('.nav-item');if(!b)return;
+  S.view=b.dataset.v; S.activeDispute=null; S.search='';$('#search').value='';
+  [...$('#nav').children].forEach(x=>x.classList&&x.classList.toggle('on',x===b));
+  $('#ptitle').childNodes[0].nodeValue=TITLES[S.view][0]; $('#psub').textContent=TITLES[S.view][1];
+  render();});
+$('#search').addEventListener('input',e=>{S.search=e.target.value.toLowerCase();render();});
+
+/* ===== ROUTER ===== */
+function render(){
+  const c=$('#content');
+  if(S.view==='overview')renderOverview(c);
+  else if(S.view==='trades')renderTrades(c);
+  else if(S.view==='disputes')S.activeDispute?renderDisputeDetail(c):renderDisputes(c);
+  else if(S.view==='users')renderUsers(c);
+  else if(S.view==='offers')renderOffers(c);
+  else renderSettings(c);
+}
+
+/* ===== OVERVIEW ===== */
+function renderOverview(c){
+  const k=S.kpi;
+  const statusCounts={escrow:0,paid:0,completed:0,disputed:0};
+  S.trades.forEach(t=>statusCounts[t.status]++);
+  c.innerHTML=`
+  <div class="kpis">
+    ${kpiCard('24h volume',fmt$(k.volume),k.volTrend,'%','#23A86E','M2 17l6-6 4 4 8-8')}
+    ${kpiCard('Held in escrow',fmt$(k.escrow),k.escTrend,'%','#5AA9E2','rect')}
+    ${kpiCard('Total users',k.users.toLocaleString(),k.userTrend,' today','#9B7AD6','users')}
+    ${kpiCard('24h fees',fmt$(k.fees),k.feeTrend,'%','#E2B45A','coin')}
+  </div>
+  <div class="grid2">
+    <div class="card"><div class="card-h"><h3>Trading volume</h3><span class="sub">last 14 days · $M</span></div>
+      <canvas id="volChart" height="220"></canvas></div>
+    <div class="card"><div class="card-h"><h3>Live trades by status</h3><span class="sub">${S.trades.length} recent</span></div>
+      <div class="statusbars">
+        ${statusBar('In escrow',statusCounts.escrow,'#5AA9E2')}
+        ${statusBar('Awaiting release',statusCounts.paid,'#E2B45A')}
+        ${statusBar('Completed',statusCounts.completed,'#3FD98C')}
+        ${statusBar('Disputed',statusCounts.disputed,'#FF6B4A')}
+      </div></div>
+  </div>
+  <div class="grid2">
+    <div class="card"><div class="card-h"><h3>Activity feed</h3><span class="sub">live</span></div>
+      <div class="feed" id="feed"></div></div>
+    <div class="card"><div class="card-h"><h3>Needs attention</h3></div>
+      <div class="statusbars">
+        ${attn('Open disputes',S.disputes.filter(d=>d.status==='open').length,'#FF6B4A','disputes')}
+        ${attn('Pending KYC reviews',S.users.filter(u=>u.kyc==='pending').length,'#E2B45A','users')}
+        ${attn('Flagged offers',S.offers.filter(o=>o.status==='flagged').length,'#E2B45A','offers')}
+      </div></div>
+  </div>`;
+  drawVolChart();
+  renderFeed();
+  c.querySelectorAll('[data-goto]').forEach(b=>b.addEventListener('click',()=>gotoView(b.dataset.goto)));
+}
+function kpiCard(l,v,trend,unit,color,icon){
+  const dir=trend>0?'up':(trend<0?'down':'flat');
+  const arrow=trend>0?'▲':(trend<0?'▼':'•');
+  const ics={'M2 17l6-6 4 4 8-8':'<path d="M2 17l6-6 4 4 8-8"/><path d="M20 7h-4M20 7v4"/>','rect':'<rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/>','users':'<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>','coin':'<circle cx="12" cy="12" r="9"/><path d="M12 7v10M9 9.5c0-1 1.3-1.5 3-1.5s3 .8 3 2-1.5 1.5-3 1.5-3 .5-3 1.5 1.3 2 3 2 3-.5 3-1.5"/>'};
+  return `<div class="kpi"><div class="ic" style="background:${color}22;color:${color}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">${ics[icon]||ics.coin}</svg></div>
+    <div class="l">${l}</div><div class="v">${v}</div>
+    <div class="t ${dir}">${arrow} ${trend>0?'+':''}${trend}${unit}</div></div>`;
+}
+function statusBar(label,n,color){
+  const pct=Math.round(n/Math.max(1,S.trades.length)*100);
+  return `<div class="sb"><div class="top"><span>${label}</span><span class="n" style="color:${color}">${n}</span></div>
+    <div class="track"><div class="fill" style="width:${pct}%;background:${color}"></div></div></div>`;
+}
+function attn(label,n,color,goto){
+  return `<div class="sb" style="cursor:pointer" data-goto="${goto}"><div class="top"><span>${label}</span><span class="n" style="color:${n?color:'var(--muted)'}">${n} →</span></div>
+    <div class="track"><div class="fill" style="width:${Math.min(100,n*18)}%;background:${color}"></div></div></div>`;
+}
+function gotoView(v){const btn=[...$('#nav').children].find(x=>x.dataset&&x.dataset.v===v);if(btn)btn.click();}
+function renderFeed(){
+  const feed=$('#feed'); if(!feed)return;
+  const items=[
+    ['#3FD98C','<b>VCH-2288</b> completed — 1.5 ETH released','14m'],
+    ['#FF6B4A','<b>DSP-118</b> dispute opened on VCH-2287','22m'],
+    ['#5AA9E2','<b>VCH-2290</b> buyer marked payment sent','6m'],
+    ['#9B7AD6','New user <b>priya_v</b> submitted KYC','18m'],
+    ['#E2B45A','Offer <b>OFR-768</b> auto-flagged (price 9% off market)','35m'],
+    ['#3FD98C','<b>VCH-2285</b> completed — 1,200 USDT released','31m'],
+  ];
+  feed.innerHTML=items.map(i=>`<div class="fe"><span class="dot" style="background:${i[0]}"></span><span>${i[1]}</span><span class="tm">${i[2]}</span></div>`).join('');
+}
+function drawVolChart(){
+  const cv=$('#volChart'); if(!cv)return;
+  const ctx=cv.getContext('2d'); const W=cv.clientWidth,H=220;
+  cv.width=W*devicePixelRatio; cv.height=H*devicePixelRatio; ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
+  ctx.clearRect(0,0,W,H);
+  const d=S.volSeries, max=Math.max(...d)*1.15, padB=22,padT=8;
+  const bw=W/d.length;
+  for(let g=0;g<=3;g++){const y=padT+(H-padB-padT)*g/3;ctx.strokeStyle='rgba(31,58,44,.7)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+  d.forEach((v,i)=>{
+    const bh=(v/max)*(H-padB-padT); const x=i*bw+bw*0.18; const w=bw*0.64; const y=H-padB-bh;
+    const grad=ctx.createLinearGradient(0,y,0,H-padB);grad.addColorStop(0,'#3FD98C');grad.addColorStop(1,'rgba(63,217,140,.25)');
+    ctx.fillStyle=i===d.length-1?'#3FD98C':grad; ctx.beginPath();
+    if(ctx.roundRect)ctx.roundRect(x,y,w,bh,4);else ctx.rect(x,y,w,bh); ctx.fill();
+  });
+  ctx.fillStyle='#587063';ctx.font='10px "Space Mono"';ctx.fillText('14d ago',2,H-6);ctx.textAlign='right';ctx.fillText('today',W-2,H-6);ctx.textAlign='left';
+}
+
+/* ===== TRADES ===== */
+function renderTrades(c){
+  c.innerHTML=`
+  <div class="toolbar"><div class="ftabs" id="tFilter">
+    ${['all','escrow','paid','completed','disputed'].map(f=>`<button data-f="${f}" class="${S.tradeFilter===f?'on':''}">${f[0].toUpperCase()+f.slice(1)}</button>`).join('')}
+  </div></div>
+  <div class="tbl"><table><thead><tr><th>Trade</th><th>Buyer</th><th>Seller</th><th>Amount</th><th>Method</th><th>Status</th><th></th></tr></thead>
+  <tbody id="tradeRows"></tbody></table></div>`;
+  $('#tFilter').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;S.tradeFilter=b.dataset.f;renderTrades(c);});
+  const rows=$('#tradeRows');
+  let list=S.trades.filter(t=>S.tradeFilter==='all'||t.status===S.tradeFilter);
+  if(S.search)list=list.filter(t=>(t.id+t.buyer+t.seller+t.crypto).toLowerCase().includes(S.search));
+  if(!list.length){rows.innerHTML='<tr><td colspan="7"><div class="empty">No trades match.</div></td></tr>';return;}
+  const smap={escrow:['blue','In escrow'],paid:['gold','Awaiting release'],completed:['green','Completed'],disputed:['coral','Disputed']};
+  rows.innerHTML=list.map(t=>`<tr>
+    <td class="mono-c"><b>${t.id}</b><div style="color:var(--faint);font-size:11px">${t.time}</div></td>
+    <td class="cell-u"><span class="uav" style="background:${colorFor(t.buyer)}">${initials(t.buyer)}</span><span class="nm">${t.buyer}</span></td>
+    <td class="cell-u"><span class="uav" style="background:${colorFor(t.seller)}">${initials(t.seller)}</span><span class="nm">${t.seller}</span></td>
+    <td class="mono-c">${t.amt} ${t.crypto}<div style="color:var(--faint);font-size:11px">${fmt$(t.fiat)}</div></td>
+    <td class="mono-c" style="color:var(--muted)">${t.method}</td>
+    <td><span class="pill ${smap[t.status][0]}"><span class="d"></span>${smap[t.status][1]}</span></td>
+    <td class="row-act">${t.status==='disputed'?'<button class="tbtn b" data-disp="'+t.id+'">Review</button>':'<button class="tbtn b">View</button>'}</td>
+  </tr>`).join('');
+  rows.querySelectorAll('[data-disp]').forEach(b=>b.addEventListener('click',()=>{
+    const d=S.disputes.find(x=>x.tradeId===b.dataset.disp&&x.status==='open');
+    if(d){gotoView('disputes');S.activeDispute=d.id;render();}else toast('No open dispute for this trade','warn');}));
+}
+
+/* ===== DISPUTES ===== */
+function renderDisputes(c){
+  c.innerHTML=`
+  <div class="toolbar"><div class="ftabs" id="dFilter">
+    <button data-f="open" class="${S.dispFilter==='open'?'on':''}">Open</button>
+    <button data-f="resolved" class="${S.dispFilter==='resolved'?'on':''}">Resolved</button>
+  </div></div>
+  <div class="tbl"><table><thead><tr><th>Dispute</th><th>Parties</th><th>Held in escrow</th><th>Reason</th><th>Age</th><th>Status</th><th></th></tr></thead>
+  <tbody id="dispRows"></tbody></table></div>`;
+  $('#dFilter').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;S.dispFilter=b.dataset.f;renderDisputes(c);});
+  const rows=$('#dispRows');
+  let list=S.disputes.filter(d=>S.dispFilter==='open'?d.status==='open':d.status!=='open');
+  if(S.search)list=list.filter(d=>(d.id+d.buyer+d.seller+d.tradeId).toLowerCase().includes(S.search));
+  if(!list.length){rows.innerHTML=`<tr><td colspan="7"><div class="empty">${S.dispFilter==='open'?'No open disputes — all clear. ✓':'No resolved disputes yet.'}</div></td></tr>`;return;}
+  rows.innerHTML=list.map(d=>{
+    const rb=d.raisedBy==='buyer';
+    const st=d.status==='open'?'<span class="pill coral"><span class="d"></span>Open</span>':
+      (d.status==='buyer'?'<span class="pill blue"><span class="d"></span>Released to buyer</span>':
+       d.status==='seller'?'<span class="pill green"><span class="d"></span>Refunded seller</span>':'<span class="pill grey"><span class="d"></span>Info requested</span>');
+    return `<tr class="${d.status==='open'?'click':''}" ${d.status==='open'?'data-id="'+d.id+'"':''}>
+      <td class="mono-c"><b>${d.id}</b><div style="color:var(--faint);font-size:11px">${d.tradeId}</div></td>
+      <td><div style="font-size:13px"><span style="color:var(--coral)">${d.buyer}</span> <span style="color:var(--faint)">vs</span> <span style="color:var(--emerald-br)">${d.seller}</span></div></td>
+      <td class="mono-c">${d.amt} ${d.crypto}<div style="color:var(--faint);font-size:11px">${fmt$(d.fiat)}</div></td>
+      <td style="font-size:12.5px;color:var(--muted)">Raised by ${rb?'buyer':'seller'}</td>
+      <td class="mono-c" style="color:var(--muted)">${d.age}</td>
+      <td>${st}</td>
+      <td class="row-act">${d.status==='open'?'<button class="tbtn g" data-id="'+d.id+'">Resolve →</button>':''}</td>
+    </tr>`;}).join('');
+  rows.querySelectorAll('[data-id]').forEach(b=>b.addEventListener('click',()=>{S.activeDispute=b.dataset.id||b.closest('tr').dataset.id;render();}));
+}
+function renderDisputeDetail(c){
+  const d=S.disputes.find(x=>x.id===S.activeDispute);
+  if(!d){S.activeDispute=null;return renderDisputes(c);}
+  c.innerHTML=`
+  <button class="back" id="back">← All disputes</button>
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px">
+    <div class="pt" style="font-size:24px">${d.id}<small>Trade ${d.tradeId} · raised by ${d.raisedBy} · ${d.age} ago</small></div>
+    <span class="pill coral" style="margin-top:4px"><span class="d"></span>Open</span>
+  </div>
+  <div class="disp-summary">
+    <div class="ds"><div class="k">Held in escrow</div><div class="v">${d.amt} ${d.crypto} · ${fmt$(d.fiat)}</div></div>
+    <div class="ds"><div class="k">Payment method</div><div class="v">${d.method}</div></div>
+    <div class="ds"><div class="k">Buyer</div><div class="v" style="color:var(--coral)">${d.buyer}</div></div>
+    <div class="ds"><div class="k">Seller</div><div class="v" style="color:var(--emerald-br)">${d.seller}</div></div>
+  </div>
+  <div class="disp-grid">
+    <div>
+      <div class="claims">
+        <div class="claim buyer"><div class="who">⬤ BUYER · ${d.buyer}</div><p>${d.claimBuyer||'<i>No statement provided.</i>'}</p>
+          ${d.evidence.length?`<div class="evidence">${d.evidence.map(ev=>`<span class="ev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>${ev}</span>`).join('')}</div>`:''}</div>
+        <div class="claim seller"><div class="who">⬤ SELLER · ${d.seller}</div><p>${d.claimSeller||'<i>Seller has not responded.</i>'}</p></div>
+      </div>
+      <div class="card"><div class="card-h"><h3>Trade transcript</h3><span class="sub">read-only</span></div>
+        <div class="transcript">${d.chat.map(m=>{
+          if(m[0]==='sys')return `<div class="tmsg sys">${m[1]}</div>`;
+          return `<div class="tmsg ${m[0]}"><span class="who">${m[0]==='b'?d.buyer+' (buyer)':d.seller+' (seller)'}</span>${m[1]}</div>`;
+        }).join('')}</div></div>
+    </div>
+    <div class="resolve">
+      <h4>Resolve dispute</h4>
+      <p class="note">Escrow is holding <b>${d.amt} ${d.crypto}</b>. Choose where it goes. This action is final and notifies both parties.</p>
+      <div class="resolve-actions">
+        <button class="rbtn toBuyer" data-act="buyer"><span class="ric"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 6 9 17l-5-5"/></svg></span><span><span class="rt">Release to buyer</span><span class="rd">${d.buyer} receives ${d.amt} ${d.crypto}</span></span></button>
+        <button class="rbtn toSeller" data-act="seller"><span class="ric"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 5 5v2"/></svg></span><span><span class="rt">Refund to seller</span><span class="rd">${d.amt} ${d.crypto} returns to ${d.seller}</span></span></button>
+        <button class="rbtn info" data-act="info"><span class="ric"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg></span><span><span class="rt">Request more info</span><span class="rd">Ask both parties for evidence</span></span></button>
+      </div>
+    </div>
+  </div>`;
+  $('#back').addEventListener('click',()=>{S.activeDispute=null;render();});
+  c.querySelectorAll('[data-act]').forEach(b=>b.addEventListener('click',()=>resolveDispute(d,b.dataset.act)));
+}
+function resolveDispute(d,act){
+  if(act==='info'){toast('Info requested from both parties · '+d.id,'warn');S.activeDispute=null;render();return;}
+  d.status=act;
+  const t=S.trades.find(x=>x.tradeId===d.tradeId)||S.trades.find(x=>x.id===d.tradeId);
+  if(t)t.status='completed';
+  toast(act==='buyer'?`Escrow released to ${d.buyer} · ${d.amt} ${d.crypto}`:`Escrow refunded to ${d.seller} · ${d.amt} ${d.crypto}`);
+  S.activeDispute=null; refreshBadges(); render();
+}
+
+/* ===== USERS ===== */
+function renderUsers(c){
+  c.innerHTML=`
+  <div class="toolbar"><div class="ftabs" id="uFilter">
+    ${['all','pending','verified','unverified','banned'].map(f=>`<button data-f="${f}" class="${S.userFilter===f?'on':''}">${f[0].toUpperCase()+f.slice(1)}</button>`).join('')}
+  </div></div>
+  <div class="tbl"><table><thead><tr><th>User</th><th>Country</th><th>Joined</th><th>Trades</th><th>Rating</th><th>KYC</th><th></th></tr></thead>
+  <tbody id="userRows"></tbody></table></div>`;
+  $('#uFilter').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;S.userFilter=b.dataset.f;renderUsers(c);});
+  const rows=$('#userRows');
+  let list=S.users.filter(u=>S.userFilter==='all'||u.kyc===S.userFilter);
+  if(S.search)list=list.filter(u=>(u.name+u.country).toLowerCase().includes(S.search));
+  if(!list.length){rows.innerHTML='<tr><td colspan="7"><div class="empty">No users match.</div></td></tr>';return;}
+  const kmap={verified:['green','Verified'],pending:['gold','Pending review'],unverified:['grey','Unverified'],banned:['coral','Banned']};
+  rows.innerHTML=list.map(u=>`<tr>
+    <td class="cell-u"><span class="uav" style="background:${colorFor(u.name)}">${initials(u.name)}</span><div><div class="nm">${u.name}</div><div class="sub">${u.vol} volume</div></div></td>
+    <td style="font-size:13px;color:var(--muted)">${u.country}</td>
+    <td class="mono-c" style="color:var(--muted)">${u.joined}</td>
+    <td class="mono-c">${u.trades.toLocaleString()}</td>
+    <td class="mono-c">${u.rating?'★ '+u.rating.toFixed(2):'—'}</td>
+    <td><span class="pill ${kmap[u.kyc][0]}"><span class="d"></span>${kmap[u.kyc][1]}</span></td>
+    <td class="row-act">
+      ${u.kyc==='pending'?`<button class="tbtn g" data-app="${u.name}">Approve</button><button class="tbtn r" data-rej="${u.name}">Reject</button>`:
+        u.kyc==='banned'?`<button class="tbtn b" data-unban="${u.name}">Unban</button>`:
+        `<button class="tbtn r" data-ban="${u.name}">Ban</button>`}
+    </td></tr>`).join('');
+  rows.querySelectorAll('[data-app]').forEach(b=>b.addEventListener('click',()=>{setKyc(b.dataset.app,'verified');toast('KYC approved · '+b.dataset.app+' is now verified');}));
+  rows.querySelectorAll('[data-rej]').forEach(b=>b.addEventListener('click',()=>{setKyc(b.dataset.rej,'unverified');toast('KYC rejected · '+b.dataset.rej,'warn');}));
+  rows.querySelectorAll('[data-ban]').forEach(b=>b.addEventListener('click',()=>{setKyc(b.dataset.ban,'banned');toast(b.dataset.ban+' has been banned','bad');}));
+  rows.querySelectorAll('[data-unban]').forEach(b=>b.addEventListener('click',()=>{setKyc(b.dataset.unban,'unverified');toast(b.dataset.unban+' unbanned','warn');}));
+}
+function setKyc(name,status){const u=S.users.find(x=>x.name===name);if(u)u.kyc=status;refreshBadges();renderUsers($('#content'));}
+
+/* ===== OFFERS ===== */
+function renderOffers(c){
+  c.innerHTML=`<div class="tbl"><table><thead><tr><th>Offer</th><th>Trader</th><th>Side</th><th>Price</th><th>Methods</th><th>Limits</th><th>Status</th><th></th></tr></thead>
+  <tbody id="offRows"></tbody></table></div>`;
+  const rows=$('#offRows');
+  let list=S.offers.slice();
+  if(S.search)list=list.filter(o=>(o.id+o.trader+o.crypto).toLowerCase().includes(S.search));
+  if(!list.length){rows.innerHTML='<tr><td colspan="8"><div class="empty">No offers match.</div></td></tr>';return;}
+  rows.innerHTML=list.map(o=>`<tr>
+    <td class="mono-c"><b>${o.id}</b></td>
+    <td class="cell-u"><span class="uav" style="background:${colorFor(o.trader)}">${initials(o.trader)}</span><span class="nm">${o.trader}</span></td>
+    <td><span class="pill ${o.side==='sell'?'coral':'green'}"><span class="d"></span>${o.side.toUpperCase()} ${o.crypto}</span></td>
+    <td class="mono-c">${fmt$(o.price)}</td>
+    <td style="font-size:12px;color:var(--muted)">${o.methods.join(', ')}</td>
+    <td class="mono-c" style="color:var(--muted)">${o.lim}</td>
+    <td>${o.status==='flagged'?'<span class="pill gold"><span class="d"></span>Flagged</span>':'<span class="pill green"><span class="d"></span>Active</span>'}</td>
+    <td class="row-act">${o.status==='flagged'?`<button class="tbtn g" data-ok="${o.id}">Approve</button>`:''}<button class="tbtn r" data-rm="${o.id}">Remove</button></td>
+  </tr>`).join('');
+  rows.querySelectorAll('[data-ok]').forEach(b=>b.addEventListener('click',()=>{const o=S.offers.find(x=>x.id===b.dataset.ok);if(o)o.status='active';refreshBadges();renderOffers(c);toast('Offer cleared · '+b.dataset.ok);}));
+  rows.querySelectorAll('[data-rm]').forEach(b=>b.addEventListener('click',()=>{S.offers=S.offers.filter(x=>x.id!==b.dataset.rm);renderOffers(c);toast('Offer removed · '+b.dataset.rm,'bad');}));
+}
+
+/* ===== SETTINGS ===== */
+function renderSettings(c){
+  c.innerHTML=`<div style="max-width:680px">
+    <div class="card" style="margin-bottom:14px"><div class="card-h"><h3>Fees</h3></div>
+      <div class="set-row"><div><div class="k">Maker fee</div><div class="d">Charged to the trader posting an offer</div></div><input class="set-input" id="fMaker" value="0.20%"></div>
+      <div class="set-row"><div><div class="k">Taker fee</div><div class="d">Charged to the trader accepting an offer</div></div><input class="set-input" id="fTaker" value="0.55%"></div>
+      <div class="set-row"><div><div class="k">Buyer fee</div><div class="d">Fee charged to buyers on completion</div></div><input class="set-input" id="fBuyer" value="0.00%"></div>
+    </div>
+    <div class="card" style="margin-bottom:14px"><div class="card-h"><h3>Risk controls</h3></div>
+      <div class="set-row"><div><div class="k">Require KYC before first trade</div><div class="d">Block unverified accounts from trading</div></div><button class="toggle-sw on" data-t></button></div>
+      <div class="set-row"><div><div class="k">Auto-flag offers off-market</div><div class="d">Flag offers priced beyond ±5% of spot</div></div><button class="toggle-sw on" data-t></button></div>
+      <div class="set-row"><div><div class="k">Auto-escalate stale disputes</div><div class="d">Route disputes idle &gt; 6h to a senior admin</div></div><button class="toggle-sw" data-t></button></div>
+      <div class="set-row"><div><div class="k">Payment window</div><div class="d">Default time a buyer has to pay</div></div><input class="set-input" id="fWindow" value="15 min"></div>
+    </div>
+    <button class="tbtn g" id="saveBtn" style="padding:12px 24px;font-size:14px">Save changes</button>
+  </div>`;
+  c.querySelectorAll('[data-t]').forEach(b=>b.addEventListener('click',()=>b.classList.toggle('on')));
+  $('#saveBtn').addEventListener('click',()=>toast('Settings saved'));
+}
+
+/* ===== LIVE FLICKER ===== */
+function tick(){
+  S.kpi.volume+=Math.floor((Math.random()-0.3)*2400);
+  S.kpi.fees+=Math.floor((Math.random()-0.3)*40);
+  if(S.view==='overview'){const v=$('.kpi .v');if(v)v.textContent=fmt$(S.kpi.volume);}
+}
+
+/* ===== INIT ===== */
+refreshBadges(); render();
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+if(!reduce)setInterval(tick,3000);
+addEventListener('resize',()=>{if(S.view==='overview')drawVolChart();});
+</script>
+</body>
+</html>
