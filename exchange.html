@@ -122,6 +122,19 @@ button{font-family:inherit;cursor:pointer}
 .copy-btn{font-family:var(--mono);font-size:10px;background:var(--panel);border:1px solid var(--line);color:var(--muted);padding:3px 8px;border-radius:5px;transition:.15s}
 .copy-btn:hover{border-color:var(--emerald-br);color:var(--emerald-br)}
 .pay-notice{background:rgba(226,180,90,.08);border:1px solid rgba(226,180,90,.2);border-radius:10px;padding:11px 14px;font-size:12.5px;color:var(--gold);margin-bottom:16px;display:flex;gap:10px;align-items:flex-start;line-height:1.5}
+/* wallet address input */
+.wallet-field{margin-bottom:16px}
+.wallet-field label{font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);display:block;margin-bottom:8px}
+.wallet-input-wrap{position:relative}
+.wallet-input-wrap input{width:100%;background:var(--bg);border:1.5px solid var(--line);border-radius:11px;padding:12px 42px 12px 14px;color:var(--paper);font-family:var(--mono);font-size:13px;outline:none;transition:.2s}
+.wallet-input-wrap input:focus{border-color:var(--emerald-br);box-shadow:0 0 0 3px var(--emerald-tint)}
+.wallet-input-wrap input.bad{border-color:var(--coral);box-shadow:0 0 0 3px rgba(255,107,74,.12)}
+.wallet-input-wrap input::placeholder{color:var(--faint)}
+.wallet-paste{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:var(--panel);border:1px solid var(--line);border-radius:6px;color:var(--muted);font-family:var(--mono);font-size:10px;padding:3px 8px;transition:.15s}
+.wallet-paste:hover{border-color:var(--emerald-br);color:var(--emerald-br)}
+.wallet-err{font-family:var(--mono);font-size:11px;color:var(--coral);margin-top:5px;display:none}
+.wallet-err.show{display:block}
+
 /* proof upload */
 .proof-box{border:1.5px dashed var(--line);border-radius:12px;padding:18px;text-align:center;cursor:pointer;transition:.2s;margin-bottom:14px;position:relative}
 .proof-box:hover{border-color:var(--emerald-br);background:var(--emerald-tint)}
@@ -533,6 +546,15 @@ function renderStep2(){
         `}
       </div>
       <div class="pay-notice">⚠ ${isBuy?'Use the exact reference — payments without a reference may be delayed.':'Send only '+S.crypto+' to this address. Sending a different coin will result in permanent loss.'}</div>
+      ${isBuy?`
+      <div class="wallet-field">
+        <label for="destWallet">Your ${S.crypto} wallet address <span style="color:var(--coral)">*</span></label>
+        <div class="wallet-input-wrap">
+          <input id="destWallet" type="text" placeholder="${S.crypto==='BTC'?'bc1q… or 1… or 3…':S.crypto==='ETH'?'0x…':'TRC20 / ERC20 address'}" value="${S.destWallet||''}">
+          <button class="wallet-paste" id="pasteWallet" type="button">paste</button>
+        </div>
+        <div class="wallet-err" id="walletErr">Enter a valid ${S.crypto} wallet address</div>
+      </div>`:''}
       <div class="proof-label">Proof of payment</div>
       <div class="proof-preview" id="proofPreview"><img id="proofImg" src="" alt="proof"><button class="pr-rm" id="proofRm">✕ Remove</button></div>
       <div class="proof-box" id="proofBox">
@@ -550,6 +572,34 @@ function renderStep2(){
     navigator.clipboard&&navigator.clipboard.writeText(b.dataset.c).catch(()=>{});
     b.textContent='copied ✓'; setTimeout(()=>b.textContent='copy',1400);
   }));
+  /* wallet address (buy only) */
+  const isBuyFlow=S.side==='buy';
+  let walletOk=!isBuyFlow;
+  let proofOk=false;
+  function checkReady(){
+    const btn=document.getElementById('paidBtn'); if(!btn)return;
+    const ready=walletOk&&proofOk;
+    btn.disabled=!ready; btn.style.opacity=ready?'1':'.4';
+    btn.textContent=ready?'Payment made ✓':(!walletOk?'Enter wallet address':'Upload proof to continue');
+  }
+  if(isBuyFlow){
+    const wIn=document.getElementById('destWallet');
+    const wErr=document.getElementById('walletErr');
+    function validateWallet(){
+      const v=wIn.value.trim();
+      S.destWallet=v;
+      const ok=v.length>=20;
+      wIn.classList.toggle('bad',!ok&&v.length>0);
+      wErr.classList.toggle('show',!ok&&v.length>0);
+      walletOk=ok; checkReady();
+    }
+    wIn.addEventListener('input',validateWallet);
+    document.getElementById('pasteWallet').addEventListener('click',()=>{
+      navigator.clipboard&&navigator.clipboard.readText().then(t=>{wIn.value=t.trim();validateWallet();}).catch(()=>{});
+    });
+    if(S.destWallet){wIn.value=S.destWallet;validateWallet();}
+  }
+
   /* proof of payment upload */
   document.getElementById('proofFile').addEventListener('change',function(){
     const file=this.files[0]; if(!file)return;
@@ -558,8 +608,7 @@ function renderStep2(){
       document.getElementById('proofImg').src=e.target.result;
       document.getElementById('proofPreview').style.display='block';
       document.getElementById('proofBox').style.display='none';
-      const btn=document.getElementById('paidBtn');
-      btn.disabled=false; btn.style.opacity='1'; btn.textContent='Payment made ✓';
+      proofOk=true; checkReady();
     };
     reader.readAsDataURL(file);
   });
@@ -567,8 +616,7 @@ function renderStep2(){
     document.getElementById('proofFile').value='';
     document.getElementById('proofPreview').style.display='none';
     document.getElementById('proofBox').style.display='block';
-    const btn=document.getElementById('paidBtn');
-    btn.disabled=true; btn.style.opacity='.4'; btn.textContent='Upload proof to continue';
+    proofOk=false; checkReady();
   });
 
   document.getElementById('paidBtn').addEventListener('click',goToStep3);
