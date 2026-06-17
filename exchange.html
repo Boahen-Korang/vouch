@@ -439,7 +439,7 @@ const FALLBACK_RATES = { GHS:15.3,NGN:1580,KES:130,ZAR:18.5,UGX:3750,TZS:2680,XO
 
 /* ===== STATE ===== */
 const S = {
-  tab:'trade', side:'buy', crypto:'BTC', unit:'fiat', amount:500, step:0,
+  tab:'trade', side:'buy', crypto:'BTC', unit:'fiat', amount:0, step:0,
   timerSec:0, timerInt:null, tradeRef:null, cryptoAmt:0, fiatAmt:0, proofData:null,
   fiatCurrency: localStorage.getItem('vouch_fiatCurrency')||'GHS',
   fiatRate: FALLBACK_RATES[localStorage.getItem('vouch_fiatCurrency')||'GHS']||15.3,
