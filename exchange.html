@@ -39,6 +39,10 @@ button{font-family:inherit;cursor:pointer}
 .tabs button:hover{color:var(--paper)}
 .tabs button.on{background:var(--panel);color:var(--paper)}
 .tb-right{margin-left:auto;display:flex;align-items:center;gap:12px}
+.tb-back{font-family:var(--mono);font-size:11px;color:var(--faint);text-decoration:none;transition:.15s;padding:6px 10px;border-radius:8px;border:1px solid var(--line)}
+.tb-back:hover{color:var(--paper);border-color:var(--muted)}
+.tb-signout{font-family:var(--mono);font-size:11px;color:var(--coral);background:rgba(255,107,74,.08);border:1px solid rgba(255,107,74,.25);border-radius:8px;padding:6px 12px;cursor:pointer;transition:.15s}
+.tb-signout:hover{background:rgba(255,107,74,.15);border-color:var(--coral)}
 .pricepill{font-family:var(--mono);font-size:12.5px;display:flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--line);padding:7px 12px;border-radius:9px}
 .pricepill .sym{color:var(--gold);font-weight:700}.pricepill .val{font-weight:700}
 .pricepill .chg.up{color:var(--emerald-br)}.pricepill .chg.down{color:var(--coral)}
@@ -301,6 +305,8 @@ button{font-family:inherit;cursor:pointer}
     <button data-tab="orders">My orders</button>
   </div>
   <div class="tb-right">
+    <a href="index.html" class="tb-back">← Back</a>
+    <button class="tb-signout" id="signoutBtn">Sign out</button>
   </div>
 </div></div>
 
@@ -975,6 +981,13 @@ function priceTick(){
     if(rl)rl.textContent='@ '+fmtLocal(S.prices[S.crypto])+' / '+S.crypto;
   }
 }
+
+/* ===== SIGN OUT ===== */
+document.getElementById('signoutBtn').addEventListener('click',async()=>{
+  if(sb) await sb.auth.signOut().catch(()=>{});
+  localStorage.removeItem('vouch_session');
+  window.location.href='login.html';
+});
 
 /* ===== INIT ===== */
 renderTopbar(); render();
