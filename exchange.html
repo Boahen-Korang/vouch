@@ -287,6 +287,7 @@ button{font-family:inherit;cursor:pointer}
 }
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 </head>
 <body>
 <div class="app">
@@ -330,6 +331,31 @@ button{font-family:inherit;cursor:pointer}
 "use strict";
 const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const $=s=>document.querySelector(s);
+
+/* ===== EMAIL NOTIFICATIONS ===== */
+const EMAILJS_PUBLIC_KEY  = 'YOUR_PUBLIC_KEY';
+const EMAILJS_SERVICE_ID  = 'YOUR_SERVICE_ID';
+const EMAILJS_TEMPLATE_ID = 'YOUR_TEMPLATE_ID';
+if(typeof emailjs!=='undefined' && EMAILJS_PUBLIC_KEY!=='YOUR_PUBLIC_KEY'){
+  emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY });
+}
+function notifyAdmin(order){
+  if(typeof emailjs==='undefined'||EMAILJS_PUBLIC_KEY==='YOUR_PUBLIC_KEY')return;
+  const fc=FIAT_CURRENCIES[order.fiatCurrency]||{sym:'$',name:'USD'};
+  const localAmt=fc.sym+((order.fiatAmt||0)*(order.fiatRate||1)).toLocaleString('en-US',{maximumFractionDigits:0});
+  const side=order.side==='buy'?'BUY (user pays fiat)':'SELL (user sends crypto)';
+  const time=new Date(order.ts).toLocaleString('en-GB',{dateStyle:'medium',timeStyle:'short'});
+  const params={
+    order_ref:   order.id,
+    order_side:  side,
+    crypto:      order.crypto,
+    crypto_amt:  (order.cryptoAmt||0).toFixed(6)+' '+order.crypto,
+    fiat_amt:    localAmt+' ('+( (order.fiatAmt||0).toFixed(2) )+' USD)',
+    username:    order.username||'Anonymous',
+    time:        time,
+  };
+  emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, params).catch(()=>{});
+}
 
 /* ===== ADMIN CONFIG (rates + payment details) ===== */
 const CONFIG = {
@@ -724,6 +750,7 @@ function renderStep2(){
     if(idx>=0)ao[idx]=adminEntry; else ao.unshift(adminEntry);
     localStorage.setItem('vouch_orders',JSON.stringify(ao));
     if(BC)BC.postMessage({type:'order',order:adminEntry});
+    notifyAdmin(adminEntry);
     document.getElementById('phase2').style.display='';
     attachPhase2();
     checkReady();
