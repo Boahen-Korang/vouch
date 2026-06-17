@@ -301,7 +301,7 @@ function toast(msg,kind){const t=el('div','toast'+(kind?' '+kind:''));t.innerHTM
 const S={
   view:'overview', search:'',
   trades:[], disputes:[], offers:[],
-  tradeFilter:'all', dispFilter:'open', userFilter:'all', activeDispute:null,
+  tradeFilter:'all', dispFilter:'open', userFilter:'all', activeDispute:null, chatUser:null,
 };
 
 /* ===== BADGES ===== */
@@ -334,7 +334,7 @@ const TITLES={overview:['Overview','Platform health at a glance'],trades:['Trade
   disputes:['Disputes','Resolve held-escrow conflicts'],users:['Users & KYC','Verify identities and manage accounts'],
   offers:['Rates','Live BTC · ETH · USDT exchange rates'],chat:['Chat','Message customers in real time'],settings:['Settings','Platform configuration']};
 $('#nav').addEventListener('click',e=>{const b=e.target.closest('.nav-item');if(!b)return;
-  S.view=b.dataset.v; S.activeDispute=null; S.search='';$('#search').value='';
+  S.view=b.dataset.v; S.activeDispute=null; S.search='';$('#search').value='';if(S.view!=='chat')S.chatUser=null;
   [...$('#nav').children].forEach(x=>x.classList&&x.classList.toggle('on',x===b));
   $('#ptitle').childNodes[0].nodeValue=TITLES[S.view][0]; $('#psub').textContent=TITLES[S.view][1];
   render();});
@@ -728,54 +728,70 @@ function renderRates(c){
 
 /* ===== CHAT VIEW ===== */
 function renderChatView(c){
-  const msgs=getMsgs();
-  /* mark customer messages as read */
-  saveMsgs(msgs.map(m=>{if(m.from==='customer')m.read=true;return m;}));
+  const allMsgs=getMsgs();
+  const accs=getAccounts();
+  /* default to first account */
+  if(!S.chatUser&&accs.length)S.chatUser=accs[0].username;
+  /* mark current user's incoming messages as read */
+  saveMsgs(allMsgs.map(m=>{if(m.from==='customer'&&m.username===S.chatUser)m.read=true;return m;}));
   refreshBadges();
-  const lastMsg=msgs.length?msgs[msgs.length-1]:null;
-  const unread=msgs.filter(m=>m.from==='customer'&&!m.read).length;
+  /* build sidebar: all registered users, with unread count + last message */
+  const sideItems=accs.map(a=>{
+    const uMsgs=allMsgs.filter(m=>(m.from==='customer'&&m.username===a.username)||(m.from==='admin'&&m.toUser===a.username));
+    const last=uMsgs.filter(m=>m.from!=='system').slice(-1)[0]||null;
+    const unread=allMsgs.filter(m=>m.from==='customer'&&m.username===a.username&&!m.read).length;
+    return{username:a.username,last,unread};
+  });
+  /* thread messages for selected user */
+  const thread=allMsgs.filter(m=>(m.from==='customer'&&m.username===S.chatUser)||(m.from==='admin'&&m.toUser===S.chatUser)||(m.from==='system'));
+  const ini=n=>(n||'?')[0].toUpperCase();
   c.innerHTML=`<div class="chat-layout">
     <div class="chat-sidebar">
       <div class="chat-sb-head">Conversations</div>
-      ${msgs.length||true?`<div class="chat-conv on">
-        <div class="cav">U</div>
-        <div style="min-width:0">
-          <div class="cnm">Customer</div>
-          <div class="cprev">${lastMsg&&lastMsg.from!=='system'?lastMsg.text:'Start of conversation'}</div>
-        </div>
-        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px">
-          <span class="ctime">${lastMsg?lastMsg.time:''}</span>
-          ${unread?`<span class="cunread">${unread}</span>`:''}
-        </div>
-      </div>`:'<div style="padding:18px;font-family:var(--mono);font-size:12px;color:var(--faint)">No conversations yet.</div>'}
+      ${accs.length?sideItems.map(si=>`
+        <div class="chat-conv${si.username===S.chatUser?' on':''}" data-cu="${si.username}" style="cursor:pointer">
+          <div class="cav" style="background:${colorFor(si.username)}">${ini(si.username)}</div>
+          <div style="min-width:0;flex:1">
+            <div class="cnm">${si.username}</div>
+            <div class="cprev">${si.last?si.last.text:'No messages yet'}</div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px">
+            <span class="ctime">${si.last?si.last.time:''}</span>
+            ${si.unread?`<span class="cunread">${si.unread}</span>`:''}
+          </div>
+        </div>`).join('')
+      :'<div style="padding:18px;font-family:var(--mono);font-size:12px;color:var(--faint)">No users registered yet.</div>'}
     </div>
     <div class="chat-main">
       <div class="chat-main-head">
-        <div class="cav">U</div>
-        <div class="info"><div class="nm">Customer</div><div class="st">Active now</div></div>
+        <div class="cav" style="background:${S.chatUser?colorFor(S.chatUser):'var(--faint)'}">${S.chatUser?ini(S.chatUser):'?'}</div>
+        <div class="info"><div class="nm">${S.chatUser||'Select a user'}</div><div class="st">Registered user</div></div>
       </div>
       <div class="chat-msgs" id="chatMsgs">
-        ${msgs.length?msgs.map(m=>{
+        ${S.chatUser?(thread.length?thread.map(m=>{
           if(m.from==='system')return`<div class="am sys-a">${m.text}</div>`;
           return`<div class="am ${m.from==='customer'?'cust':'adm'}">${m.text}<span class="at">${m.time}</span></div>`;
-        }).join(''):'<div class="chat-empty"><svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.5" opacity=".3"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>No messages yet. Waiting for customers.</div>'}
+        }).join(''):'<div class="chat-empty"><svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.5" opacity=".3"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>No messages from ${S.chatUser} yet.</div>')
+        :'<div class="chat-empty">Select a user to view their conversation.</div>'}
       </div>
       <div class="chat-input-row">
-        <input id="adminMsgIn" placeholder="Reply to customer…" autocomplete="off">
-        <button class="chat-send-btn" id="adminSendBtn"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg></button>
+        <input id="adminMsgIn" placeholder="Reply to ${S.chatUser||'user'}…" autocomplete="off" ${!S.chatUser?'disabled':''}>
+        <button class="chat-send-btn" id="adminSendBtn" ${!S.chatUser?'disabled':''} style="${!S.chatUser?'opacity:.4':''}"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg></button>
       </div>
     </div>
   </div>`;
-  /* scroll to bottom */
   const msgsEl=document.getElementById('chatMsgs');
   if(msgsEl)msgsEl.scrollTop=msgsEl.scrollHeight;
+  /* sidebar click */
+  c.querySelectorAll('[data-cu]').forEach(el=>el.addEventListener('click',()=>{S.chatUser=el.dataset.cu;renderChatView(c);}));
   function sendAdminMsg(){
+    if(!S.chatUser)return;
     const inp=document.getElementById('adminMsgIn');if(!inp)return;
     const text=inp.value.trim();if(!text)return;
     inp.value='';
-    const allMsgs=getMsgs();
-    const m={id:Date.now().toString(36),from:'admin',text,time:tnow(),read:false,ts:Date.now()};
-    allMsgs.push(m);saveMsgs(allMsgs);
+    const msgs2=getMsgs();
+    const m={id:Date.now().toString(36),from:'admin',toUser:S.chatUser,text,time:tnow(),read:false,ts:Date.now()};
+    msgs2.push(m);saveMsgs(msgs2);
     BC&&BC.postMessage({type:'message',m});
     renderChatView(c);
   }

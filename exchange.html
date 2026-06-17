@@ -928,9 +928,11 @@ function getMsgs(){return JSON.parse(localStorage.getItem(CHAT_KEY)||'[]');}
 function saveMsgs(m){localStorage.setItem(CHAT_KEY,JSON.stringify(m));}
 function tnow(){const d=new Date();return d.getHours().toString().padStart(2,'0')+':'+d.getMinutes().toString().padStart(2,'0');}
 
+function getChatUsername(){const s=JSON.parse(localStorage.getItem('vouch_session')||'{}');return s.username||'Guest';}
+
 function addCustMsg(text){
   const msgs=getMsgs();
-  const m={id:Date.now().toString(36),from:'customer',text,time:tnow(),read:false,ts:Date.now()};
+  const m={id:Date.now().toString(36),from:'customer',username:getChatUsername(),text,time:tnow(),read:false,ts:Date.now()};
   msgs.push(m);saveMsgs(msgs);
   BC&&BC.postMessage({type:'message',m});
   return m;
@@ -938,7 +940,12 @@ function addCustMsg(text){
 
 function renderChatMsgs(){
   const body=document.getElementById('cpBody');if(!body)return;
-  const msgs=getMsgs();
+  const me=getChatUsername();
+  const msgs=getMsgs().filter(m=>
+    (m.from==='customer'&&m.username===me)||
+    (m.from==='admin'&&(!m.toUser||m.toUser===me))||
+    m.from==='system'
+  );
   if(!msgs.length){body.innerHTML='<div class="cm sys-m">👋 Hi! How can we help you?</div>';return;}
   body.innerHTML=msgs.map(m=>{
     if(m.from==='system')return`<div class="cm sys-m">${m.text}</div>`;
@@ -948,12 +955,14 @@ function renderChatMsgs(){
 }
 
 function updateFabBadge(){
-  const unread=getMsgs().filter(m=>m.from==='admin'&&!m.read).length;
+  const me=getChatUsername();
+  const unread=getMsgs().filter(m=>m.from==='admin'&&(!m.toUser||m.toUser===me)&&!m.read).length;
   const b=document.getElementById('chatBadge');if(!b)return;
   b.textContent=unread;b.classList.toggle('show',unread>0);
 }
 function markAdminRead(){
-  saveMsgs(getMsgs().map(m=>{if(m.from==='admin')m.read=true;return m;}));
+  const me=getChatUsername();
+  saveMsgs(getMsgs().map(m=>{if(m.from==='admin'&&(!m.toUser||m.toUser===me))m.read=true;return m;}));
   updateFabBadge();
 }
 
