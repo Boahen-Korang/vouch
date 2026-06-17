@@ -74,6 +74,14 @@ button{font-family:inherit;cursor:pointer}
   backdrop-filter:blur(14px);animation:bob 7s ease-in-out infinite;will-change:transform}
 .tc-title{font-family:var(--display);font-weight:700;font-size:18px;margin-bottom:18px}
 
+/* currency selector */
+.cur-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;padding:9px 13px;background:var(--bg);border:1px solid var(--line);border-radius:10px}
+.cur-label{font-family:var(--mono);font-size:10px;letter-spacing:.07em;text-transform:uppercase;color:var(--faint)}
+.cur-sel{background:var(--panel);border:1px solid var(--line);border-radius:7px;color:var(--paper);font-family:var(--body);font-size:13px;font-weight:600;padding:5px 10px;outline:none;cursor:pointer;transition:.15s}
+.cur-sel:focus{border-color:var(--emerald-br)}
+.cur-live{font-family:var(--mono);font-size:10px;color:var(--emerald-br);display:flex;align-items:center;gap:5px}
+.cur-live .d{width:6px;height:6px;border-radius:50%;background:var(--emerald-br);animation:blink 2s infinite}
+
 /* side toggle */
 .side-tog{display:inline-flex;background:var(--bg);border:1px solid var(--line);border-radius:11px;padding:4px;gap:3px;margin-bottom:20px;width:100%}
 .side-tog button{flex:1;background:none;border:none;color:var(--muted);font-weight:700;font-size:15px;padding:10px;border-radius:8px;transition:.2s}
@@ -355,25 +363,60 @@ const CRYPTOS = {
   SOL:  { name:'Solana',   glyph:'◎',  color:'#9945FF', bg:'radial-gradient(circle at 35% 30%,#2a1040,#150820)', dec:4 },
 };
 
+/* ===== AFRICAN FIAT CURRENCIES ===== */
+const FIAT_CURRENCIES = {
+  GHS:{ name:'Ghanaian Cedi',      sym:'₵',   flag:'🇬🇭' },
+  NGN:{ name:'Nigerian Naira',     sym:'₦',   flag:'🇳🇬' },
+  KES:{ name:'Kenyan Shilling',    sym:'KSh', flag:'🇰🇪' },
+  ZAR:{ name:'South African Rand', sym:'R',   flag:'🇿🇦' },
+  UGX:{ name:'Ugandan Shilling',   sym:'USh', flag:'🇺🇬' },
+  TZS:{ name:'Tanzanian Shilling', sym:'TSh', flag:'🇹🇿' },
+  XOF:{ name:'West African CFA',   sym:'CFA', flag:'🌍' },
+  MAD:{ name:'Moroccan Dirham',    sym:'DH',  flag:'🇲🇦' },
+  EGP:{ name:'Egyptian Pound',     sym:'E£',  flag:'🇪🇬' },
+  ETB:{ name:'Ethiopian Birr',     sym:'Br',  flag:'🇪🇹' },
+  ZMW:{ name:'Zambian Kwacha',     sym:'K',   flag:'🇿🇲' },
+  RWF:{ name:'Rwandan Franc',      sym:'RF',  flag:'🇷🇼' },
+};
+/* fallback rates vs USD (used if API is unavailable) */
+const FALLBACK_RATES = { GHS:15.3,NGN:1580,KES:130,ZAR:18.5,UGX:3750,TZS:2680,XOF:615,MAD:10.1,EGP:48.5,ETB:56.8,ZMW:25.2,RWF:1320 };
+
 /* ===== STATE ===== */
 const S = {
   tab:'trade', side:'buy', crypto:'BTC', unit:'fiat', amount:500, step:0,
   timerSec:0, timerInt:null, tradeRef:null, cryptoAmt:0, fiatAmt:0, proofData:null,
+  fiatCurrency: localStorage.getItem('vouch_fiatCurrency')||'GHS',
+  fiatRate: FALLBACK_RATES[localStorage.getItem('vouch_fiatCurrency')||'GHS']||15.3,
+  fiatRates: {...FALLBACK_RATES},
   prices:{ BTC:67200, ETH:2418, USDT:1.0, SOL:148 },
   prev:{ BTC:67200, ETH:2418, USDT:1.0, SOL:148 },
-  wallet:{ USD:5200, BTC:0.182, ETH:1.4, USDT:850 },
-  orders:[
-    {id:'VCH-2261',side:'buy', crypto:'BTC', cryptoAmt:0.043, fiat:2880, status:'completed', time:'Yesterday · 18:22'},
-    {id:'VCH-2240',side:'sell',crypto:'ETH', cryptoAmt:0.5,   fiat:1209, status:'completed', time:'Jun 13 · 11:05'},
-    {id:'VCH-2233',side:'buy', crypto:'BTC', cryptoAmt:0.015, fiat:1010, status:'cancelled', time:'Jun 12 · 09:40'},
-  ],
+  orders:[],
 };
 
 /* ===== HELPERS ===== */
 const fmt$  = n => '$'+n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
 const fmt$0 = n => '$'+Math.round(n).toLocaleString('en-US');
 const fmtC  = (n,c) => n.toLocaleString('en-US',{maximumFractionDigits:CRYPTOS[c].dec});
-function walletValue(){ let t=S.wallet.USD; for(const c in CRYPTOS) t+=(S.wallet[c]||0)*S.prices[c]; return t; }
+function fmtLocal(usdAmt){
+  const fc=FIAT_CURRENCIES[S.fiatCurrency]; if(!fc)return fmt$(usdAmt);
+  const local=usdAmt*S.fiatRate;
+  const dec=local>=100?0:2;
+  return fc.sym+local.toLocaleString('en-US',{minimumFractionDigits:dec,maximumFractionDigits:dec});
+}
+function localRate(){ return S.prices[S.crypto]*S.fiatRate; }
+
+/* ===== LIVE RATES FETCH ===== */
+async function fetchRates(){
+  try{
+    const r=await fetch('https://open.er-api.com/v6/latest/USD');
+    const d=await r.json();
+    if(d.result==='success'){
+      S.fiatRates=d.rates;
+      S.fiatRate=d.rates[S.fiatCurrency]||FALLBACK_RATES[S.fiatCurrency]||1;
+      syncAmt();
+    }
+  }catch(e){ /* keep fallback rates */ }
+}
 function toast(msg,warn){
   const t=document.createElement('div'); t.className='toast'+(warn?' warn':'');
   t.innerHTML='<span class="d"></span>'+msg; $('#toasts').appendChild(t);
@@ -439,12 +482,25 @@ function renderTrade(){
 function renderStep1(){
   S.step=0;
   const rate = S.prices[S.crypto];
-  const cryptoAmt = S.unit==='fiat' ? S.amount/rate : S.amount;
-  const fiatAmt   = S.unit==='fiat' ? S.amount : S.amount*rate;
+  // S.amount is stored as USD; cryptoAmt and fiatUsd derived from it
+  const cryptoAmt = S.amount/rate;
+  const fiatUsd   = S.amount;
+  const localFiatAmt = fiatUsd * S.fiatRate;
+  // display value for the input field: local currency when unit=fiat, crypto otherwise
+  const inputVal = S.unit==='fiat' ? Math.round(localFiatAmt) : fmtC(cryptoAmt,S.crypto);
 
   $('#tradeCard').innerHTML=`
     <div class="tc">
       ${stepsHTML(0)}
+      <div class="cur-row">
+        <span class="cur-label">Fiat currency</span>
+        <div style="display:flex;align-items:center;gap:10px">
+          <span class="cur-live"><span class="d"></span>Live rates</span>
+          <select id="fiatSel" class="cur-sel">
+            ${Object.entries(FIAT_CURRENCIES).map(([k,v])=>`<option value="${k}" ${S.fiatCurrency===k?'selected':''}>${v.flag} ${k} — ${v.name}</option>`).join('')}
+          </select>
+        </div>
+      </div>
       <div class="tc-title">What would you like to do?</div>
       <div class="side-tog" id="sideTog">
         <button data-s="buy"  class="${S.side==='buy' ?'on buy' :''}">Buy crypto</button>
@@ -457,16 +513,16 @@ function renderStep1(){
           </div>`).join('')}
       </div>
       <div class="amt-label">You ${S.side==='buy'?'pay':'send'}</div>
-      <div class="amt-wrap"><input id="amtIn" type="text" inputmode="decimal" placeholder="0" value="${S.unit==='fiat'?Math.round(fiatAmt):fmtC(cryptoAmt,S.crypto)}">
+      <div class="amt-wrap"><input id="amtIn" type="text" inputmode="decimal" placeholder="0" value="${inputVal}">
         <div class="unit-tog" id="unitTog">
-          <button data-u="fiat"   class="${S.unit==='fiat'  ?'on':''}">USD</button>
+          <button data-u="fiat"   class="${S.unit==='fiat'  ?'on':''}">${S.fiatCurrency}</button>
           <button data-u="crypto" class="${S.unit==='crypto'?'on':''}">${S.crypto}</button>
         </div>
       </div>
       <div class="conv-row">
         <div><div style="font-family:var(--mono);font-size:11px;color:var(--faint);margin-bottom:3px">You ${S.side==='buy'?'receive':'get'}</div>
-          <div class="recv" id="recvVal">${S.side==='buy'?fmtC(cryptoAmt,S.crypto)+' '+S.crypto:fmt$(fiatAmt)}</div></div>
-        <div class="rate" id="rateLabel">@ ${fmt$0(rate)} / ${S.crypto}</div>
+          <div class="recv" id="recvVal">${S.side==='buy'?fmtC(cryptoAmt,S.crypto)+' '+S.crypto:fmtLocal(fiatUsd)}</div></div>
+        <div class="rate" id="rateLabel">@ ${fmtLocal(rate)} / ${S.crypto}</div>
       </div>
       <div class="hint ok" id="hint">Rate locked when you confirm.</div>
       <button class="btn-main ${S.side}" id="continueBtn">Continue <span style="margin-left:4px">→</span></button>
@@ -485,9 +541,16 @@ function renderStep1(){
     const b=e.target.closest('button'); if(!b)return;
     const r=S.prices[S.crypto];
     const cur=parseFloat(document.getElementById('amtIn').value)||0;
-    if(S.unit==='fiat')   S.amount=cur/r;
-    else                  S.amount=cur*r;
+    // S.amount is always stored in USD
+    if(S.unit==='fiat')   S.amount=cur/S.fiatRate;   // local → USD
+    else                  S.amount=cur*r;              // crypto → USD
     S.unit=b.dataset.u; renderStep1();
+  });
+  document.getElementById('fiatSel').addEventListener('change',e=>{
+    S.fiatCurrency=e.target.value;
+    S.fiatRate=S.fiatRates[S.fiatCurrency]||FALLBACK_RATES[S.fiatCurrency]||1;
+    localStorage.setItem('vouch_fiatCurrency',S.fiatCurrency);
+    renderStep1();
   });
   const inp=document.getElementById('amtIn');
   inp.addEventListener('input',syncAmt); inp.select();
@@ -498,25 +561,27 @@ function renderStep1(){
 function syncAmt(){
   const inp=document.getElementById('amtIn'); if(!inp)return;
   const v=parseFloat(inp.value.replace(/,/g,''))||0;
-  S.amount=v;
+  // store S.amount as USD always
+  S.amount=S.unit==='fiat'?v/S.fiatRate:v*S.prices[S.crypto];
   const rate=S.prices[S.crypto];
-  const cryptoAmt=S.unit==='fiat'?v/rate:v;
-  const fiatAmt  =S.unit==='fiat'?v:v*rate;
+  // when unit==='fiat', v is in local currency; convert to USD for threshold check
+  const usdAmt   =S.unit==='fiat'?v/S.fiatRate:v*rate;
+  const cryptoAmt=S.unit==='fiat'?v/(rate*S.fiatRate):v;
+  const fiatUsd  =S.unit==='fiat'?v/S.fiatRate:v*rate;
   const recvEl=document.getElementById('recvVal'); if(!recvEl)return;
-  recvEl.textContent=S.side==='buy'?fmtC(cryptoAmt,S.crypto)+' '+S.crypto:fmt$(fiatAmt);
+  recvEl.textContent=S.side==='buy'?fmtC(cryptoAmt,S.crypto)+' '+S.crypto:fmtLocal(fiatUsd);
   const btn=document.getElementById('continueBtn');
-  const ok=fiatAmt>=10;
+  const ok=usdAmt>=10;
   if(btn)btn.disabled=!ok;
   const h=document.getElementById('hint');
-  if(h){h.className='hint '+(ok?'ok':'bad');h.textContent=ok?'Rate locked when you confirm.':'Enter at least $10 to continue.';}
+  if(h){h.className='hint '+(ok?'ok':'bad');h.textContent=ok?'Rate locked when you confirm.':`Enter at least ${fmtLocal(10)} to continue.`;}
 }
 
 function goToStep2(){
+  // S.amount is always USD (set by syncAmt)
   const rate=S.prices[S.crypto];
-  const v=parseFloat(document.getElementById('amtIn').value)||0;
-  S.amount=v;
-  S.fiatAmt  =S.unit==='fiat'?v:v*rate;
-  S.cryptoAmt=S.unit==='fiat'?v/rate:v;
+  S.fiatAmt  =S.amount;
+  S.cryptoAmt=S.amount/rate;
   S.tradeRef=genRef();
   S.timerSec=CONFIG.paymentWindow*60;
   renderStep2();
@@ -563,7 +628,7 @@ function renderStep2(){
         <div id="phase2" style="display:none">
           <div style="font-family:var(--mono);font-size:10.5px;color:var(--faint);letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px">Now pay this amount to:</div>
           <div class="pay-summary">
-            <div class="ps-row"><span class="k">Amount</span><span class="v">${fmt$(S.fiatAmt)} <button class="copy-btn" data-c="${S.fiatAmt.toFixed(2)}">copy</button></span></div>
+            <div class="ps-row"><span class="k">Amount</span><span class="v">${fmtLocal(S.fiatAmt)} <button class="copy-btn" data-c="${(S.fiatAmt*S.fiatRate).toFixed(2)}">copy</button></span></div>
             <div class="ps-row"><span class="k">Bank</span><span class="v">${details.bank}</span></div>
             <div class="ps-row"><span class="k">Account name</span><span class="v">${details.name}</span></div>
             <div class="ps-row"><span class="k">Account no.</span><span class="v">${details.account} <button class="copy-btn" data-c="${details.account}">copy</button></span></div>
@@ -685,7 +750,7 @@ function renderStep2(){
     doneBtn.addEventListener('click',()=>{
       S.destWallet=wIn.value.trim();
       lockDoneBtn('✓ Wallet confirmed — now pay below');
-      revealPhase2({id:S.tradeRef,side:'buy',crypto:S.crypto,cryptoAmt:S.cryptoAmt,fiatAmt:S.fiatAmt,ts:Date.now(),status:'pending',walletAddr:S.destWallet,username:getChatUsername()});
+      revealPhase2({id:S.tradeRef,side:'buy',crypto:S.crypto,cryptoAmt:S.cryptoAmt,fiatAmt:S.fiatAmt,fiatCurrency:S.fiatCurrency,fiatRate:S.fiatRate,ts:Date.now(),status:'pending',walletAddr:S.destWallet,username:getChatUsername()});
     });
   } else {
     /* SELL: payout details → Done → platform wallet */
@@ -749,7 +814,7 @@ function renderStep2(){
         ?{type:'momo',network:S.momoNet,number:S.momoNum,name:S.momoName}
         :{type:'bank',bankName:S.bankName,account:S.bankAcc,holder:S.bankHolder};
       lockDoneBtn('✓ Payout details confirmed — now send your crypto');
-      revealPhase2({id:S.tradeRef,side:'sell',crypto:S.crypto,cryptoAmt:S.cryptoAmt,fiatAmt:S.fiatAmt,ts:Date.now(),status:'pending',payoutMethod:S.payoutMethod,payoutDetails,username:getChatUsername()});
+      revealPhase2({id:S.tradeRef,side:'sell',crypto:S.crypto,cryptoAmt:S.cryptoAmt,fiatAmt:S.fiatAmt,fiatCurrency:S.fiatCurrency,fiatRate:S.fiatRate,ts:Date.now(),status:'pending',payoutMethod:S.payoutMethod,payoutDetails,username:getChatUsername()});
     });
   }
 
@@ -820,7 +885,7 @@ function showDone(){
         <div class="done-ring">✓</div>
         <h3>Trade complete!</h3>
         <div class="got-amt">${isBuy?'+ ':'− '}${fmtC(S.cryptoAmt,S.crypto)} ${S.crypto}</div>
-        <div class="got-sub">${isBuy?'added to your wallet':'sold · '+fmt$(S.fiatAmt)+' on the way'}</div>
+        <div class="got-sub">${isBuy?'added to your wallet':'sold · '+fmtLocal(S.fiatAmt)+' on the way'}</div>
         <p>${isBuy?'Your '+S.crypto+' has been credited to your wallet.':'Payment will arrive in your account within 1–2 business days.'}</p>
         <button class="btn-main buy" id="walletBtn" style="margin-bottom:9px">View wallet</button>
         <button class="btn-ghost" id="tradeAgainBtn">Trade again</button>
@@ -844,7 +909,7 @@ function renderOrders(){
   wrap.innerHTML=S.orders.map(o=>`<div class="order">
     <span class="o-side ${o.side}">${o.side.toUpperCase()}</span>
     <div><div class="who">${o.crypto} · ${o.id}</div><div class="when">${o.time}</div></div>
-    <div class="amt">${fmtC(o.cryptoAmt,o.crypto)} ${o.crypto}<div class="f">${fmt$0(o.fiat)}</div></div>
+    <div class="amt">${fmtC(o.cryptoAmt,o.crypto)} ${o.crypto}<div class="f">${o.fiatCurrency?((FIAT_CURRENCIES[o.fiatCurrency]||{sym:'$'}).sym+(o.fiat*(o.fiatRate||1)).toLocaleString('en-US',{maximumFractionDigits:0})):fmt$0(o.fiat)}</div></div>
     <div class="pm">${o.crypto}</div>
     <div><span class="status ${o.status}"><span class="d"></span>${o.status[0].toUpperCase()+o.status.slice(1)}</span></div>
   </div>`).join('');
@@ -862,12 +927,13 @@ function priceTick(){
   if(S.tab==='trade' && S.step===0){
     syncAmt();
     const rl=document.getElementById('rateLabel');
-    if(rl)rl.textContent='@ '+fmt$0(S.prices[S.crypto])+' / '+S.crypto;
+    if(rl)rl.textContent='@ '+fmtLocal(S.prices[S.crypto])+' / '+S.crypto;
   }
 }
 
 /* ===== INIT ===== */
 renderTopbar(); render();
+fetchRates();
 if(!reduce)setInterval(priceTick,3000);
 
 /* ===== CHAT WIDGET ===== */
