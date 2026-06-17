@@ -221,6 +221,15 @@ a{color:inherit;text-decoration:none}
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
+/* ===== SUPABASE CONFIG — replace with your project values ===== */
+const SUPABASE_URL  = 'YOUR_SUPABASE_URL';
+const SUPABASE_ANON = 'YOUR_SUPABASE_ANON_KEY';
+const sb = (SUPABASE_URL !== 'YOUR_SUPABASE_URL')
+  ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON)
+  : null;
+</script>
 <script>
 const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -303,10 +312,10 @@ toggleModeBtn.addEventListener('click', e => {
   [emailErr, pwErr, usernameErr, pwConfirmErr].forEach(el => el.classList.remove('show'));
 });
 
-/* ===== accounts storage ===== */
+/* ===== accounts storage (localStorage cache) ===== */
 const ACCS_KEY='vouch_accounts';
-function getAccounts(){return JSON.parse(localStorage.getItem(ACCS_KEY)||'[]');}
-function saveAccounts(a){localStorage.setItem(ACCS_KEY,JSON.stringify(a));}
+function getLocalAccounts(){return JSON.parse(localStorage.getItem(ACCS_KEY)||'[]');}
+function saveLocalAccounts(a){localStorage.setItem(ACCS_KEY,JSON.stringify(a));}
 
 /* ===== validation + submit ===== */
 const form=document.getElementById('loginForm'), btn=document.getElementById('loginBtn');
@@ -340,52 +349,87 @@ function valid(){
 }));
 
 function showFormErr(msg){formErr.textContent=msg;formErr.classList.add('show');}
+function doRedirect(isReg){
+  btn.classList.remove('loading'); btn.classList.add('done');
+  btn.querySelector('.lbl').textContent=isReg?'Account created ✓':'Welcome back ✓';
+  btn.querySelector('.ar').style.display='none';
+  setTimeout(()=>{window.location.href='exchange.html';},700);
+}
 
-form.addEventListener('submit',e=>{
+form.addEventListener('submit', async e=>{
   e.preventDefault();
   formErr.classList.remove('show');
   if(!valid()) return;
 
-  const accounts=getAccounts();
   const emailVal=email.value.trim().toLowerCase();
+  const uname=username.value.trim();
 
-  if(isRegister){
-    /* check duplicate email */
-    if(accounts.find(a=>a.email===emailVal)){
-      email.classList.add('bad');
-      showFormErr('An account with this email already exists. Log in instead.');
-      return;
+  if(sb){
+    /* ---- Supabase auth path ---- */
+    btn.classList.add('loading');
+    if(isRegister){
+      /* check username uniqueness */
+      const {data:taken}=await sb.from('profiles').select('username').eq('username',uname).maybeSingle();
+      if(taken){
+        btn.classList.remove('loading');
+        username.classList.add('bad'); usernameErr.classList.add('show');
+        usernameErr.textContent='Username already taken';
+        return;
+      }
+      const {data,error}=await sb.auth.signUp({email:emailVal,password:pw.value});
+      if(error){btn.classList.remove('loading');showFormErr(error.message);return;}
+      const now=new Date();
+      const joinedStr=now.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+      await sb.from('profiles').insert({id:data.user.id,username:uname,email:emailVal,joined:joinedStr,kyc:'unverified'});
+      /* update local cache */
+      const accs=getLocalAccounts();
+      accs.push({username:uname,email:emailVal,joined:joinedStr,kyc:'unverified'});
+      saveLocalAccounts(accs);
+      localStorage.setItem('vouch_session',JSON.stringify({username:uname,email:emailVal}));
+      doRedirect(true);
+    } else {
+      const {data,error}=await sb.auth.signInWithPassword({email:emailVal,password:pw.value});
+      if(error){
+        btn.classList.remove('loading');
+        if(error.message.toLowerCase().includes('invalid')){
+          pw.classList.add('bad'); pwErr.textContent='Incorrect password'; pwErr.classList.add('show');
+        } else { showFormErr(error.message); }
+        return;
+      }
+      const {data:profile}=await sb.from('profiles').select('*').eq('id',data.user.id).maybeSingle();
+      const resolvedName=profile?.username||emailVal.split('@')[0];
+      localStorage.setItem('vouch_session',JSON.stringify({username:resolvedName,email:emailVal}));
+      /* update local accounts cache */
+      const accs=getLocalAccounts();
+      const idx=accs.findIndex(a=>a.email===emailVal);
+      const entry={username:resolvedName,email:emailVal,joined:profile?.joined||'—',kyc:profile?.kyc||'unverified'};
+      if(idx>=0)accs[idx]=entry; else accs.push(entry);
+      saveLocalAccounts(accs);
+      doRedirect(false);
     }
-    /* save new account */
-    const now=new Date();
-    const joinedStr=now.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
-    accounts.push({username:username.value.trim(), email:emailVal, password:pw.value, joined:joinedStr, kyc:'unverified'});
-    saveAccounts(accounts);
-    localStorage.setItem('vouch_session',JSON.stringify({username:username.value.trim(),email:emailVal}));
   } else {
-    /* find account */
-    const account=accounts.find(a=>a.email===emailVal);
-    if(!account){
-      email.classList.add('bad');
-      showFormErr('No account found with this email. Create one instead.');
-      return;
+    /* ---- localStorage fallback (Supabase not configured) ---- */
+    const accounts=getLocalAccounts();
+    if(isRegister){
+      if(accounts.find(a=>a.email===emailVal)){
+        email.classList.add('bad');
+        showFormErr('An account with this email already exists. Log in instead.');
+        return;
+      }
+      const now=new Date();
+      const joinedStr=now.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+      accounts.push({username:uname,email:emailVal,password:pw.value,joined:joinedStr,kyc:'unverified'});
+      saveLocalAccounts(accounts);
+      localStorage.setItem('vouch_session',JSON.stringify({username:uname,email:emailVal}));
+    } else {
+      const account=accounts.find(a=>a.email===emailVal);
+      if(!account){email.classList.add('bad');showFormErr('No account found with this email. Create one instead.');return;}
+      if(account.password!==pw.value){pw.classList.add('bad');pwErr.textContent='Incorrect password';pwErr.classList.add('show');return;}
+      localStorage.setItem('vouch_session',JSON.stringify({username:account.username,email:emailVal}));
     }
-    if(account.password!==pw.value){
-      pw.classList.add('bad');
-      pwErr.textContent='Incorrect password';
-      pwErr.classList.add('show');
-      return;
-    }
-    localStorage.setItem('vouch_session',JSON.stringify({username:account.username,email:emailVal}));
+    btn.classList.add('loading');
+    setTimeout(()=>doRedirect(isRegister),1400);
   }
-
-  btn.classList.add('loading');
-  setTimeout(()=>{
-    btn.classList.remove('loading'); btn.classList.add('done');
-    btn.querySelector('.lbl').textContent=isRegister?'Account created ✓':'Welcome back ✓';
-    btn.querySelector('.ar').style.display='none';
-    setTimeout(()=>{window.location.href='exchange.html';},700);
-  },1400);
 });
 </script>
 </body>

@@ -287,6 +287,15 @@ tbody tr.click:hover{background:var(--panel-2)}
 </div>
 <div class="toasts" id="toasts"></div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
+/* ===== SUPABASE CONFIG — replace with your project values ===== */
+const SUPABASE_URL  = 'YOUR_SUPABASE_URL';
+const SUPABASE_ANON = 'YOUR_SUPABASE_ANON_KEY';
+const sb = (SUPABASE_URL !== 'YOUR_SUPABASE_URL')
+  ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON)
+  : null;
+</script>
 <script>
 "use strict";
 const $=s=>document.querySelector(s), el=(t,c)=>{const e=document.createElement(t);if(c)e.className=c;return e;};
@@ -625,6 +634,21 @@ function renderDisputes(c){
 /* ===== USERS ===== */
 function getAccounts(){return JSON.parse(localStorage.getItem('vouch_accounts')||'[]');}
 function saveAccounts(a){localStorage.setItem('vouch_accounts',JSON.stringify(a));}
+async function syncAccountsFromSupabase(){
+  if(!sb)return;
+  const {data,error}=await sb.from('profiles').select('*');
+  if(error||!data)return;
+  const local=getAccounts();
+  const merged=data.map(p=>({
+    username:p.username, email:p.email, joined:p.joined||'—', kyc:p.kyc||'unverified',
+  }));
+  /* merge in any local-only entries not yet in Supabase */
+  local.forEach(l=>{if(!merged.find(m=>m.email===l.email))merged.push(l);});
+  saveAccounts(merged);
+  refreshBadges();
+  if(S.view==='users')renderUsers($('#content'));
+  if(S.view==='overview')renderOverview($('#content'));
+}
 function renderUsers(c){
   const accs=getAccounts();
   const allOrders=JSON.parse(localStorage.getItem('vouch_orders')||'[]');
@@ -678,6 +702,7 @@ function setKyc(name,status){
   const accs=getAccounts();
   const idx=accs.findIndex(a=>a.username===name);
   if(idx>=0){accs[idx].kyc=status;saveAccounts(accs);}
+  if(sb)sb.from('profiles').update({kyc:status}).eq('username',name);
   refreshBadges();renderUsers($('#content'));
 }
 
@@ -882,6 +907,7 @@ window.addEventListener('storage',e=>{
 
 /* ===== INIT ===== */
 refreshBadges(); render();
+syncAccountsFromSupabase();
 const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
 if(!reduce)setInterval(tick,3000);
 addEventListener('resize',()=>{if(S.view==='overview')drawVolChart();});
