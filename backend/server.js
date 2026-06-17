@@ -16,7 +16,8 @@ console.log('DATABASE_URL prefix:', dbUrl.slice(0, 30) + '...');
 
 const pool = new Pool({
   connectionString: dbUrl,
-  ssl: { rejectUnauthorized: false },
+  ssl: dbUrl.includes('.internal') ? false : { rejectUnauthorized: false },
+  connectionTimeoutMillis: 10000,
 });
 
 async function initDb() {
