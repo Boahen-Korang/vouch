@@ -330,7 +330,6 @@ const CONFIG = {
     bank:    'Standard Chartered',
     name:    'Vouch Technologies Ltd',
     account: '0012 3456 7890',
-    sort:    '12-34-56',
   },
   sellWallets: {                         // user sends crypto/asset → platform
     SOL:  '',
@@ -568,10 +567,7 @@ function renderStep2(){
             <div class="ps-row"><span class="k">Bank</span><span class="v">${details.bank}</span></div>
             <div class="ps-row"><span class="k">Account name</span><span class="v">${details.name}</span></div>
             <div class="ps-row"><span class="k">Account no.</span><span class="v">${details.account} <button class="copy-btn" data-c="${details.account}">copy</button></span></div>
-            <div class="ps-row"><span class="k">Sort code</span><span class="v">${details.sort}</span></div>
-            <div class="ps-row"><span class="k">Reference</span><span class="v">${S.tradeRef} <button class="copy-btn" data-c="${S.tradeRef}">copy</button></span></div>
           </div>
-          <div class="pay-notice">⚠ Use the exact reference — payments without a reference may be delayed.</div>
           ${proofHTML}
           <button class="btn-main buy" id="paidBtn" disabled style="opacity:.4">Upload proof to continue</button>
         </div>
@@ -594,7 +590,6 @@ function renderStep2(){
             <div class="ps-row"><span class="k">Amount</span><span class="v">${fmtC(S.cryptoAmt,S.crypto)} ${S.crypto}</span></div>
             <div class="ps-row"><span class="k">Network</span><span class="v">${S.crypto==='BTC'?'Bitcoin':'Ethereum (ERC-20)'}</span></div>
             <div class="ps-row"><span class="k">Wallet address</span><span class="v" style="word-break:break-all;font-size:12px">${platformWallet} <button class="copy-btn" data-c="${platformWallet}">copy</button></span></div>
-            <div class="ps-row"><span class="k">Reference / memo</span><span class="v">${S.tradeRef} <button class="copy-btn" data-c="${S.tradeRef}">copy</button></span></div>
           </div>
           <div class="pay-notice">⚠ Send only ${S.crypto} to this address. Sending a different coin will result in permanent loss.</div>
           ${proofHTML}
