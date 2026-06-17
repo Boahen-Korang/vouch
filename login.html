@@ -517,7 +517,7 @@ form.addEventListener('submit', async e=>{
       json=await res.json();
     }catch(e){
       cleanup();submitting=false;btn.classList.remove('loading');
-      showFormErr('Connection error — check your internet and try again');return;
+      showFormErr('Network error: '+e.message);return;
     }
     cleanup();btn.classList.remove('loading');
     if(!res.ok){
@@ -536,7 +536,7 @@ form.addEventListener('submit', async e=>{
       json=await res.json();
     }catch(e){
       cleanup();submitting=false;btn.classList.remove('loading');
-      showFormErr('Connection error — check your internet and try again');return;
+      showFormErr('Network error: '+e.message);return;
     }
     cleanup();btn.classList.remove('loading');
     if(!res.ok){
