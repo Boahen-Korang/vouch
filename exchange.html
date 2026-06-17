@@ -323,7 +323,7 @@ const $=s=>document.querySelector(s);
 
 /* ===== ADMIN CONFIG (rates + payment details) ===== */
 const CONFIG = {
-  rates: { BTC:67200, ETH:2418, USDT:1.0, EUR:1.08, XAU:2350 },
+  rates: { BTC:67200, ETH:2418, USDT:1.0, EUR:1.08, XAU:2350, SOL:148 },
   buyDetails: {                          // user pays fiat → platform
     bank:    'Standard Chartered',
     name:    'Vouch Technologies Ltd',
@@ -333,6 +333,7 @@ const CONFIG = {
   sellWallets: {                         // user sends crypto/asset → platform
     EUR:  '',
     XAU:  '',
+    SOL:  '',
     BTC:  'bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh',
     ETH:  '0x742d35Cc6634C0532925a3b8D4C2F5A0b91A7854',
     USDT: '0x742d35Cc6634C0532925a3b8D4C2F5A0b91A7854',
@@ -352,16 +353,17 @@ const CRYPTOS = {
   BTC:  { name:'Bitcoin',  glyph:'₿', color:'#E2B45A', bg:'radial-gradient(circle at 35% 30%,#3a2a12,#1a1207)', dec:6 },
   ETH:  { name:'Ethereum', glyph:'Ξ', color:'#5AA9E2', bg:'radial-gradient(circle at 35% 30%,#16283a,#0a121d)', dec:4 },
   USDT: { name:'Tether',   glyph:'₮', color:'#3FD98C', bg:'radial-gradient(circle at 35% 30%,#16382a,#0a1d15)', dec:2 },
-  EUR:  { name:'Euro',     glyph:'€', color:'#7B9FE8', bg:'radial-gradient(circle at 35% 30%,#1a2040,#0d1225)', dec:2 },
+  EUR:  { name:'Euro',     glyph:'€',  color:'#7B9FE8', bg:'radial-gradient(circle at 35% 30%,#1a2040,#0d1225)', dec:2 },
   XAU:  { name:'Gold',     glyph:'Au', color:'#D4AF37', bg:'radial-gradient(circle at 35% 30%,#3a2e0a,#1e1805)', dec:4 },
+  SOL:  { name:'Solana',   glyph:'◎',  color:'#9945FF', bg:'radial-gradient(circle at 35% 30%,#2a1040,#150820)', dec:4 },
 };
 
 /* ===== STATE ===== */
 const S = {
   tab:'trade', side:'buy', crypto:'BTC', unit:'fiat', amount:500, step:0,
   timerSec:0, timerInt:null, tradeRef:null, cryptoAmt:0, fiatAmt:0, proofData:null,
-  prices:{ BTC:67200, ETH:2418, USDT:1.0, EUR:1.08, XAU:2350 },
-  prev:{ BTC:67200, ETH:2418, USDT:1.0, EUR:1.08, XAU:2350 },
+  prices:{ BTC:67200, ETH:2418, USDT:1.0, EUR:1.08, XAU:2350, SOL:148 },
+  prev:{ BTC:67200, ETH:2418, USDT:1.0, EUR:1.08, XAU:2350, SOL:148 },
   wallet:{ USD:5200, BTC:0.182, ETH:1.4, USDT:850 },
   orders:[
     {id:'VCH-2261',side:'buy', crypto:'BTC', cryptoAmt:0.043, fiat:2880, status:'completed', time:'Yesterday · 18:22'},
@@ -419,15 +421,17 @@ function renderTrade(){
       <div class="info-panel">
         <h4>HOW IT WORKS</h4>
         <div class="info-list">
-          <div class="il"><span class="ck">01</span><span>Choose to buy or sell and enter your amount.</span></div>
-          <div class="il"><span class="ck">02</span><span>Send payment to the details shown — bank transfer or crypto wallet.</span></div>
-          <div class="il"><span class="ck">03</span><span>Click <b>Payment Made</b> and we'll verify and process your order.</span></div>
+          <div class="il"><span class="ck">01</span><span>Choose an asset, select <b>Buy</b> or <b>Sell</b>, and enter your amount.</span></div>
+          <div class="il"><span class="ck">02</span><span><b>Buying?</b> Provide your wallet address or account details to receive the asset.</span></div>
+          <div class="il"><span class="ck">03</span><span><b>Selling?</b> Send your asset to our address and enter your payout details.</span></div>
+          <div class="il"><span class="ck">04</span><span>Upload proof of payment. Our team confirms and releases your funds — typically within minutes.</span></div>
         </div>
         <div class="info-sep"></div>
-        <h4>RATES</h4>
+        <h4>GOOD TO KNOW</h4>
         <div class="info-list">
-          <div class="il"><span class="ck">—</span><span>Rates refresh every few seconds from live market data.</span></div>
-          <div class="il"><span class="ck">—</span><span>The rate shown at the time you confirm is locked for your trade.</span></div>
+          <div class="il"><span class="ck">—</span><span>Rates are set by Vouch and updated regularly.</span></div>
+          <div class="il"><span class="ck">—</span><span>The rate at confirmation is the rate you get — no surprises.</span></div>
+          <div class="il"><span class="ck">—</span><span>All trades are reviewed by our team before release.</span></div>
         </div>
       </div>
     </div>`;
