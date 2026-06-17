@@ -368,9 +368,9 @@ function notifyAdmin(order){
 const CONFIG = {
   rates: { BTC:67200, ETH:2418, USDT:1.0, SOL:148 },
   buyDetails: {                          // user pays fiat → platform
-    bank:    'Standard Chartered',
-    name:    'Vouch Technologies Ltd',
-    account: '0012 3456 7890',
+    bank:    '',
+    name:    '',
+    account: '',
   },
   sellWallets: {                         // user sends crypto/asset → platform
     SOL:  '',
@@ -778,9 +778,11 @@ function renderStep2(){
     localStorage.setItem('vouch_orders',JSON.stringify(ao));
     if(BC)BC.postMessage({type:'order',order:adminEntry});
     notifyAdmin(adminEntry);
-    document.getElementById('phase2').style.display='';
+    const p2=document.getElementById('phase2');
+    p2.style.display='';
     attachPhase2();
     checkReady();
+    setTimeout(()=>p2.scrollIntoView({behavior:'smooth',block:'start'}),100);
   }
 
   if(isBuy){
