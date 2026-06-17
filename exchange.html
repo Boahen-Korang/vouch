@@ -709,7 +709,7 @@ function renderStep2(){
     doneBtn.addEventListener('click',()=>{
       S.destWallet=wIn.value.trim();
       lockDoneBtn('✓ Wallet confirmed — now pay below');
-      revealPhase2({id:S.tradeRef,side:'buy',crypto:S.crypto,cryptoAmt:S.cryptoAmt,fiatAmt:S.fiatAmt,ts:Date.now(),status:'pending',walletAddr:S.destWallet});
+      revealPhase2({id:S.tradeRef,side:'buy',crypto:S.crypto,cryptoAmt:S.cryptoAmt,fiatAmt:S.fiatAmt,ts:Date.now(),status:'pending',walletAddr:S.destWallet,username:getChatUsername()});
     });
   } else {
     /* SELL: payout details → Done → platform wallet */
@@ -773,7 +773,7 @@ function renderStep2(){
         ?{type:'momo',network:S.momoNet,number:S.momoNum,name:S.momoName}
         :{type:'bank',bankName:S.bankName,account:S.bankAcc,holder:S.bankHolder};
       lockDoneBtn('✓ Payout details confirmed — now send your crypto');
-      revealPhase2({id:S.tradeRef,side:'sell',crypto:S.crypto,cryptoAmt:S.cryptoAmt,fiatAmt:S.fiatAmt,ts:Date.now(),status:'pending',payoutMethod:S.payoutMethod,payoutDetails});
+      revealPhase2({id:S.tradeRef,side:'sell',crypto:S.crypto,cryptoAmt:S.cryptoAmt,fiatAmt:S.fiatAmt,ts:Date.now(),status:'pending',payoutMethod:S.payoutMethod,payoutDetails,username:getChatUsername()});
     });
   }
 
@@ -820,7 +820,7 @@ function goToStep3(){
       if(BC)BC.postMessage({type:'order',order:_ao[_idx]});
     } else {
       /* fallback: order wasn't saved yet by revealPhase2 */
-      const _e={id:S.tradeRef,side:S.side,crypto:S.crypto,cryptoAmt:S.cryptoAmt,fiatAmt:S.fiatAmt,ts:Date.now(),status:'pending',proof:S.proofData||null};
+      const _e={id:S.tradeRef,side:S.side,crypto:S.crypto,cryptoAmt:S.cryptoAmt,fiatAmt:S.fiatAmt,ts:Date.now(),status:'pending',proof:S.proofData||null,username:getChatUsername()};
       if(S.side==='sell'){
         _e.payoutMethod=S.payoutMethod;
         _e.payoutDetails=S.payoutMethod==='momo'

@@ -301,7 +301,7 @@ function toast(msg,kind){const t=el('div','toast'+(kind?' '+kind:''));t.innerHTM
 const S={
   view:'overview', search:'',
   trades:[], disputes:[], offers:[],
-  tradeFilter:'all', dispFilter:'open', userFilter:'all', activeDispute:null, chatUser:null,
+  tradeFilter:'all', dispFilter:'open', userFilter:'all', chatUser:null,
 };
 
 /* ===== BADGES ===== */
@@ -334,7 +334,7 @@ const TITLES={overview:['Overview','Platform health at a glance'],trades:['Trade
   disputes:['Disputes','Resolve held-escrow conflicts'],users:['Users & KYC','Verify identities and manage accounts'],
   offers:['Rates','Live BTC · ETH · USDT exchange rates'],chat:['Chat','Message customers in real time'],settings:['Settings','Platform configuration']};
 $('#nav').addEventListener('click',e=>{const b=e.target.closest('.nav-item');if(!b)return;
-  S.view=b.dataset.v; S.activeDispute=null; S.search='';$('#search').value='';if(S.view!=='chat')S.chatUser=null;
+  S.view=b.dataset.v; S.search='';$('#search').value='';if(S.view!=='chat')S.chatUser=null;
   [...$('#nav').children].forEach(x=>x.classList&&x.classList.toggle('on',x===b));
   $('#ptitle').childNodes[0].nodeValue=TITLES[S.view][0]; $('#psub').textContent=TITLES[S.view][1];
   render();});
@@ -345,7 +345,7 @@ function render(){
   const c=$('#content');
   if(S.view==='overview')renderOverview(c);
   else if(S.view==='trades')renderTrades(c);
-  else if(S.view==='disputes')S.activeDispute?renderDisputeDetail(c):renderDisputes(c);
+  else if(S.view==='disputes')renderDisputes(c);
   else if(S.view==='users')renderUsers(c);
   else if(S.view==='offers')renderRates(c);
   else if(S.view==='chat')renderChatView(c);
@@ -357,28 +357,31 @@ function renderOverview(c){
   const realOrders=JSON.parse(localStorage.getItem('vouch_orders')||'[]');
   const allOrders=[...realOrders,...S.trades];
   const pending=realOrders.filter(o=>o.status==='pending').length;
-  const completed=allOrders.filter(o=>o.status==='completed'||o.status==='approved').length;
-  const rejected=allOrders.filter(o=>o.status==='rejected').length;
-  const totalFiat=allOrders.reduce((s,o)=>s+(o.fiatAmt||0),0);
+  const completed=realOrders.filter(o=>o.status==='completed'||o.status==='approved').length;
+  const rejected=realOrders.filter(o=>o.status==='rejected').length;
+  const disputed=realOrders.filter(o=>o.status==='disputed').length;
+  const totalFiat=realOrders.reduce((s,o)=>s+(o.fiatAmt||0),0);
   const estFees=Math.round(totalFiat*0.005);
   const registeredUsers=JSON.parse(localStorage.getItem('vouch_accounts')||'[]').length;
-  const totalAll=allOrders.length||1;
+  const totalAll=realOrders.length||1;
   c.innerHTML=`
   <div class="kpis">
-    ${kpiCard('Total volume',fmt$(totalFiat),0,'','#23A86E','M2 17l6-6 4 4 8-8')}
-    ${kpiCard('Pending orders',pending,0,'','#E2B45A','coin')}
-    ${kpiCard('Registered users',registeredUsers.toLocaleString(),0,'','#9B7AD6','users')}
-    ${kpiCard('Est. fees earned',fmt$(estFees),0,'','#5AA9E2','coin')}
+    ${kpiCard('Total volume',realOrders.length?fmt$(totalFiat):'—',0,'','#23A86E','M2 17l6-6 4 4 8-8')}
+    ${kpiCard('Pending orders',pending||'—',0,'','#E2B45A','coin')}
+    ${kpiCard('Registered users',registeredUsers||'—',0,'','#9B7AD6','users')}
+    ${kpiCard('Est. fees',realOrders.length?fmt$(estFees):'—',0,'','#5AA9E2','coin')}
   </div>
   <div class="grid2">
-    <div class="card"><div class="card-h"><h3>Trading volume</h3><span class="sub">last 14 days · $M</span></div>
+    <div class="card"><div class="card-h"><h3>Trading volume</h3><span class="sub">last 14 days · $K</span></div>
       <canvas id="volChart" height="220"></canvas></div>
-    <div class="card"><div class="card-h"><h3>Orders by status</h3><span class="sub">${allOrders.length} total</span></div>
-      <div class="statusbars">
+    <div class="card"><div class="card-h"><h3>Orders by status</h3><span class="sub">${realOrders.length} total</span></div>
+      ${realOrders.length?`<div class="statusbars">
         ${statusBar2('Pending review',pending,'#E2B45A',totalAll)}
         ${statusBar2('Completed',completed,'#3FD98C',totalAll)}
-        ${statusBar2('Rejected',rejected,'#FF6B4A',totalAll)}
-      </div></div>
+        ${statusBar2('Disputed',disputed,'#FF6B4A',totalAll)}
+        ${statusBar2('Rejected',rejected,'#587063',totalAll)}
+      </div>`:'<div style="padding:20px 0;font-family:var(--mono);font-size:12px;color:var(--faint);text-align:center">No orders yet.</div>'}
+    </div></div>
   </div>
   <div class="grid2">
     <div class="card"><div class="card-h"><h3>Activity feed</h3><span class="sub">live</span></div>
@@ -386,7 +389,7 @@ function renderOverview(c){
     <div class="card"><div class="card-h"><h3>Needs attention</h3></div>
       <div class="statusbars">
         ${attn('Pending orders',pending,'#E2B45A','trades')}
-        ${attn('Open disputes',S.disputes.filter(d=>d.status==='open').length,'#FF6B4A','disputes')}
+        ${attn('Open disputes',realOrders.filter(o=>o.status==='disputed').length,'#FF6B4A','disputes')}
         ${attn('Pending KYC reviews',JSON.parse(localStorage.getItem('vouch_accounts')||'[]').filter(a=>a.kyc==='pending').length,'#9B7AD6','users')}
       </div></div>
   </div>`;
@@ -539,9 +542,10 @@ function showOrderModal(o,c){
     <div class="drow"><div class="dk">Submitted</div><div class="dv">${timeStr}</div></div>
     <div class="drow"><div class="dk">Status</div><div class="dv" style="color:var(--gold)">Pending review</div></div>
     ${detailsHTML}
-    <div style="display:flex;gap:9px;margin-top:20px">
-      <button class="tbtn g" id="mApprove" style="flex:1;padding:11px">${isSell?'Mark as paid ✓':'Mark as sent ✓'}</button>
-      <button class="tbtn r" id="mReject" style="flex:1;padding:11px">Reject ✗</button>
+    <div style="display:flex;gap:9px;margin-top:20px;flex-wrap:wrap">
+      <button class="tbtn g" id="mApprove" style="flex:1;padding:11px;min-width:120px">${isSell?'Mark as paid ✓':'Mark as sent ✓'}</button>
+      <button class="tbtn r" id="mReject" style="flex:1;padding:11px;min-width:100px">Reject ✗</button>
+      ${o.status==='pending'?`<button class="tbtn b" id="mDispute" style="width:100%;padding:10px;margin-top:2px">Flag as dispute</button>`:''}
     </div>
   </div>`;
   document.body.appendChild(ov);
@@ -560,110 +564,105 @@ function showOrderModal(o,c){
     if(idx>=0){orders[idx].status='rejected';localStorage.setItem('vouch_orders',JSON.stringify(orders));}
     toast('Order rejected · '+o.id,'bad'); close(); refreshBadges(); if(S.view==='trades')renderTrades(c||$('#content'));
   });
+  const mDisp=document.getElementById('mDispute');
+  if(mDisp)mDisp.addEventListener('click',()=>{
+    const orders=JSON.parse(localStorage.getItem('vouch_orders')||'[]');
+    const idx=orders.findIndex(x=>x.id===o.id);
+    if(idx>=0){orders[idx].status='disputed';localStorage.setItem('vouch_orders',JSON.stringify(orders));}
+    toast('Order flagged as dispute · '+o.id,'warn'); close(); refreshBadges();
+    if(S.view==='trades')renderTrades(c||$('#content'));
+    if(S.view==='disputes')renderDisputes(c||$('#content'));
+  });
 }
 
 /* ===== DISPUTES ===== */
 function renderDisputes(c){
+  const allOrders=JSON.parse(localStorage.getItem('vouch_orders')||'[]');
+  const open=allOrders.filter(o=>o.status==='disputed');
+  const resolved=allOrders.filter(o=>o.status==='dispute-resolved');
+  const list=S.dispFilter==='open'?open:resolved;
+  const filtered=S.search?list.filter(o=>(o.id+o.crypto+(o.payoutDetails?.number||o.walletAddr||'')).toLowerCase().includes(S.search)):list;
   c.innerHTML=`
   <div class="toolbar"><div class="ftabs" id="dFilter">
-    <button data-f="open" class="${S.dispFilter==='open'?'on':''}">Open</button>
+    <button data-f="open" class="${S.dispFilter==='open'?'on':''}">Open${open.length?` (${open.length})`:''}</button>
     <button data-f="resolved" class="${S.dispFilter==='resolved'?'on':''}">Resolved</button>
   </div></div>
-  <div class="tbl"><table><thead><tr><th>Dispute</th><th>Parties</th><th>Held in escrow</th><th>Reason</th><th>Age</th><th>Status</th><th></th></tr></thead>
+  <div class="tbl"><table><thead><tr><th>Order</th><th>Side</th><th>Amount</th><th>Details</th><th>Flagged</th><th></th></tr></thead>
   <tbody id="dispRows"></tbody></table></div>`;
   $('#dFilter').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;S.dispFilter=b.dataset.f;renderDisputes(c);});
   const rows=$('#dispRows');
-  let list=S.disputes.filter(d=>S.dispFilter==='open'?d.status==='open':d.status!=='open');
-  if(S.search)list=list.filter(d=>(d.id+d.buyer+d.seller+d.tradeId).toLowerCase().includes(S.search));
-  if(!list.length){rows.innerHTML=`<tr><td colspan="7"><div class="empty">${S.dispFilter==='open'?'No open disputes — all clear. ✓':'No resolved disputes yet.'}</div></td></tr>`;return;}
-  rows.innerHTML=list.map(d=>{
-    const rb=d.raisedBy==='buyer';
-    const st=d.status==='open'?'<span class="pill coral"><span class="d"></span>Open</span>':
-      (d.status==='buyer'?'<span class="pill blue"><span class="d"></span>Released to buyer</span>':
-       d.status==='seller'?'<span class="pill green"><span class="d"></span>Refunded seller</span>':'<span class="pill grey"><span class="d"></span>Info requested</span>');
-    return `<tr class="${d.status==='open'?'click':''}" ${d.status==='open'?'data-id="'+d.id+'"':''}>
-      <td class="mono-c"><b>${d.id}</b><div style="color:var(--faint);font-size:11px">${d.tradeId}</div></td>
-      <td><div style="font-size:13px"><span style="color:var(--coral)">${d.buyer}</span> <span style="color:var(--faint)">vs</span> <span style="color:var(--emerald-br)">${d.seller}</span></div></td>
-      <td class="mono-c">${d.amt} ${d.crypto}<div style="color:var(--faint);font-size:11px">${fmt$(d.fiat)}</div></td>
-      <td style="font-size:12.5px;color:var(--muted)">Raised by ${rb?'buyer':'seller'}</td>
-      <td class="mono-c" style="color:var(--muted)">${d.age}</td>
-      <td>${st}</td>
-      <td class="row-act">${d.status==='open'?'<button class="tbtn g" data-id="'+d.id+'">Resolve →</button>':''}</td>
-    </tr>`;}).join('');
-  rows.querySelectorAll('[data-id]').forEach(b=>b.addEventListener('click',()=>{S.activeDispute=b.dataset.id||b.closest('tr').dataset.id;render();}));
-}
-function renderDisputeDetail(c){
-  const d=S.disputes.find(x=>x.id===S.activeDispute);
-  if(!d){S.activeDispute=null;return renderDisputes(c);}
-  c.innerHTML=`
-  <button class="back" id="back">← All disputes</button>
-  <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px">
-    <div class="pt" style="font-size:24px">${d.id}<small>Trade ${d.tradeId} · raised by ${d.raisedBy} · ${d.age} ago</small></div>
-    <span class="pill coral" style="margin-top:4px"><span class="d"></span>Open</span>
-  </div>
-  <div class="disp-summary">
-    <div class="ds"><div class="k">Held in escrow</div><div class="v">${d.amt} ${d.crypto} · ${fmt$(d.fiat)}</div></div>
-    <div class="ds"><div class="k">Payment method</div><div class="v">${d.method}</div></div>
-    <div class="ds"><div class="k">Buyer</div><div class="v" style="color:var(--coral)">${d.buyer}</div></div>
-    <div class="ds"><div class="k">Seller</div><div class="v" style="color:var(--emerald-br)">${d.seller}</div></div>
-  </div>
-  <div class="disp-grid">
-    <div>
-      <div class="claims">
-        <div class="claim buyer"><div class="who">⬤ BUYER · ${d.buyer}</div><p>${d.claimBuyer||'<i>No statement provided.</i>'}</p>
-          ${d.evidence.length?`<div class="evidence">${d.evidence.map(ev=>`<span class="ev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>${ev}</span>`).join('')}</div>`:''}</div>
-        <div class="claim seller"><div class="who">⬤ SELLER · ${d.seller}</div><p>${d.claimSeller||'<i>Seller has not responded.</i>'}</p></div>
-      </div>
-      <div class="card"><div class="card-h"><h3>Trade transcript</h3><span class="sub">read-only</span></div>
-        <div class="transcript">${d.chat.map(m=>{
-          if(m[0]==='sys')return `<div class="tmsg sys">${m[1]}</div>`;
-          return `<div class="tmsg ${m[0]}"><span class="who">${m[0]==='b'?d.buyer+' (buyer)':d.seller+' (seller)'}</span>${m[1]}</div>`;
-        }).join('')}</div></div>
-    </div>
-    <div class="resolve">
-      <h4>Resolve dispute</h4>
-      <p class="note">Escrow is holding <b>${d.amt} ${d.crypto}</b>. Choose where it goes. This action is final and notifies both parties.</p>
-      <div class="resolve-actions">
-        <button class="rbtn toBuyer" data-act="buyer"><span class="ric"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 6 9 17l-5-5"/></svg></span><span><span class="rt">Release to buyer</span><span class="rd">${d.buyer} receives ${d.amt} ${d.crypto}</span></span></button>
-        <button class="rbtn toSeller" data-act="seller"><span class="ric"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 5 5v2"/></svg></span><span><span class="rt">Refund to seller</span><span class="rd">${d.amt} ${d.crypto} returns to ${d.seller}</span></span></button>
-        <button class="rbtn info" data-act="info"><span class="ric"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg></span><span><span class="rt">Request more info</span><span class="rd">Ask both parties for evidence</span></span></button>
-      </div>
-    </div>
-  </div>`;
-  $('#back').addEventListener('click',()=>{S.activeDispute=null;render();});
-  c.querySelectorAll('[data-act]').forEach(b=>b.addEventListener('click',()=>resolveDispute(d,b.dataset.act)));
-}
-function resolveDispute(d,act){
-  if(act==='info'){toast('Info requested from both parties · '+d.id,'warn');S.activeDispute=null;render();return;}
-  d.status=act;
-  const t=S.trades.find(x=>x.tradeId===d.tradeId)||S.trades.find(x=>x.id===d.tradeId);
-  if(t)t.status='completed';
-  toast(act==='buyer'?`Escrow released to ${d.buyer} · ${d.amt} ${d.crypto}`:`Escrow refunded to ${d.seller} · ${d.amt} ${d.crypto}`);
-  S.activeDispute=null; refreshBadges(); render();
+  if(!filtered.length){rows.innerHTML=`<tr><td colspan="6"><div class="empty">${S.dispFilter==='open'?'No open disputes — all clear. ✓':'No resolved disputes yet.'}</div></td></tr>`;return;}
+  rows.innerHTML=filtered.map(o=>{
+    const dt=new Date(o.ts);
+    const tstr=dt.getHours().toString().padStart(2,'0')+':'+dt.getMinutes().toString().padStart(2,'0')+' · '+dt.toLocaleDateString('en-GB',{day:'numeric',month:'short'});
+    const details=o.side==='buy'
+      ?`Wallet: ${(o.walletAddr||'').slice(0,16)}…`
+      :(o.payoutMethod==='momo'?'MoMo · '+(o.payoutDetails?.number||''):'Bank · '+(o.payoutDetails?.account||''));
+    const pill=o.status==='dispute-resolved'?'<span class="pill green"><span class="d"></span>Resolved</span>':'<span class="pill coral"><span class="d"></span>Open</span>';
+    return `<tr>
+      <td class="mono-c"><b>${o.id}</b><div style="color:var(--faint);font-size:11px">${tstr}</div></td>
+      <td><span class="pill ${o.side==='sell'?'coral':'green'}"><span class="d"></span>${o.side.toUpperCase()}</span></td>
+      <td class="mono-c">${o.cryptoAmt} ${o.crypto}<div style="color:var(--faint);font-size:11px">$${Math.round(o.fiatAmt).toLocaleString()}</div></td>
+      <td style="font-size:12px;color:var(--muted)">${details}</td>
+      <td>${pill}</td>
+      <td class="row-act">${o.status==='disputed'?`<button class="tbtn g" data-res="${o.id}">Resolve →</button><button class="tbtn r" data-rej="${o.id}">Reject</button>`:''}</td>
+    </tr>`;
+  }).join('');
+  rows.querySelectorAll('[data-res]').forEach(b=>b.addEventListener('click',()=>{
+    const orders=JSON.parse(localStorage.getItem('vouch_orders')||'[]');
+    const idx=orders.findIndex(x=>x.id===b.dataset.res);
+    if(idx>=0){orders[idx].status='dispute-resolved';localStorage.setItem('vouch_orders',JSON.stringify(orders));}
+    toast('Dispute resolved · '+b.dataset.res); refreshBadges(); renderDisputes(c);
+  }));
+  rows.querySelectorAll('[data-rej]').forEach(b=>b.addEventListener('click',()=>{
+    const orders=JSON.parse(localStorage.getItem('vouch_orders')||'[]');
+    const idx=orders.findIndex(x=>x.id===b.dataset.rej);
+    if(idx>=0){orders[idx].status='rejected';localStorage.setItem('vouch_orders',JSON.stringify(orders));}
+    toast('Order rejected · '+b.dataset.rej,'bad'); refreshBadges(); renderDisputes(c);
+  }));
 }
 
 /* ===== USERS ===== */
 function getAccounts(){return JSON.parse(localStorage.getItem('vouch_accounts')||'[]');}
 function saveAccounts(a){localStorage.setItem('vouch_accounts',JSON.stringify(a));}
 function renderUsers(c){
+  const accs=getAccounts();
+  const allOrders=JSON.parse(localStorage.getItem('vouch_orders')||'[]');
+  const pendingKyc=accs.filter(a=>a.kyc==='pending').length;
+  const verifiedCount=accs.filter(a=>a.kyc==='verified').length;
   c.innerHTML=`
-  <div class="toolbar"><div class="ftabs" id="uFilter">
-    ${['all','pending','verified','unverified','banned'].map(f=>`<button data-f="${f}" class="${S.userFilter===f?'on':''}">${f[0].toUpperCase()+f.slice(1)}</button>`).join('')}
-  </div></div>
-  <div class="tbl"><table><thead><tr><th>User</th><th>Email</th><th>Joined</th><th>KYC</th><th></th></tr></thead>
+  <div class="toolbar" style="flex-wrap:wrap;gap:10px">
+    <div class="ftabs" id="uFilter">
+      <button data-f="all" class="${S.userFilter==='all'?'on':''}">All (${accs.length})</button>
+      <button data-f="pending" class="${S.userFilter==='pending'?'on':''}">Pending${pendingKyc?` (${pendingKyc})`:''}</button>
+      <button data-f="verified" class="${S.userFilter==='verified'?'on':''}">Verified${verifiedCount?` (${verifiedCount})`:''}</button>
+      <button data-f="unverified" class="${S.userFilter==='unverified'?'on':''}">Unverified</button>
+      <button data-f="banned" class="${S.userFilter==='banned'?'on':''}">Banned</button>
+    </div>
+  </div>
+  <div class="tbl"><table><thead><tr><th>User</th><th>Email</th><th>Joined</th><th>Trades</th><th>KYC</th><th></th></tr></thead>
   <tbody id="userRows"></tbody></table></div>`;
   $('#uFilter').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;S.userFilter=b.dataset.f;renderUsers(c);});
   const rows=$('#userRows');
-  const accs=getAccounts();
-  let list=accs.map(a=>({name:a.username,email:a.email,joined:a.joined||'—',kyc:a.kyc||'unverified'}));
+  let list=accs.map(a=>{
+    const uOrders=allOrders.filter(o=>o.username===a.username||o.user===a.username);
+    return {name:a.username,email:a.email,joined:a.joined||'—',kyc:a.kyc||'unverified',
+      total:uOrders.length,
+      done:uOrders.filter(o=>o.status==='completed'||o.status==='approved'||o.status==='dispute-resolved').length};
+  });
   list=list.filter(u=>S.userFilter==='all'||u.kyc===S.userFilter);
   if(S.search)list=list.filter(u=>(u.name+u.email).toLowerCase().includes(S.search));
-  if(!list.length){rows.innerHTML=`<tr><td colspan="5"><div class="empty">${accs.length?'No users match.':'No registered users yet.'}</div></td></tr>`;return;}
+  if(!list.length){rows.innerHTML=`<tr><td colspan="6"><div class="empty">${accs.length?'No users match.':'No registered users yet.'}</div></td></tr>`;return;}
   const kmap={verified:['green','Verified'],pending:['gold','Pending review'],unverified:['grey','Unverified'],banned:['coral','Banned']};
   rows.innerHTML=list.map(u=>`<tr>
-    <td class="cell-u"><span class="uav" style="background:${colorFor(u.name)}">${initials(u.name)}</span><div><div class="nm">${u.name}</div></div></td>
+    <td class="cell-u"><span class="uav" style="background:${colorFor(u.name)}">${initials(u.name)}</span>
+      <div><div class="nm">${u.name}</div></div></td>
     <td style="font-size:13px;color:var(--muted)">${u.email}</td>
     <td class="mono-c" style="color:var(--muted)">${u.joined}</td>
+    <td class="mono-c">
+      <div style="font-size:13px;color:var(--paper)">${u.total||'—'}</div>
+      ${u.total>0?`<div style="font-size:11px;color:var(--faint)">${u.done} done</div>`:''}
+    </td>
     <td><span class="pill ${kmap[u.kyc][0]}"><span class="d"></span>${kmap[u.kyc][1]}</span></td>
     <td class="row-act">
       ${u.kyc==='pending'?`<button class="tbtn g" data-app="${u.name}">Approve</button><button class="tbtn r" data-rej="${u.name}">Reject</button>`:
@@ -872,6 +871,7 @@ window.addEventListener('storage',e=>{
   if(e.key==='vouch_orders'){
     refreshBadges();
     if(S.view==='trades')renderTrades($('#content'));
+    if(S.view==='disputes')renderDisputes($('#content'));
     if(S.view==='overview')renderOverview($('#content'));
   }
   if(e.key==='vouch_msgs'){
