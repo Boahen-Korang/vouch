@@ -683,13 +683,11 @@ function renderUsers(c){
 /* ===== RATES ===== */
 function renderRates(c){
   const cfg=JSON.parse(localStorage.getItem('vouch_config')||'{}');
-  const rates=cfg.rates||{BTC:67500,ETH:2420,USDT:1,EUR:1.08,XAU:2350,SOL:148};
+  const rates=cfg.rates||{BTC:67500,ETH:2420,USDT:1,SOL:148};
   const coins=[
     {sym:'BTC',name:'Bitcoin',color:'#E2B45A',icon:'₿'},
     {sym:'ETH',name:'Ethereum',color:'#5AA9E2',icon:'Ξ'},
     {sym:'USDT',name:'Tether',color:'#3FD98C',icon:'₮'},
-    {sym:'EUR',name:'Euro',color:'#7B9FE8',icon:'€'},
-    {sym:'XAU',name:'Gold',color:'#D4AF37',icon:'Au'},
     {sym:'SOL',name:'Solana',color:'#9945FF',icon:'◎'},
   ];
   c.innerHTML=`
@@ -818,10 +816,6 @@ function renderSettings(c){
         <input class="set-input-wide" id="wUSDT" placeholder="0x… or T…" value="${sw.USDT||''}"></div>
       <div class="set-row"><div><div class="k">SOL</div><div class="d">Solana receive address</div></div>
         <input class="set-input-wide" id="wSOL" placeholder="…" value="${sw.SOL||''}"></div>
-      <div class="set-row"><div><div class="k">EUR</div><div class="d">Bank / IBAN for Euro transfers</div></div>
-        <input class="set-input-wide" id="wEUR" placeholder="IBAN or account…" value="${sw.EUR||''}"></div>
-      <div class="set-row"><div><div class="k">XAU</div><div class="d">Gold vault / delivery instructions</div></div>
-        <input class="set-input-wide" id="wXAU" placeholder="Vault ID or address…" value="${sw.XAU||''}"></div>
     </div>
 
     <div class="card" style="margin-bottom:14px">
@@ -864,8 +858,6 @@ function renderSettings(c){
       ETH:document.getElementById('wETH').value.trim(),
       USDT:document.getElementById('wUSDT').value.trim(),
       SOL:document.getElementById('wSOL').value.trim(),
-      EUR:document.getElementById('wEUR').value.trim(),
-      XAU:document.getElementById('wXAU').value.trim(),
     };
     cfg.buyDetails={
       bank:document.getElementById('bBank').value.trim(),
