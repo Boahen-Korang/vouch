@@ -440,7 +440,7 @@ const FALLBACK_RATES = { GHS:15.3,NGN:1580,KES:130,ZAR:18.5,UGX:3750,TZS:2680,XO
 /* ===== STATE ===== */
 const S = {
   tab:'trade', side:'buy', crypto:'BTC', unit:'fiat', amount:0, step:0,
-  timerSec:0, timerInt:null, tradeRef:null, cryptoAmt:0, fiatAmt:0, proofData:null,
+  timerSec:0, timerInt:null, pollInt:null, tradeRef:null, cryptoAmt:0, fiatAmt:0, proofData:null,
   fiatCurrency: localStorage.getItem('vouch_fiatCurrency')||'GHS',
   fiatRate: FALLBACK_RATES[localStorage.getItem('vouch_fiatCurrency')||'GHS']||15.3,
   fiatRates: {...FALLBACK_RATES},
@@ -507,6 +507,7 @@ function stepsHTML(active){
 
 /* ===== TRADE TAB ===== */
 function renderTrade(){
+  clearInterval(S.pollInt); S.pollInt=null;
   S.step=0;
   const page=$('#page');
   page.innerHTML=`
@@ -944,34 +945,57 @@ function goToStep3(){
       <div class="center-card">
         <div class="spin-ring" id="spinRing"></div>
         <h3>Payment received</h3>
-        <p>We're verifying your payment and processing your order. This usually takes a few moments.</p>
+        <p>We're verifying your payment. The spinner will stop once our team approves your order.</p>
         <div style="font-family:var(--mono);font-size:12px;color:var(--faint)">Ref: ${S.tradeRef}</div>
       </div>
     </div>`;
-  setTimeout(()=>{
-    S.orders.unshift({id:S.tradeRef,side:S.side,crypto:S.crypto,cryptoAmt:S.cryptoAmt,fiat:S.fiatAmt,fiatCurrency:S.fiatCurrency,fiatRate:S.fiatRate,status:'completed',time:'Just now · '+now()});
-    /* attach proof to existing order entry and broadcast */
-    const _ao=JSON.parse(localStorage.getItem('vouch_orders')||'[]');
-    const _idx=_ao.findIndex(x=>x.id===S.tradeRef);
-    if(_idx>=0){
-      _ao[_idx].proof=S.proofData||null;
-      localStorage.setItem('vouch_orders',JSON.stringify(_ao));
-      if(BC)BC.postMessage({type:'order',order:_ao[_idx]});
-    } else {
-      /* fallback: order wasn't saved yet by revealPhase2 */
-      const _e={id:S.tradeRef,side:S.side,crypto:S.crypto,cryptoAmt:S.cryptoAmt,fiatAmt:S.fiatAmt,ts:Date.now(),status:'pending',proof:S.proofData||null,username:getChatUsername()};
-      if(S.side==='sell'){
-        _e.payoutMethod=S.payoutMethod;
-        _e.payoutDetails=S.payoutMethod==='momo'
-          ?{type:'momo',network:S.momoNet,number:S.momoNum,name:S.momoName}
-          :{type:'bank',bankName:S.bankName,account:S.bankAcc,holder:S.bankHolder};
-      }else{_e.walletAddr=S.destWallet;}
-      _ao.unshift(_e);localStorage.setItem('vouch_orders',JSON.stringify(_ao));
-      if(BC)BC.postMessage({type:'order',order:_e});
-    }
-    renderTopbar();
-    showDone();
-  }, reduce?100:3400);
+
+  /* save proof to order and push to Supabase */
+  const _ao=JSON.parse(localStorage.getItem('vouch_orders')||'[]');
+  const _idx=_ao.findIndex(x=>x.id===S.tradeRef);
+  if(_idx>=0){
+    _ao[_idx].proof=S.proofData||null;
+    localStorage.setItem('vouch_orders',JSON.stringify(_ao));
+    if(sb)sb.from('orders').upsert({id:S.tradeRef,data:_ao[_idx]}).catch(()=>{});
+    if(BC)BC.postMessage({type:'order',order:_ao[_idx]});
+  } else {
+    const _e={id:S.tradeRef,side:S.side,crypto:S.crypto,cryptoAmt:S.cryptoAmt,fiatAmt:S.fiatAmt,ts:Date.now(),status:'pending',proof:S.proofData||null,username:getChatUsername()};
+    if(S.side==='sell'){
+      _e.payoutMethod=S.payoutMethod;
+      _e.payoutDetails=S.payoutMethod==='momo'
+        ?{type:'momo',network:S.momoNet,number:S.momoNum,name:S.momoName}
+        :{type:'bank',bankName:S.bankName,account:S.bankAcc,holder:S.bankHolder};
+    }else{_e.walletAddr=S.destWallet;}
+    _ao.unshift(_e);localStorage.setItem('vouch_orders',JSON.stringify(_ao));
+    if(sb)sb.from('orders').upsert({id:S.tradeRef,data:_e}).catch(()=>{});
+    if(BC)BC.postMessage({type:'order',order:_e});
+  }
+  renderTopbar();
+
+  /* listen for admin approval via BroadcastChannel (same browser) */
+  if(BC){
+    BC.addEventListener('message',function _onApprove(ev){
+      if(ev.data?.type==='order' && ev.data.order?.id===S.tradeRef && ev.data.order?.status==='approved'){
+        BC.removeEventListener('message',_onApprove);
+        clearInterval(S.pollInt); S.pollInt=null;
+        showDone();
+      }
+    });
+  }
+
+  /* poll Supabase every 6s for cross-device approval */
+  if(sb && S.tradeRef){
+    S.pollInt=setInterval(async()=>{
+      if(S.step!==2){clearInterval(S.pollInt);S.pollInt=null;return;}
+      try{
+        const {data}=await sb.from('orders').select('data').eq('id',S.tradeRef).maybeSingle();
+        if(data?.data?.status==='approved'){
+          clearInterval(S.pollInt);S.pollInt=null;
+          showDone();
+        }
+      }catch(e){}
+    },6000);
+  }
 }
 
 function showDone(){

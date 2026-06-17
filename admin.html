@@ -527,12 +527,25 @@ function renderTrades(c){
   }));
 }
 
-function approveOrder(oid,c){
-  const orders=JSON.parse(localStorage.getItem('vouch_orders')||'[]');
-  const idx=orders.findIndex(x=>x.id===oid);
-  if(idx<0)return;
+async function approveOrder(oid,c){
+  let orders=JSON.parse(localStorage.getItem('vouch_orders')||'[]');
+  let idx=orders.findIndex(x=>x.id===oid);
+
+  /* if not in local storage, fetch from Supabase (cross-device) */
+  if(idx<0 && sb){
+    try{
+      const {data}=await sb.from('orders').select('data').eq('id',oid).maybeSingle();
+      if(data?.data){orders.unshift(data.data);idx=0;}
+    }catch(e){}
+  }
+  if(idx<0){toast('Order not found: '+oid,true);return;}
+
   orders[idx].status='approved';
   localStorage.setItem('vouch_orders',JSON.stringify(orders));
+
+  /* push to Supabase so exchange page polling detects approval */
+  if(sb)sb.from('orders').upsert({id:oid,data:orders[idx]}).catch(()=>{});
+
   if(typeof BroadcastChannel!=='undefined'){
     const bc=new BroadcastChannel('vouch_chat');
     bc.postMessage({type:'order',order:orders[idx]});
