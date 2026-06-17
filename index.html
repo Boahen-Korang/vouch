@@ -274,7 +274,7 @@ footer{position:relative;z-index:10;background:var(--forest);color:#9FB3A6;borde
       <a href="#chat">Chat</a>
     </div>
     <a href="login.html" style="font-family:var(--mono);font-size:13px;color:var(--ink-soft);margin-right:4px">Log in</a>
-    <a href="exchange.html" class="btn btn-ink">Start trading <span class="ar">→</span></a>
+    <a href="login.html" class="btn btn-ink">Start trading <span class="ar">→</span></a>
   </div>
 </nav>
 
@@ -287,7 +287,7 @@ footer{position:relative;z-index:10;background:var(--forest);color:#9FB3A6;borde
     <h1>Step <em>into</em> the<br><span class="u">marketplace</span>.</h1>
     <p class="lede">Buy and sell crypto directly with real people — escrow holds the funds, reputation does the vouching, and you only close when both sides are happy. Scroll in.</p>
     <div class="hero-cta">
-      <a href="exchange.html" class="btn btn-emerald">Browse offers <span class="ar">→</span></a>
+      <a href="login.html" class="btn btn-emerald">Browse offers <span class="ar">→</span></a>
       <a href="#how" class="btn btn-line">See how escrow works</a>
     </div>
 
@@ -436,7 +436,7 @@ footer{position:relative;z-index:10;background:var(--forest);color:#9FB3A6;borde
       <p>Create an account, find an offer, and let escrow do the trusting. Free to browse, free to buy.</p>
       <div class="hero-cta">
         <a href="login.html" class="btn btn-paper">Create free account <span class="ar">→</span></a>
-        <a href="exchange.html" class="btn btn-outline">Explore the marketplace</a>
+        <a href="login.html" class="btn btn-outline">Explore the marketplace</a>
       </div>
     </div>
   </div>
@@ -452,7 +452,7 @@ footer{position:relative;z-index:10;background:var(--forest);color:#9FB3A6;borde
         <div class="logo"><span class="mark"></span>vouch</div>
         <p>Peer-to-peer crypto trading with escrow built in. Trade directly with people, settle in your currency, keep your funds protected end to end.</p>
       </div>
-      <div class="fcol"><h5>Trade</h5><a href="exchange.html">Buy crypto</a><a href="exchange.html">Sell crypto</a><a href="exchange.html">Post an offer</a><a href="#">Fees</a></div>
+      <div class="fcol"><h5>Trade</h5><a href="login.html">Buy crypto</a><a href="login.html">Sell crypto</a><a href="login.html">Post an offer</a><a href="#">Fees</a></div>
       <div class="fcol"><h5>Trust</h5><a href="#how">Escrow</a><a href="#reputation">Reputation</a><a href="#">Disputes</a><a href="#">Security</a></div>
       <div class="fcol"><h5>Company</h5><a href="#">About</a><a href="#">Help center</a><a href="#">Terms</a><a href="#">Privacy</a></div>
     </div>
@@ -576,7 +576,7 @@ function renderOffers(){
       <div class="o-price"><div class="p">$${o.price.toLocaleString()}</div><div class="unit">per BTC · USD</div></div>
       <div><div class="o-meth">${o.methods.map(m=>`<span class="meth">${m}</span>`).join('')}</div>
         <div class="o-lim">$${o.min.toLocaleString()} – $${o.max.toLocaleString()}</div></div>
-      <div class="o-act"><a href="exchange.html" class="btn ${cls}" ${sty}>${label} <span class="ar">→</span></a></div>
+      <div class="o-act"><a href="login.html" class="btn ${cls}" ${sty}>${label} <span class="ar">→</span></a></div>
     </div>`;}).join('')
     :`<div style="text-align:center;padding:34px;color:var(--ink-faint);font-family:var(--mono);font-size:13px">No offers for that method. Try another filter.</div>`;
 }
