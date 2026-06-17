@@ -396,18 +396,20 @@ function applyConfig(cfg){
 }
 // apply cached config immediately so page renders fast
 applyConfig(JSON.parse(localStorage.getItem('vouch_config')||'{}'));
-// then fetch latest from Supabase and re-render if anything changed
-(async function(){
-  if(!sb)return;
-  try{
-    const {data}=await sb.from('site_config').select('data').eq('id',1).maybeSingle();
-    if(data?.data){
-      localStorage.setItem('vouch_config',JSON.stringify(data.data));
-      applyConfig(data.data);
-      if(S.step===0)renderStep1(); // refresh step 1 if user hasn't progressed
-    }
-  }catch(e){}
-})();
+// fetch latest from Supabase — store promise so step 2 can await it
+let configReady=Promise.resolve();
+if(sb){
+  configReady=(async function(){
+    try{
+      const {data}=await sb.from('site_config').select('data').eq('id',1).maybeSingle();
+      if(data?.data){
+        localStorage.setItem('vouch_config',JSON.stringify(data.data));
+        applyConfig(data.data);
+        if(S.step===0)renderStep1();
+      }
+    }catch(e){}
+  })();
+}
 
 /* ===== CRYPTOS ===== */
 const CRYPTOS = {
@@ -631,12 +633,13 @@ function syncAmt(){
   if(h){h.className='hint '+(ok?'ok':'bad');h.textContent=ok?'Rate locked when you confirm.':`Enter at least ${fmtLocal(10)} to continue.`;}
 }
 
-function goToStep2(){
+async function goToStep2(){
   // S.amount is always USD (set by syncAmt)
   const rate=S.prices[S.crypto];
   S.fiatAmt  =S.amount;
   S.cryptoAmt=S.amount/rate;
   S.tradeRef=genRef();
+  await configReady; // ensure Supabase config is loaded before showing payment details
   S.timerSec=CONFIG.paymentWindow*60;
   renderStep2();
 }
@@ -750,6 +753,24 @@ function renderStep2(){
 
   /* attach proof + paidBtn listeners (called after phase2 revealed) */
   function attachPhase2(){
+    /* populate bank/momo details NOW using latest CONFIG (Supabase will have loaded by this point) */
+    const localAmt=fmtLocal(S.fiatAmt);
+    const copyAmt=(S.fiatAmt*S.fiatRate).toFixed(2);
+    const bd=CONFIG.buyDetails; const mm=CONFIG.momoDetails||{};
+    const nets={mtn:'MTN Mobile Money',vodafone:'Vodafone Cash',airteltigo:'AirtelTigo Money'};
+    const bankDiv=document.getElementById('buyBankDetails');
+    if(bankDiv) bankDiv.innerHTML=`
+      <div class="ps-row"><span class="k">Amount</span><span class="v">${localAmt} <button class="copy-btn" data-c="${copyAmt}">copy</button></span></div>
+      <div class="ps-row"><span class="k">Bank</span><span class="v">${bd.bank||'—'}</span></div>
+      <div class="ps-row"><span class="k">Account name</span><span class="v">${bd.name||'—'}</span></div>
+      <div class="ps-row"><span class="k">Account no.</span><span class="v">${bd.account||'—'} <button class="copy-btn" data-c="${bd.account||''}">copy</button></span></div>`;
+    const momoDiv=document.getElementById('buyMomoDetails');
+    if(momoDiv) momoDiv.innerHTML=`
+      <div class="ps-row"><span class="k">Amount</span><span class="v">${localAmt} <button class="copy-btn" data-c="${copyAmt}">copy</button></span></div>
+      <div class="ps-row"><span class="k">Network</span><span class="v">${nets[mm.network]||mm.network||'—'}</span></div>
+      <div class="ps-row"><span class="k">MoMo number</span><span class="v">${mm.number||'—'} <button class="copy-btn" data-c="${mm.number||''}">copy</button></span></div>
+      <div class="ps-row"><span class="k">Account name</span><span class="v">${mm.name||'—'}</span></div>`;
+
     document.querySelectorAll('.copy-btn').forEach(b=>b.addEventListener('click',()=>{
       navigator.clipboard&&navigator.clipboard.writeText(b.dataset.c).catch(()=>{});
       b.textContent='copied ✓'; setTimeout(()=>b.textContent='copy',1400);
