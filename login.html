@@ -357,7 +357,9 @@ form.addEventListener('submit',e=>{
       return;
     }
     /* save new account */
-    accounts.push({username:username.value.trim(), email:emailVal, password:pw.value});
+    const now=new Date();
+    const joinedStr=now.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+    accounts.push({username:username.value.trim(), email:emailVal, password:pw.value, joined:joinedStr, kyc:'unverified'});
     saveAccounts(accounts);
     localStorage.setItem('vouch_session',JSON.stringify({username:username.value.trim(),email:emailVal}));
   } else {

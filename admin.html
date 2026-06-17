@@ -300,57 +300,7 @@ function toast(msg,kind){const t=el('div','toast'+(kind?' '+kind:''));t.innerHTM
 /* ===== STATE ===== */
 const S={
   view:'overview', search:'',
-  kpi:{volume:1842000, volTrend:+8.4, escrow:642300, escTrend:+2.1, users:48210, userTrend:+312, fees:9240, feeTrend:+5.6},
-  volSeries:[112,98,134,121,156,143,168,151,172,160,149,181,166,184],
-  trades:[
-    {id:'VCH-2291',side:'buy',crypto:'BTC',cryptoAmt:0.05,fiatAmt:3360,walletAddr:'bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh',status:'completed',time:'2m ago'},
-    {id:'VCH-2290',side:'sell',crypto:'BTC',cryptoAmt:0.12,fiatAmt:8064,payoutMethod:'momo',payoutDetails:{type:'momo',network:'mtn',number:'0241234567',name:'Kofi Mensah'},status:'completed',time:'6m ago'},
-    {id:'VCH-2288',side:'buy',crypto:'ETH',cryptoAmt:1.5,fiatAmt:3627,walletAddr:'0x71C7656EC7ab88b098defB751B7401B5f6d8976F',status:'completed',time:'14m ago'},
-    {id:'VCH-2285',side:'sell',crypto:'USDT',cryptoAmt:1200,fiatAmt:1200,payoutMethod:'bank',payoutDetails:{type:'bank',bankName:'GCB Bank',account:'1234567890',holder:'Samuel Kofi'},status:'completed',time:'31m ago'},
-    {id:'VCH-2284',side:'buy',crypto:'ETH',cryptoAmt:0.8,fiatAmt:1934,walletAddr:'0x2546BcD3c84621e976D8185a91A922aE77ECEc30',status:'completed',time:'40m ago'},
-    {id:'VCH-2282',side:'sell',crypto:'BTC',cryptoAmt:0.03,fiatAmt:2016,payoutMethod:'momo',payoutDetails:{type:'momo',network:'vodafone',number:'0201234567',name:'Ama Owusu'},status:'completed',time:'52m ago'},
-    {id:'VCH-2280',side:'buy',crypto:'BTC',cryptoAmt:0.5,fiatAmt:33600,walletAddr:'bc1p5d7rjq7g6rdk2yhzks9smlaqtedr4dekq08ge52juxkngg2t5dkqk94r5s',status:'completed',time:'1h ago'},
-  ],
-  disputes:[
-    {id:'DSP-118',tradeId:'VCH-2287',buyer:'nadia_p',seller:'oscar.h',crypto:'BTC',amt:0.2,fiat:13440,method:'Bank transfer',raisedBy:'buyer',age:'22m',status:'open',
-      claimBuyer:"I sent the full £10,600 by bank transfer over 30 minutes ago with the correct reference, but the seller still hasn't released the BTC. I've attached the bank confirmation.",
-      claimSeller:"Nothing has arrived in my account yet. The reference on the offer was VCH2287 — I can only release once I actually see the funds. Happy to wait but it's not here.",
-      evidence:['bank_receipt.pdf','statement_0613.png'],
-      chat:[['sys','Escrow locked 0.2 BTC'],['b','Payment sent, ref VCH2287 ✅'],['s','Not seeing it yet, can you check the reference?'],['b','It definitely went through, here is the receipt'],['sys','Buyer opened a dispute']]},
-    {id:'DSP-117',tradeId:'VCH-2276',buyer:'leo.m',seller:'mei_t',crypto:'ETH',amt:0.6,fiat:1450,method:'PayPal',raisedBy:'seller',age:'48m',status:'open',
-      claimBuyer:"I paid through PayPal friends & family like we agreed. Not sure what the issue is.",
-      claimSeller:"The PayPal payment is marked as a goods purchase, not friends & family — it can be reversed any time. That wasn't the deal. Requesting a refund of escrow.",
-      evidence:['paypal_txn.png'],
-      chat:[['sys','Escrow locked 0.6 ETH'],['b','Paid via PayPal'],['s','This is a goods payment, it can be charged back'],['sys','Seller opened a dispute']]},
-    {id:'DSP-116',tradeId:'VCH-2268',buyer:'sam_k',seller:'aisha_t',crypto:'BTC',amt:0.08,fiat:5376,method:'Revolut',raisedBy:'buyer',age:'2h',status:'open',
-      claimBuyer:"Seller is asking me to cancel after I already paid. I won't cancel — I want my BTC released.",
-      claimSeller:"Price moved a lot since we agreed, asking buyer to redo at current rate.",
-      evidence:['revolut_confirmation.png','chat_export.txt'],
-      chat:[['sys','Escrow locked 0.08 BTC'],['b','Sent the Revolut payment'],['s','Price moved, can we cancel and redo?'],['b','No, I already paid — release please'],['sys','Buyer opened a dispute']]},
-    {id:'DSP-115',tradeId:'VCH-2255',buyer:'tariq_h',seller:'deji_o',crypto:'USDT',amt:900,fiat:900,method:'Bank transfer',raisedBy:'buyer',age:'5h',status:'open',
-      claimBuyer:"Bank shows the transfer completed this morning. Seller went offline.",
-      claimSeller:"",
-      evidence:['transfer_complete.pdf'],
-      chat:[['sys','Escrow locked 900 USDT'],['b','Transfer done, see attached'],['sys','Buyer opened a dispute · seller unresponsive 3h']]},
-  ],
-  users:[
-    {name:'marcus_k',country:'United Kingdom',joined:'Mar 2021',kyc:'verified',trades:1842,rating:4.9,vol:'$3.4M'},
-    {name:'sora_btc',country:'Singapore',joined:'Jul 2019',kyc:'verified',trades:5104,rating:4.95,vol:'$11.2M'},
-    {name:'priya_v',country:'India',joined:'Jun 2026',kyc:'pending',trades:0,rating:0,vol:'$0'},
-    {name:'leo.m',country:'Spain',joined:'Jun 2026',kyc:'pending',trades:3,rating:5.0,vol:'$1.2K'},
-    {name:'oscar.h',country:'Germany',joined:'Feb 2022',kyc:'verified',trades:3380,rating:4.92,vol:'$7.8M'},
-    {name:'mei_t',country:'Malaysia',joined:'May 2026',kyc:'pending',trades:189,rating:4.6,vol:'$84K'},
-    {name:'dodgy_dave',country:'Unknown',joined:'Jun 2026',kyc:'unverified',trades:1,rating:2.1,vol:'$320'},
-    {name:'aisha_t',country:'UAE',joined:'Jan 2023',kyc:'verified',trades:1290,rating:4.88,vol:'$2.1M'},
-  ],
-  offers:[
-    {id:'OFR-771',trader:'marcus_k',side:'sell',crypto:'BTC',price:67504,methods:['Bank transfer','Revolut'],lim:'$200–8K',status:'active'},
-    {id:'OFR-770',trader:'lina.fx',side:'sell',crypto:'BTC',price:67730,methods:['Wise','PayPal'],lim:'$100–5K',status:'active'},
-    {id:'OFR-768',trader:'dodgy_dave',side:'sell',crypto:'BTC',price:61200,methods:['Cash'],lim:'$50–10K',status:'flagged'},
-    {id:'OFR-765',trader:'oscar.h',side:'buy',crypto:'BTC',price:66980,methods:['Bank transfer','Wise'],lim:'$250–15K',status:'active'},
-    {id:'OFR-763',trader:'deji_o',side:'buy',crypto:'ETH',price:2402,methods:['Revolut','Cash'],lim:'$100–4K',status:'active'},
-    {id:'OFR-760',trader:'mei_t',side:'sell',crypto:'ETH',price:2455,methods:['PayPal'],lim:'$50–1.5K',status:'flagged'},
-  ],
+  trades:[], disputes:[], offers:[],
   tradeFilter:'all', dispFilter:'open', userFilter:'all', activeDispute:null,
 };
 
@@ -364,7 +314,8 @@ function unreadCount(){return getMsgs().filter(m=>m.from==='customer'&&!m.read).
 
 function refreshBadges(){
   const d=S.disputes.filter(x=>x.status==='open').length;
-  const k=S.users.filter(u=>u.kyc==='pending').length;
+  const accs=JSON.parse(localStorage.getItem('vouch_accounts')||'[]');
+  const k=accs.filter(a=>a.kyc==='pending').length;
   const ch=unreadCount();
   const pendingOrders=JSON.parse(localStorage.getItem('vouch_orders')||'[]').filter(o=>o.status==='pending').length;
   $('#bDisp').textContent=d; $('#bDisp').style.display=d?'':'none';
@@ -411,15 +362,13 @@ function renderOverview(c){
   const totalFiat=allOrders.reduce((s,o)=>s+(o.fiatAmt||0),0);
   const estFees=Math.round(totalFiat*0.005);
   const registeredUsers=JSON.parse(localStorage.getItem('vouch_accounts')||'[]').length;
-  const totalUsers=Math.max(registeredUsers,S.kpi.users);
-  const statusCounts={pending,completed,rejected};
   const totalAll=allOrders.length||1;
   c.innerHTML=`
   <div class="kpis">
-    ${kpiCard('Total volume',fmt$(totalFiat||S.kpi.volume),S.kpi.volTrend,'%','#23A86E','M2 17l6-6 4 4 8-8')}
-    ${kpiCard('Pending orders',pending,pending>0?pending:0,'','#E2B45A','coin')}
-    ${kpiCard('Total users',totalUsers.toLocaleString(),registeredUsers,' registered','#9B7AD6','users')}
-    ${kpiCard('Est. fees earned',fmt$(estFees||S.kpi.fees),S.kpi.feeTrend,'%','#5AA9E2','coin')}
+    ${kpiCard('Total volume',fmt$(totalFiat),0,'','#23A86E','M2 17l6-6 4 4 8-8')}
+    ${kpiCard('Pending orders',pending,0,'','#E2B45A','coin')}
+    ${kpiCard('Registered users',registeredUsers.toLocaleString(),0,'','#9B7AD6','users')}
+    ${kpiCard('Est. fees earned',fmt$(estFees),0,'','#5AA9E2','coin')}
   </div>
   <div class="grid2">
     <div class="card"><div class="card-h"><h3>Trading volume</h3><span class="sub">last 14 days · $M</span></div>
@@ -438,7 +387,7 @@ function renderOverview(c){
       <div class="statusbars">
         ${attn('Pending orders',pending,'#E2B45A','trades')}
         ${attn('Open disputes',S.disputes.filter(d=>d.status==='open').length,'#FF6B4A','disputes')}
-        ${attn('Pending KYC reviews',S.users.filter(u=>u.kyc==='pending').length,'#9B7AD6','users')}
+        ${attn('Pending KYC reviews',JSON.parse(localStorage.getItem('vouch_accounts')||'[]').filter(a=>a.kyc==='pending').length,'#9B7AD6','users')}
       </div></div>
   </div>`;
   drawVolChart();
@@ -471,7 +420,7 @@ function gotoView(v){const btn=[...$('#nav').children].find(x=>x.dataset&&x.data
 function renderFeed(){
   const feed=$('#feed'); if(!feed)return;
   const realOrders=JSON.parse(localStorage.getItem('vouch_orders')||'[]');
-  const realItems=realOrders.slice().reverse().slice(0,4).map(o=>{
+  const items=realOrders.slice().reverse().slice(0,6).map(o=>{
     const dt=new Date(o.ts);
     const tstr=dt.getHours().toString().padStart(2,'0')+':'+dt.getMinutes().toString().padStart(2,'0');
     const color=o.side==='sell'?'#FF6B4A':'#3FD98C';
@@ -480,21 +429,25 @@ function renderFeed(){
       :`<b>${o.id}</b> BUY — ${o.cryptoAmt} ${o.crypto} · send to wallet`;
     return [color,label,tstr];
   });
-  const demoItems=[
-    ['#3FD98C','<b>VCH-2288</b> completed — 1.5 ETH sent to customer wallet','14m'],
-    ['#FF6B4A','<b>DSP-118</b> dispute opened on VCH-2287','22m'],
-    ['#9B7AD6','New user registered and started a trade','18m'],
-    ['#3FD98C','<b>VCH-2285</b> completed — 1,200 USDT sent','31m'],
-  ];
-  const items=[...realItems,...demoItems].slice(0,6);
+  if(!items.length){feed.innerHTML='<div style="padding:20px 0;font-family:var(--mono);font-size:12px;color:var(--faint);text-align:center">No activity yet.</div>';return;}
   feed.innerHTML=items.map(i=>`<div class="fe"><span class="dot" style="background:${i[0]}"></span><span>${i[1]}</span><span class="tm">${i[2]}</span></div>`).join('');
+}
+function getVolSeries(){
+  const orders=JSON.parse(localStorage.getItem('vouch_orders')||'[]');
+  const buckets=new Array(14).fill(0);
+  const now=Date.now();
+  orders.forEach(o=>{
+    const daysAgo=Math.floor((now-o.ts)/86400000);
+    if(daysAgo>=0&&daysAgo<14)buckets[13-daysAgo]+=(o.fiatAmt||0)/1000;
+  });
+  return buckets;
 }
 function drawVolChart(){
   const cv=$('#volChart'); if(!cv)return;
   const ctx=cv.getContext('2d'); const W=cv.clientWidth,H=220;
   cv.width=W*devicePixelRatio; cv.height=H*devicePixelRatio; ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
   ctx.clearRect(0,0,W,H);
-  const d=S.volSeries, max=Math.max(...d)*1.15, padB=22,padT=8;
+  const d=getVolSeries(), max=Math.max(...d)*1.15||1, padB=22,padT=8;
   const bw=W/d.length;
   for(let g=0;g<=3;g++){const y=padT+(H-padB-padT)*g/3;ctx.strokeStyle='rgba(31,58,44,.7)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
   d.forEach((v,i)=>{
@@ -529,19 +482,13 @@ function renderTrades(c){
       :(o.payoutMethod==='momo'?'MoMo · '+(o.payoutDetails?.number||''):'Bank · '+(o.payoutDetails?.account||''));
     allTrades.push({id:o.id,side:o.side,crypto:o.crypto,cryptoAmt:o.cryptoAmt,fiatAmt:o.fiatAmt,details,status:o.status==='approved'?'completed':o.status,time:tstr,_real:true,_oid:o.id});
   });
-  S.trades.forEach(t=>{
-    const details=t.side==='buy'
-      ?`Wallet: ${(t.walletAddr||'').slice(0,14)}…`
-      :(t.payoutMethod==='momo'?'MoMo · '+(t.payoutDetails?.number||''):'Bank · '+(t.payoutDetails?.account||''));
-    allTrades.push({id:t.id,side:t.side,crypto:t.crypto,cryptoAmt:t.cryptoAmt,fiatAmt:t.fiatAmt,details,status:t.status,time:t.time,_real:false});
-  });
   let list=allTrades.filter(t=>S.tradeFilter==='all'||t.status===S.tradeFilter);
   if(S.search)list=list.filter(t=>(t.id+t.crypto+t.details).toLowerCase().includes(S.search));
-  if(!list.length){rows.innerHTML='<tr><td colspan="6"><div class="empty">No trades match.</div></td></tr>';return;}
+  if(!list.length){rows.innerHTML=`<tr><td colspan="6"><div class="empty">${allTrades.length?'No trades match this filter.':'No orders yet.'}</div></td></tr>`;return;}
   rows.innerHTML=list.map(t=>{
     const sm=smap[t.status]||['grey',t.status];
     const sideCol=t.side==='sell'?'var(--coral)':'var(--emerald-br)';
-    const action=t._real?`<button class="tbtn g" data-okey="${t._oid}">Details →</button>`:'<button class="tbtn b" disabled>Demo</button>';
+    const action=`<button class="tbtn g" data-okey="${t._oid}">Details →</button>`;
     return `<tr>
       <td class="mono-c"><b>${t.id}</b><div style="color:var(--faint);font-size:11px">${t.time}</div></td>
       <td><span class="pill ${t.side==='sell'?'coral':'green'}"><span class="d"></span>${t.side.toUpperCase()}</span></td>
@@ -690,25 +637,27 @@ function resolveDispute(d,act){
 }
 
 /* ===== USERS ===== */
+function getAccounts(){return JSON.parse(localStorage.getItem('vouch_accounts')||'[]');}
+function saveAccounts(a){localStorage.setItem('vouch_accounts',JSON.stringify(a));}
 function renderUsers(c){
   c.innerHTML=`
   <div class="toolbar"><div class="ftabs" id="uFilter">
     ${['all','pending','verified','unverified','banned'].map(f=>`<button data-f="${f}" class="${S.userFilter===f?'on':''}">${f[0].toUpperCase()+f.slice(1)}</button>`).join('')}
   </div></div>
-  <div class="tbl"><table><thead><tr><th>User</th><th>Country</th><th>Joined</th><th>Trades</th><th>Rating</th><th>KYC</th><th></th></tr></thead>
+  <div class="tbl"><table><thead><tr><th>User</th><th>Email</th><th>Joined</th><th>KYC</th><th></th></tr></thead>
   <tbody id="userRows"></tbody></table></div>`;
   $('#uFilter').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;S.userFilter=b.dataset.f;renderUsers(c);});
   const rows=$('#userRows');
-  let list=S.users.filter(u=>S.userFilter==='all'||u.kyc===S.userFilter);
-  if(S.search)list=list.filter(u=>(u.name+u.country).toLowerCase().includes(S.search));
-  if(!list.length){rows.innerHTML='<tr><td colspan="7"><div class="empty">No users match.</div></td></tr>';return;}
+  const accs=getAccounts();
+  let list=accs.map(a=>({name:a.username,email:a.email,joined:a.joined||'—',kyc:a.kyc||'unverified'}));
+  list=list.filter(u=>S.userFilter==='all'||u.kyc===S.userFilter);
+  if(S.search)list=list.filter(u=>(u.name+u.email).toLowerCase().includes(S.search));
+  if(!list.length){rows.innerHTML=`<tr><td colspan="5"><div class="empty">${accs.length?'No users match.':'No registered users yet.'}</div></td></tr>`;return;}
   const kmap={verified:['green','Verified'],pending:['gold','Pending review'],unverified:['grey','Unverified'],banned:['coral','Banned']};
   rows.innerHTML=list.map(u=>`<tr>
-    <td class="cell-u"><span class="uav" style="background:${colorFor(u.name)}">${initials(u.name)}</span><div><div class="nm">${u.name}</div><div class="sub">${u.vol} volume</div></div></td>
-    <td style="font-size:13px;color:var(--muted)">${u.country}</td>
+    <td class="cell-u"><span class="uav" style="background:${colorFor(u.name)}">${initials(u.name)}</span><div><div class="nm">${u.name}</div></div></td>
+    <td style="font-size:13px;color:var(--muted)">${u.email}</td>
     <td class="mono-c" style="color:var(--muted)">${u.joined}</td>
-    <td class="mono-c">${u.trades.toLocaleString()}</td>
-    <td class="mono-c">${u.rating?'★ '+u.rating.toFixed(2):'—'}</td>
     <td><span class="pill ${kmap[u.kyc][0]}"><span class="d"></span>${kmap[u.kyc][1]}</span></td>
     <td class="row-act">
       ${u.kyc==='pending'?`<button class="tbtn g" data-app="${u.name}">Approve</button><button class="tbtn r" data-rej="${u.name}">Reject</button>`:
@@ -720,7 +669,12 @@ function renderUsers(c){
   rows.querySelectorAll('[data-ban]').forEach(b=>b.addEventListener('click',()=>{setKyc(b.dataset.ban,'banned');toast(b.dataset.ban+' has been banned','bad');}));
   rows.querySelectorAll('[data-unban]').forEach(b=>b.addEventListener('click',()=>{setKyc(b.dataset.unban,'unverified');toast(b.dataset.unban+' unbanned','warn');}));
 }
-function setKyc(name,status){const u=S.users.find(x=>x.name===name);if(u)u.kyc=status;refreshBadges();renderUsers($('#content'));}
+function setKyc(name,status){
+  const accs=getAccounts();
+  const idx=accs.findIndex(a=>a.username===name);
+  if(idx>=0){accs[idx].kyc=status;saveAccounts(accs);}
+  refreshBadges();renderUsers($('#content'));
+}
 
 /* ===== RATES ===== */
 function renderRates(c){
@@ -883,9 +837,7 @@ function renderSettings(c){
 
 /* ===== LIVE FLICKER ===== */
 function tick(){
-  S.kpi.volume+=Math.floor((Math.random()-0.3)*2400);
-  S.kpi.fees+=Math.floor((Math.random()-0.3)*40);
-  if(S.view==='overview'){const v=$('.kpi .v');if(v)v.textContent=fmt$(S.kpi.volume);}
+  if(S.view==='overview')renderOverview($('#content'));
 }
 
 /* ===== INIT ===== */
