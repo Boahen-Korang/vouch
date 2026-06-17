@@ -350,6 +350,14 @@ form.addEventListener('submit', async e=>{
     /* ---- Supabase auth path ---- */
     btn.classList.add('loading');
     if(isRegister){
+      /* check email uniqueness */
+      const {data:emailTaken}=await sb.from('profiles').select('email').eq('email',emailVal).maybeSingle();
+      if(emailTaken){
+        btn.classList.remove('loading');
+        email.classList.add('bad');
+        showFormErr('An account with this email already exists. Log in instead.');
+        return;
+      }
       /* check username uniqueness */
       const {data:taken}=await sb.from('profiles').select('username').eq('username',uname).maybeSingle();
       if(taken){
