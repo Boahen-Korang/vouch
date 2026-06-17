@@ -488,6 +488,7 @@ function renderTopbar(){}
 $('#tabs').addEventListener('click',e=>{
   const b=e.target.closest('button'); if(!b)return;
   S.tab=b.dataset.tab;
+  location.hash=S.tab;
   [...$('#tabs').children].forEach(x=>x.classList.toggle('on',x===b));
   render();
 });
@@ -1069,6 +1070,9 @@ document.getElementById('signoutBtn').addEventListener('click',async()=>{
 });
 
 /* ===== INIT ===== */
+const _hash=location.hash.replace('#','');
+if(_hash==='orders')S.tab='orders';
+[...$('#tabs').children].forEach(x=>x.classList.toggle('on',x.dataset.tab===S.tab));
 renderTopbar(); render();
 fetchRates();
 if(!reduce)setInterval(priceTick,3000);

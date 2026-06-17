@@ -350,7 +350,7 @@ const TITLES={overview:['Overview','Platform health at a glance'],trades:['Trade
   disputes:['Disputes','Resolve flagged orders'],users:['Users','Manage registered accounts'],
   offers:['Rates','Live BTC · ETH · USDT exchange rates'],chat:['Chat','Message customers in real time'],settings:['Settings','Platform configuration']};
 $('#nav').addEventListener('click',e=>{const b=e.target.closest('.nav-item');if(!b)return;
-  S.view=b.dataset.v; S.search='';$('#search').value='';if(S.view!=='chat')S.chatUser=null;
+  S.view=b.dataset.v; location.hash=S.view; S.search='';$('#search').value='';if(S.view!=='chat')S.chatUser=null;
   [...$('#nav').children].forEach(x=>x.classList&&x.classList.toggle('on',x===b));
   $('#ptitle').childNodes[0].nodeValue=TITLES[S.view][0]; $('#psub').textContent=TITLES[S.view][1];
   render();});
@@ -949,6 +949,13 @@ document.getElementById('signoutBtn').addEventListener('click',async()=>{
 });
 
 /* ===== INIT ===== */
+const _adminHash=location.hash.replace('#','');
+if(_adminHash && TITLES[_adminHash]){
+  S.view=_adminHash;
+  const nb=[...$('#nav').children].find(x=>x.dataset&&x.dataset.v===S.view);
+  if(nb){[...$('#nav').children].forEach(x=>x.classList&&x.classList.toggle('on',x===nb));}
+  $('#ptitle').childNodes[0].nodeValue=TITLES[S.view][0]; $('#psub').textContent=TITLES[S.view][1];
+}
 refreshBadges(); render();
 syncAccountsFromSupabase();
 const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
