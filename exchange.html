@@ -875,10 +875,7 @@ function goToStep3(){
       </div>
     </div>`;
   setTimeout(()=>{
-    /* settle wallet */
-    if(S.side==='buy'){ S.wallet[S.crypto]=(S.wallet[S.crypto]||0)+S.cryptoAmt; S.wallet.USD-=S.fiatAmt; }
-    else               { S.wallet[S.crypto]=(S.wallet[S.crypto]||0)-S.cryptoAmt; S.wallet.USD+=S.fiatAmt; }
-    S.orders.unshift({id:S.tradeRef,side:S.side,crypto:S.crypto,cryptoAmt:S.cryptoAmt,fiat:S.fiatAmt,status:'completed',time:'Just now · '+now()});
+    S.orders.unshift({id:S.tradeRef,side:S.side,crypto:S.crypto,cryptoAmt:S.cryptoAmt,fiat:S.fiatAmt,fiatCurrency:S.fiatCurrency,fiatRate:S.fiatRate,status:'completed',time:'Just now · '+now()});
     /* attach proof to existing order entry and broadcast */
     const _ao=JSON.parse(localStorage.getItem('vouch_orders')||'[]');
     const _idx=_ao.findIndex(x=>x.id===S.tradeRef);
