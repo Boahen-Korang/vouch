@@ -287,12 +287,8 @@ button{font-family:inherit;cursor:pointer}
   <div class="tabs" id="tabs">
     <button data-tab="trade" class="on">Trade</button>
     <button data-tab="orders">My orders</button>
-    <button data-tab="wallet">Wallet</button>
   </div>
   <div class="tb-right">
-    <div class="pricepill"><span class="sym" id="ppSym">₿</span><span class="val" id="ppVal">—</span><span class="chg up" id="ppChg">—</span></div>
-    <div class="balpill" id="balPill">—</div>
-    <a href="admin.html" class="me" title="Admin dashboard">Y</a>
   </div>
 </div></div>
 
@@ -384,14 +380,7 @@ function now(){ const d=new Date(); return d.getHours().toString().padStart(2,'0
 function genRef(){ return 'VCH-'+Math.floor(8000+Math.random()*9000); }
 
 /* ===== TOPBAR ===== */
-function renderTopbar(){
-  const c=S.crypto, p=S.prices[c], pv=S.prev[c];
-  $('#ppSym').textContent=CRYPTOS[c].glyph; $('#ppSym').style.color=CRYPTOS[c].color;
-  $('#ppVal').textContent=fmt$0(p);
-  const ch=(p-pv)/pv*100;
-  const el=$('#ppChg'); el.textContent=(ch>=0?'+':'')+ch.toFixed(2)+'%'; el.className='chg '+(ch>=0?'up':'down');
-  $('#balPill').textContent=fmt$0(walletValue())+' total';
-}
+function renderTopbar(){}
 
 /* ===== TABS ===== */
 $('#tabs').addEventListener('click',e=>{
@@ -405,7 +394,6 @@ $('#tabs').addEventListener('click',e=>{
 function render(){
   if(S.tab==='trade') renderTrade();
   else if(S.tab==='orders') renderOrders();
-  else renderWallet();
 }
 
 /* ===== RATES BOARD ===== */
@@ -874,21 +862,6 @@ function renderOrders(){
   </div>`).join('');
 }
 
-/* ===== WALLET ===== */
-function renderWallet(){
-  const page=$('#page');
-  const assets=[{k:'USD',name:'US Dollar',sym:'$',color:'#90A89A',bg:'#1b3528'},
-    ...Object.keys(CRYPTOS).map(c=>({k:c,...CRYPTOS[c],sym:CRYPTOS[c].glyph}))];
-  page.innerHTML=`<div class="page-title">Wallet</div><div class="page-sub">Your balances across all assets.</div>
-    <div class="wallet-top"><div class="wallet-total"><div class="l">Total balance</div><div class="v">${fmt$(walletValue())}</div></div></div>
-    <div class="assets">${assets.map(a=>{
-      const bal=S.wallet[a.k]||0, val=a.k==='USD'?bal:bal*S.prices[a.k];
-      const amtStr=a.k==='USD'?fmt$(bal):fmtC(bal,a.k)+' '+a.k;
-      return `<div class="asset"><div class="ic" style="background:${a.bg};color:${a.color}">${a.sym}</div>
-        <div><div class="nm">${a.name}</div><div class="sym">${a.k}</div></div>
-        <div class="amt"><div class="a">${amtStr}</div><div class="f">${fmt$(val)}</div></div></div>`;
-    }).join('')}</div>`;
-}
 
 /* ===== LIVE PRICE TICK ===== */
 function priceTick(){
