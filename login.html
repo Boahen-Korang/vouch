@@ -150,6 +150,11 @@ a{color:inherit;text-decoration:none}
       <p class="sub">Log in to your escrow-protected account</p>
 
       <form id="loginForm" novalidate>
+        <div class="field" id="fUsername" style="display:none">
+          <label for="username">Username</label>
+          <div class="input-wrap"><input type="text" id="username" placeholder="your_handle" autocomplete="username"></div>
+          <div class="err" id="usernameErr">Choose a username (letters, numbers, _ only)</div>
+        </div>
         <div class="field">
           <label for="email">Email</label>
           <div class="input-wrap"><input type="email" id="email" placeholder="you@example.com" autocomplete="email"></div>
@@ -161,10 +166,15 @@ a{color:inherit;text-decoration:none}
             <input type="password" id="pw" placeholder="••••••••" autocomplete="current-password">
             <button type="button" class="toggle-pw" id="togglePw" aria-label="Show password">SHOW</button>
           </div>
-          <div class="err" id="pwErr">Enter your password</div>
+          <div class="err" id="pwErr" data-login="Enter your password" data-register="Password must be at least 8 characters">Enter your password</div>
+        </div>
+        <div class="field" id="fConfirm" style="display:none">
+          <label for="pwConfirm">Confirm password</label>
+          <div class="input-wrap"><input type="password" id="pwConfirm" placeholder="••••••••" autocomplete="new-password"></div>
+          <div class="err" id="pwConfirmErr">Passwords don't match</div>
         </div>
 
-        <div class="row">
+        <div class="row" id="rowRemember">
           <label class="remember">
             <input type="checkbox" id="remember">
             <span class="box"><svg viewBox="0 0 24 24" fill="none" stroke="#04130C" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>
@@ -192,7 +202,7 @@ a{color:inherit;text-decoration:none}
         </button>
       </div>
 
-      <p class="signup">New to Vouch? <a href="login.html">Create an account</a></p>
+      <p class="signup" id="signupLine">New to Vouch? <a href="#" id="toggleMode">Create an account</a></p>
       <div class="trust">
         <svg viewBox="0 0 24 24" fill="none" stroke="var(--faint)" stroke-width="2" stroke-linecap="round"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
         Bank-grade encryption · escrow protected
@@ -245,27 +255,79 @@ togglePw.addEventListener('click',()=>{
   togglePw.textContent=show?'HIDE':'SHOW';
 });
 
+/* ===== mode toggle ===== */
+let isRegister = false;
+const h1 = document.querySelector('.card h1');
+const sub = document.querySelector('.card .sub');
+const fUsername = document.getElementById('fUsername');
+const fConfirm = document.getElementById('fConfirm');
+const rowRemember = document.getElementById('rowRemember');
+const signupLine = document.getElementById('signupLine');
+const toggleModeBtn = document.getElementById('toggleMode');
+
+toggleModeBtn.addEventListener('click', e => {
+  e.preventDefault();
+  isRegister = !isRegister;
+  if (isRegister) {
+    h1.textContent = 'Create account';
+    sub.textContent = 'Join Vouch and start trading with escrow protection';
+    fUsername.style.display = '';
+    fConfirm.style.display = '';
+    rowRemember.style.display = 'none';
+    btn.querySelector('.lbl').textContent = 'Create account';
+    signupLine.innerHTML = 'Already have an account? <a href="#" id="toggleMode">Log in</a>';
+    document.getElementById('toggleMode').addEventListener('click', e => { e.preventDefault(); toggleModeBtn.click(); });
+  } else {
+    h1.textContent = 'Welcome back';
+    sub.textContent = 'Log in to your escrow-protected account';
+    fUsername.style.display = 'none';
+    fConfirm.style.display = 'none';
+    rowRemember.style.display = '';
+    btn.querySelector('.lbl').textContent = 'Log in';
+    signupLine.innerHTML = 'New to Vouch? <a href="#" id="toggleMode">Create an account</a>';
+    document.getElementById('toggleMode').addEventListener('click', e => { e.preventDefault(); toggleModeBtn.click(); });
+  }
+  btn.classList.remove('done', 'loading');
+  btn.querySelector('.ar').style.display = '';
+  [email, pw, username, pwConfirm].forEach(el => { el.classList.remove('bad'); });
+  [emailErr, pwErr, usernameErr, pwConfirmErr].forEach(el => el.classList.remove('show'));
+});
+
 /* ===== validation + fake submit ===== */
 const form=document.getElementById('loginForm'), btn=document.getElementById('loginBtn');
-const email=document.getElementById('email');
+const email=document.getElementById('email'), username=document.getElementById('username');
+const pwConfirm=document.getElementById('pwConfirm');
 const emailErr=document.getElementById('emailErr'), pwErr=document.getElementById('pwErr');
+const usernameErr=document.getElementById('usernameErr'), pwConfirmErr=document.getElementById('pwConfirmErr');
+
 function valid(){
   let ok=true;
+  if(isRegister){
+    const uok=/^[a-zA-Z0-9_]{2,24}$/.test(username.value.trim());
+    username.classList.toggle('bad',!uok); usernameErr.classList.toggle('show',!uok); ok=ok&&uok;
+  }
   const eok=/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value.trim());
   email.classList.toggle('bad',!eok); emailErr.classList.toggle('show',!eok); ok=ok&&eok;
-  const pok=pw.value.length>0;
+  const pok=isRegister?pw.value.length>=8:pw.value.length>0;
+  pwErr.textContent=isRegister?'Password must be at least 8 characters':'Enter your password';
   pw.classList.toggle('bad',!pok); pwErr.classList.toggle('show',!pok); ok=ok&&pok;
+  if(isRegister){
+    const cok=pwConfirm.value===pw.value&&pwConfirm.value.length>0;
+    pwConfirm.classList.toggle('bad',!cok); pwConfirmErr.classList.toggle('show',!cok); ok=ok&&cok;
+  }
   return ok;
 }
-[email,pw].forEach(el=>el.addEventListener('input',()=>{el.classList.remove('bad');
-  (el===email?emailErr:pwErr).classList.remove('show');}));
+[email,pw,username,pwConfirm].forEach(el=>el.addEventListener('input',()=>{
+  el.classList.remove('bad');
+  ({[email.id]:emailErr,[pw.id]:pwErr,[username.id]:usernameErr,[pwConfirm.id]:pwConfirmErr})[el.id]?.classList.remove('show');
+}));
 form.addEventListener('submit',e=>{
   e.preventDefault();
   if(!valid()) return;
   btn.classList.add('loading');
   setTimeout(()=>{
     btn.classList.remove('loading'); btn.classList.add('done');
-    btn.querySelector('.lbl').textContent='Welcome back ✓';
+    btn.querySelector('.lbl').textContent=isRegister?'Account created ✓':'Welcome back ✓';
     btn.querySelector('.ar').style.display='none';
     setTimeout(()=>{window.location.href='exchange.html';},700);
   },1400);
