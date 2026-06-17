@@ -323,14 +323,16 @@ const $=s=>document.querySelector(s);
 
 /* ===== ADMIN CONFIG (rates + payment details) ===== */
 const CONFIG = {
-  rates: { BTC:67200, ETH:2418, USDT:1.0 },
+  rates: { BTC:67200, ETH:2418, USDT:1.0, EUR:1.08, XAU:2350 },
   buyDetails: {                          // user pays fiat → platform
     bank:    'Standard Chartered',
     name:    'Vouch Technologies Ltd',
     account: '0012 3456 7890',
     sort:    '12-34-56',
   },
-  sellWallets: {                         // user sends crypto → platform
+  sellWallets: {                         // user sends crypto/asset → platform
+    EUR:  '',
+    XAU:  '',
     BTC:  'bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh',
     ETH:  '0x742d35Cc6634C0532925a3b8D4C2F5A0b91A7854',
     USDT: '0x742d35Cc6634C0532925a3b8D4C2F5A0b91A7854',
@@ -350,14 +352,16 @@ const CRYPTOS = {
   BTC:  { name:'Bitcoin',  glyph:'₿', color:'#E2B45A', bg:'radial-gradient(circle at 35% 30%,#3a2a12,#1a1207)', dec:6 },
   ETH:  { name:'Ethereum', glyph:'Ξ', color:'#5AA9E2', bg:'radial-gradient(circle at 35% 30%,#16283a,#0a121d)', dec:4 },
   USDT: { name:'Tether',   glyph:'₮', color:'#3FD98C', bg:'radial-gradient(circle at 35% 30%,#16382a,#0a1d15)', dec:2 },
+  EUR:  { name:'Euro',     glyph:'€', color:'#7B9FE8', bg:'radial-gradient(circle at 35% 30%,#1a2040,#0d1225)', dec:2 },
+  XAU:  { name:'Gold',     glyph:'Au', color:'#D4AF37', bg:'radial-gradient(circle at 35% 30%,#3a2e0a,#1e1805)', dec:4 },
 };
 
 /* ===== STATE ===== */
 const S = {
   tab:'trade', side:'buy', crypto:'BTC', unit:'fiat', amount:500, step:0,
   timerSec:0, timerInt:null, tradeRef:null, cryptoAmt:0, fiatAmt:0, proofData:null,
-  prices:{ BTC:67200, ETH:2418, USDT:1.0 },
-  prev:{ BTC:67200, ETH:2418, USDT:1.0 },
+  prices:{ BTC:67200, ETH:2418, USDT:1.0, EUR:1.08, XAU:2350 },
+  prev:{ BTC:67200, ETH:2418, USDT:1.0, EUR:1.08, XAU:2350 },
   wallet:{ USD:5200, BTC:0.182, ETH:1.4, USDT:850 },
   orders:[
     {id:'VCH-2261',side:'buy', crypto:'BTC', cryptoAmt:0.043, fiat:2880, status:'completed', time:'Yesterday · 18:22'},

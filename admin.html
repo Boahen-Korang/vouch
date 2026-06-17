@@ -709,11 +709,13 @@ function setKyc(name,status){
 /* ===== RATES ===== */
 function renderRates(c){
   const cfg=JSON.parse(localStorage.getItem('vouch_config')||'{}');
-  const rates=cfg.rates||{BTC:67500,ETH:2420,USDT:1};
+  const rates=cfg.rates||{BTC:67500,ETH:2420,USDT:1,EUR:1.08,XAU:2350};
   const coins=[
     {sym:'BTC',name:'Bitcoin',color:'#E2B45A',icon:'₿'},
     {sym:'ETH',name:'Ethereum',color:'#5AA9E2',icon:'Ξ'},
     {sym:'USDT',name:'Tether',color:'#3FD98C',icon:'₮'},
+    {sym:'EUR',name:'Euro',color:'#7B9FE8',icon:'€'},
+    {sym:'XAU',name:'Gold',color:'#D4AF37',icon:'Au'},
   ];
   c.innerHTML=`
   <div style="max-width:680px">
