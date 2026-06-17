@@ -8,7 +8,15 @@ const cors     = require('cors');
 
 const app = express();
 app.use(express.json());
-app.use(cors());
+app.use(cors({ origin: '*', methods: ['GET','POST','OPTIONS'], allowedHeaders: ['Content-Type','Authorization'] }));
+app.options('*', cors());
+
+/* keep-alive ping every 14 min so Render free tier doesn't sleep */
+setInterval(() => {
+  const http = require('https');
+  const host = process.env.RENDER_EXTERNAL_URL || '';
+  if (host) http.get(host + '/api/health', () => {}).on('error', () => {});
+}, 14 * 60 * 1000);
 
 const dbUrl = process.env.DATABASE_URL || '';
 console.log('DATABASE_URL set:', !!dbUrl);
