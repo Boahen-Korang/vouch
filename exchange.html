@@ -396,18 +396,6 @@ function render(){
   else if(S.tab==='orders') renderOrders();
 }
 
-/* ===== RATES BOARD ===== */
-function ratesHTML(){
-  return '<div class="rates-board">'+Object.entries(CRYPTOS).map(([k,c])=>{
-    const p=S.prices[k], pv=S.prev[k], ch=(p-pv)/pv*100;
-    return `<div class="rate-card">
-      <div class="rate-ic" style="background:${c.bg};color:${c.color}">${c.glyph}</div>
-      <div><div class="rate-name">${c.name}</div>
-        <div class="rate-val" id="rv${k}">${fmt$0(p)}</div>
-        <div class="rate-chg ${ch>=0?'up':'down'}" id="rc${k}">${ch>=0?'▲':'▼'} ${Math.abs(ch).toFixed(2)}%</div>
-      </div></div>`;
-  }).join('')+'</div>';
-}
 
 /* ===== STEP INDICATOR ===== */
 function stepsHTML(active){
@@ -422,7 +410,6 @@ function renderTrade(){
   page.innerHTML=`
     <div class="page-title">Trade</div>
     <div class="page-sub">Buy or sell crypto instantly at platform rates.</div>
-    ${ratesHTML()}
     <div class="trade-layout">
       <div id="tradeCard"></div>
       <div class="info-panel">
@@ -870,18 +857,8 @@ function priceTick(){
     const move=(Math.random()-.48)*S.prices[c]*.003;
     S.prices[c]=Math.max(1,S.prices[c]+move);
   }
-  renderTopbar();
-  /* update rates board if on trade tab */
+  /* update conversion in step 1 */
   if(S.tab==='trade' && S.step===0){
-    Object.keys(CRYPTOS).forEach(k=>{
-      const rv=document.getElementById('rv'+k), rc=document.getElementById('rc'+k);
-      if(!rv)return;
-      const p=S.prices[k], pv=S.prev[k], ch=(p-pv)/pv*100;
-      rv.textContent=fmt$0(p);
-      rc.className='rate-chg '+(ch>=0?'up':'down');
-      rc.textContent=(ch>=0?'▲':'▼')+' '+Math.abs(ch).toFixed(2)+'%';
-    });
-    /* update conversion in step 1 */
     syncAmt();
     const rl=document.getElementById('rateLabel');
     if(rl)rl.textContent='@ '+fmt$0(S.prices[S.crypto])+' / '+S.crypto;
