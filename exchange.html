@@ -973,10 +973,12 @@ function goToStep3(){
   }
   renderTopbar();
 
-  /* after a few seconds swap to "wait a few minutes" message */
+  /* after a few seconds stop spinner and show "wait a few minutes" */
   setTimeout(()=>{
+    const ring=document.getElementById('spinRing');
     const msg=document.getElementById('step3Msg');
     const sub=document.getElementById('step3Sub');
+    if(ring)ring.style.display='none';
     if(msg)msg.textContent='Payment made';
     if(sub)sub.textContent='Wait a few minutes while we process your order.';
   },4000);
