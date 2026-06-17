@@ -189,7 +189,9 @@ button{font-family:inherit;cursor:pointer}
 .step-dot.active .l{color:var(--paper);font-weight:700}
 
 /* info panel */
-.info-panel{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:22px;box-shadow:0 10px 40px -14px rgba(0,0,0,.6)}
+.info-panel{background:linear-gradient(160deg,rgba(20,42,30,.92),rgba(10,22,16,.92));border:1px solid var(--line);border-radius:18px;padding:22px;
+  box-shadow:0 40px 80px -30px rgba(0,0,0,.8),0 0 60px -30px var(--emerald-glow),inset 0 1px 0 rgba(255,255,255,.04);
+  backdrop-filter:blur(12px);animation:bob 9s ease-in-out infinite;animation-delay:-3s;will-change:transform}
 .info-panel h4{font-family:var(--display);font-weight:700;font-size:15px;margin-bottom:12px;color:var(--muted)}
 .info-list{display:flex;flex-direction:column;gap:10px}
 .il{display:flex;gap:11px;font-size:13.5px;line-height:1.5}
