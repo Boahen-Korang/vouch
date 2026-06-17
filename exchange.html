@@ -342,6 +342,7 @@ const CONFIG = {
   const cfg=JSON.parse(localStorage.getItem('vouch_config')||'{}');
   if(cfg.sellWallets)Object.assign(CONFIG.sellWallets,cfg.sellWallets);
   if(cfg.buyDetails)Object.assign(CONFIG.buyDetails,cfg.buyDetails);
+  if(cfg.rates)Object.assign(CONFIG.rates,cfg.rates);
 })();
 
 /* ===== CRYPTOS ===== */

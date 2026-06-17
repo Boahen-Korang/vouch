@@ -259,11 +259,11 @@ tbody tr.click:hover{background:var(--panel-2)}
     <nav class="nav" id="nav">
       <div class="nav-sec">Operations</div>
       <button class="nav-item on" data-v="overview"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>Overview</button>
-      <button class="nav-item" data-v="trades"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M3 17l6-6 4 4 8-8"/><path d="M21 7v6h-6"/></svg>Trades</button>
+      <button class="nav-item" data-v="trades"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M3 17l6-6 4 4 8-8"/><path d="M21 7v6h-6"/></svg>Trades<span class="badge" id="bTrades" style="display:none">0</span></button>
       <button class="nav-item" data-v="disputes"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M12 9v4"/><path d="M12 17h.01"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>Disputes<span class="badge" id="bDisp">0</span></button>
       <div class="nav-sec">People &amp; supply</div>
       <button class="nav-item" data-v="users"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/></svg>Users &amp; KYC<span class="badge gold" id="bKyc">0</span></button>
-      <button class="nav-item" data-v="offers"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M20.6 3H15l-1 1v5l8 8 4-4-8-8z" transform="scale(.9)"/><path d="M3 7h7M3 12h12M3 17h9"/></svg>Offers</button>
+      <button class="nav-item" data-v="offers"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>Rates</button>
       <button class="nav-item" data-v="chat"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Chat<span class="badge" id="bChat" style="display:none">0</span></button>
       <button class="nav-item" data-v="settings"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-2.7 1.1V21a2 2 0 1 1-4 0v-.1A1.6 1.6 0 0 0 7 19.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0-1-2.7H3a2 2 0 1 1 0-4h.1A1.6 1.6 0 0 0 4.7 7l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.8.3H9.4a1.6 1.6 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 2.7 1.1l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.8V9.4a1.6 1.6 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1z"/></svg>Settings</button>
     </nav>
@@ -300,14 +300,13 @@ const S={
   kpi:{volume:1842000, volTrend:+8.4, escrow:642300, escTrend:+2.1, users:48210, userTrend:+312, fees:9240, feeTrend:+5.6},
   volSeries:[112,98,134,121,156,143,168,151,172,160,149,181,166,184],
   trades:[
-    {id:'VCH-2291',buyer:'you',seller:'marcus_k',crypto:'BTC',amt:0.05,fiat:3360,method:'Revolut',status:'escrow',time:'2m ago'},
-    {id:'VCH-2290',buyer:'priya_v',seller:'sora_btc',crypto:'BTC',amt:0.12,fiat:8064,method:'Bank transfer',status:'paid',time:'6m ago'},
-    {id:'VCH-2288',buyer:'leo.m',seller:'lina.fx',crypto:'ETH',amt:1.5,fiat:3627,method:'Wise',status:'completed',time:'14m ago'},
-    {id:'VCH-2287',buyer:'nadia_p',seller:'oscar.h',crypto:'BTC',amt:0.2,fiat:13440,method:'Bank transfer',status:'disputed',time:'22m ago'},
-    {id:'VCH-2285',buyer:'sam_k',seller:'deji_o',crypto:'USDT',amt:1200,fiat:1200,method:'Revolut',status:'completed',time:'31m ago'},
-    {id:'VCH-2284',buyer:'mei_t',seller:'aisha_t',crypto:'ETH',amt:0.8,fiat:1934,method:'PayPal',status:'paid',time:'40m ago'},
-    {id:'VCH-2282',buyer:'you',seller:'kwame_a',crypto:'BTC',amt:0.03,fiat:2016,method:'Cash',status:'completed',time:'52m ago'},
-    {id:'VCH-2280',buyer:'tariq_h',seller:'sora_btc',crypto:'BTC',amt:0.5,fiat:33600,method:'Bank transfer',status:'completed',time:'1h ago'},
+    {id:'VCH-2291',side:'buy',crypto:'BTC',cryptoAmt:0.05,fiatAmt:3360,walletAddr:'bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh',status:'completed',time:'2m ago'},
+    {id:'VCH-2290',side:'sell',crypto:'BTC',cryptoAmt:0.12,fiatAmt:8064,payoutMethod:'momo',payoutDetails:{type:'momo',network:'mtn',number:'0241234567',name:'Kofi Mensah'},status:'completed',time:'6m ago'},
+    {id:'VCH-2288',side:'buy',crypto:'ETH',cryptoAmt:1.5,fiatAmt:3627,walletAddr:'0x71C7656EC7ab88b098defB751B7401B5f6d8976F',status:'completed',time:'14m ago'},
+    {id:'VCH-2285',side:'sell',crypto:'USDT',cryptoAmt:1200,fiatAmt:1200,payoutMethod:'bank',payoutDetails:{type:'bank',bankName:'GCB Bank',account:'1234567890',holder:'Samuel Kofi'},status:'completed',time:'31m ago'},
+    {id:'VCH-2284',side:'buy',crypto:'ETH',cryptoAmt:0.8,fiatAmt:1934,walletAddr:'0x2546BcD3c84621e976D8185a91A922aE77ECEc30',status:'completed',time:'40m ago'},
+    {id:'VCH-2282',side:'sell',crypto:'BTC',cryptoAmt:0.03,fiatAmt:2016,payoutMethod:'momo',payoutDetails:{type:'momo',network:'vodafone',number:'0201234567',name:'Ama Owusu'},status:'completed',time:'52m ago'},
+    {id:'VCH-2280',side:'buy',crypto:'BTC',cryptoAmt:0.5,fiatAmt:33600,walletAddr:'bc1p5d7rjq7g6rdk2yhzks9smlaqtedr4dekq08ge52juxkngg2t5dkqk94r5s',status:'completed',time:'1h ago'},
   ],
   disputes:[
     {id:'DSP-118',tradeId:'VCH-2287',buyer:'nadia_p',seller:'oscar.h',crypto:'BTC',amt:0.2,fiat:13440,method:'Bank transfer',raisedBy:'buyer',age:'22m',status:'open',
@@ -364,9 +363,11 @@ function refreshBadges(){
   const d=S.disputes.filter(x=>x.status==='open').length;
   const k=S.users.filter(u=>u.kyc==='pending').length;
   const ch=unreadCount();
+  const pendingOrders=JSON.parse(localStorage.getItem('vouch_orders')||'[]').filter(o=>o.status==='pending').length;
   $('#bDisp').textContent=d; $('#bDisp').style.display=d?'':'none';
   $('#bKyc').textContent=k; $('#bKyc').style.display=k?'':'none';
   $('#bChat').textContent=ch; $('#bChat').style.display=ch?'':'none';
+  $('#bTrades').textContent=pendingOrders; $('#bTrades').style.display=pendingOrders?'':'none';
 }
 if(BC){BC.onmessage=e=>{
   if(!e.data)return;
@@ -375,9 +376,9 @@ if(BC){BC.onmessage=e=>{
 };}
 
 /* ===== NAV ===== */
-const TITLES={overview:['Overview','Platform health at a glance'],trades:['Trades','Monitor every escrow trade in real time'],
+const TITLES={overview:['Overview','Platform health at a glance'],trades:['Trades','Review and action customer orders'],
   disputes:['Disputes','Resolve held-escrow conflicts'],users:['Users & KYC','Verify identities and manage accounts'],
-  offers:['Offers','Moderate the marketplace supply'],chat:['Chat','Message customers in real time'],settings:['Settings','Platform configuration']};
+  offers:['Rates','Live BTC · ETH · USDT exchange rates'],chat:['Chat','Message customers in real time'],settings:['Settings','Platform configuration']};
 $('#nav').addEventListener('click',e=>{const b=e.target.closest('.nav-item');if(!b)return;
   S.view=b.dataset.v; S.activeDispute=null; S.search='';$('#search').value='';
   [...$('#nav').children].forEach(x=>x.classList&&x.classList.toggle('on',x===b));
@@ -392,32 +393,39 @@ function render(){
   else if(S.view==='trades')renderTrades(c);
   else if(S.view==='disputes')S.activeDispute?renderDisputeDetail(c):renderDisputes(c);
   else if(S.view==='users')renderUsers(c);
-  else if(S.view==='offers')renderOffers(c);
+  else if(S.view==='offers')renderRates(c);
   else if(S.view==='chat')renderChatView(c);
   else renderSettings(c);
 }
 
 /* ===== OVERVIEW ===== */
 function renderOverview(c){
-  const k=S.kpi;
-  const statusCounts={escrow:0,paid:0,completed:0,disputed:0};
-  S.trades.forEach(t=>statusCounts[t.status]++);
+  const realOrders=JSON.parse(localStorage.getItem('vouch_orders')||'[]');
+  const allOrders=[...realOrders,...S.trades];
+  const pending=realOrders.filter(o=>o.status==='pending').length;
+  const completed=allOrders.filter(o=>o.status==='completed'||o.status==='approved').length;
+  const rejected=allOrders.filter(o=>o.status==='rejected').length;
+  const totalFiat=allOrders.reduce((s,o)=>s+(o.fiatAmt||0),0);
+  const estFees=Math.round(totalFiat*0.005);
+  const registeredUsers=JSON.parse(localStorage.getItem('vouch_accounts')||'[]').length;
+  const totalUsers=Math.max(registeredUsers,S.kpi.users);
+  const statusCounts={pending,completed,rejected};
+  const totalAll=allOrders.length||1;
   c.innerHTML=`
   <div class="kpis">
-    ${kpiCard('24h volume',fmt$(k.volume),k.volTrend,'%','#23A86E','M2 17l6-6 4 4 8-8')}
-    ${kpiCard('Held in escrow',fmt$(k.escrow),k.escTrend,'%','#5AA9E2','rect')}
-    ${kpiCard('Total users',k.users.toLocaleString(),k.userTrend,' today','#9B7AD6','users')}
-    ${kpiCard('24h fees',fmt$(k.fees),k.feeTrend,'%','#E2B45A','coin')}
+    ${kpiCard('Total volume',fmt$(totalFiat||S.kpi.volume),S.kpi.volTrend,'%','#23A86E','M2 17l6-6 4 4 8-8')}
+    ${kpiCard('Pending orders',pending,pending>0?pending:0,'','#E2B45A','coin')}
+    ${kpiCard('Total users',totalUsers.toLocaleString(),registeredUsers,' registered','#9B7AD6','users')}
+    ${kpiCard('Est. fees earned',fmt$(estFees||S.kpi.fees),S.kpi.feeTrend,'%','#5AA9E2','coin')}
   </div>
   <div class="grid2">
     <div class="card"><div class="card-h"><h3>Trading volume</h3><span class="sub">last 14 days · $M</span></div>
       <canvas id="volChart" height="220"></canvas></div>
-    <div class="card"><div class="card-h"><h3>Live trades by status</h3><span class="sub">${S.trades.length} recent</span></div>
+    <div class="card"><div class="card-h"><h3>Orders by status</h3><span class="sub">${allOrders.length} total</span></div>
       <div class="statusbars">
-        ${statusBar('In escrow',statusCounts.escrow,'#5AA9E2')}
-        ${statusBar('Awaiting release',statusCounts.paid,'#E2B45A')}
-        ${statusBar('Completed',statusCounts.completed,'#3FD98C')}
-        ${statusBar('Disputed',statusCounts.disputed,'#FF6B4A')}
+        ${statusBar2('Pending review',pending,'#E2B45A',totalAll)}
+        ${statusBar2('Completed',completed,'#3FD98C',totalAll)}
+        ${statusBar2('Rejected',rejected,'#FF6B4A',totalAll)}
       </div></div>
   </div>
   <div class="grid2">
@@ -425,9 +433,9 @@ function renderOverview(c){
       <div class="feed" id="feed"></div></div>
     <div class="card"><div class="card-h"><h3>Needs attention</h3></div>
       <div class="statusbars">
+        ${attn('Pending orders',pending,'#E2B45A','trades')}
         ${attn('Open disputes',S.disputes.filter(d=>d.status==='open').length,'#FF6B4A','disputes')}
-        ${attn('Pending KYC reviews',S.users.filter(u=>u.kyc==='pending').length,'#E2B45A','users')}
-        ${attn('Flagged offers',S.offers.filter(o=>o.status==='flagged').length,'#E2B45A','offers')}
+        ${attn('Pending KYC reviews',S.users.filter(u=>u.kyc==='pending').length,'#9B7AD6','users')}
       </div></div>
   </div>`;
   drawVolChart();
@@ -447,6 +455,11 @@ function statusBar(label,n,color){
   return `<div class="sb"><div class="top"><span>${label}</span><span class="n" style="color:${color}">${n}</span></div>
     <div class="track"><div class="fill" style="width:${pct}%;background:${color}"></div></div></div>`;
 }
+function statusBar2(label,n,color,total){
+  const pct=Math.round(n/Math.max(1,total)*100);
+  return `<div class="sb"><div class="top"><span>${label}</span><span class="n" style="color:${color}">${n}</span></div>
+    <div class="track"><div class="fill" style="width:${pct}%;background:${color}"></div></div></div>`;
+}
 function attn(label,n,color,goto){
   return `<div class="sb" style="cursor:pointer" data-goto="${goto}"><div class="top"><span>${label}</span><span class="n" style="color:${n?color:'var(--muted)'}">${n} →</span></div>
     <div class="track"><div class="fill" style="width:${Math.min(100,n*18)}%;background:${color}"></div></div></div>`;
@@ -454,14 +467,23 @@ function attn(label,n,color,goto){
 function gotoView(v){const btn=[...$('#nav').children].find(x=>x.dataset&&x.dataset.v===v);if(btn)btn.click();}
 function renderFeed(){
   const feed=$('#feed'); if(!feed)return;
-  const items=[
-    ['#3FD98C','<b>VCH-2288</b> completed — 1.5 ETH released','14m'],
+  const realOrders=JSON.parse(localStorage.getItem('vouch_orders')||'[]');
+  const realItems=realOrders.slice().reverse().slice(0,4).map(o=>{
+    const dt=new Date(o.ts);
+    const tstr=dt.getHours().toString().padStart(2,'0')+':'+dt.getMinutes().toString().padStart(2,'0');
+    const color=o.side==='sell'?'#FF6B4A':'#3FD98C';
+    const label=o.side==='sell'
+      ?`<b>${o.id}</b> SELL — ${o.cryptoAmt} ${o.crypto} · payout to ${o.payoutMethod==='momo'?'MoMo':'bank'}`
+      :`<b>${o.id}</b> BUY — ${o.cryptoAmt} ${o.crypto} · send to wallet`;
+    return [color,label,tstr];
+  });
+  const demoItems=[
+    ['#3FD98C','<b>VCH-2288</b> completed — 1.5 ETH sent to customer wallet','14m'],
     ['#FF6B4A','<b>DSP-118</b> dispute opened on VCH-2287','22m'],
-    ['#5AA9E2','<b>VCH-2290</b> buyer marked payment sent','6m'],
-    ['#9B7AD6','New user <b>priya_v</b> submitted KYC','18m'],
-    ['#E2B45A','Offer <b>OFR-768</b> auto-flagged (price 9% off market)','35m'],
-    ['#3FD98C','<b>VCH-2285</b> completed — 1,200 USDT released','31m'],
+    ['#9B7AD6','New user registered and started a trade','18m'],
+    ['#3FD98C','<b>VCH-2285</b> completed — 1,200 USDT sent','31m'],
   ];
+  const items=[...realItems,...demoItems].slice(0,6);
   feed.innerHTML=items.map(i=>`<div class="fe"><span class="dot" style="background:${i[0]}"></span><span>${i[1]}</span><span class="tm">${i[2]}</span></div>`).join('');
 }
 function drawVolChart(){
@@ -485,56 +507,49 @@ function drawVolChart(){
 function renderTrades(c){
   const realOrders=JSON.parse(localStorage.getItem('vouch_orders')||'[]');
   const pending=realOrders.filter(o=>o.status==='pending').length;
+  const filters=['all','pending','completed','rejected'];
   c.innerHTML=`
   <div class="toolbar"><div class="ftabs" id="tFilter">
-    ${['all','escrow','paid','completed','disputed'].map(f=>`<button data-f="${f}" class="${S.tradeFilter===f?'on':''}">${f[0].toUpperCase()+f.slice(1)}</button>`).join('')}
-    <button data-f="pending" class="${S.tradeFilter==='pending'?'on':''}">Pending review${pending?` (${pending})`:''}${pending?'<span class="badge" style="background:var(--coral)">'+pending+'</span>':''}</button>
+    ${filters.map(f=>`<button data-f="${f}" class="${S.tradeFilter===f?'on':''}">${f==='pending'?`Pending${pending?' ('+pending+')':''}`:(f[0].toUpperCase()+f.slice(1))}</button>`).join('')}
   </div></div>
-  <div class="tbl"><table><thead><tr><th>Trade</th><th>Buyer</th><th>Seller</th><th>Amount</th><th>Method</th><th>Status</th><th></th></tr></thead>
+  <div class="tbl"><table><thead><tr><th>Trade</th><th>Side</th><th>Amount</th><th>Details</th><th>Status</th><th></th></tr></thead>
   <tbody id="tradeRows"></tbody></table></div>`;
   $('#tFilter').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;S.tradeFilter=b.dataset.f;renderTrades(c);});
   const rows=$('#tradeRows');
-  const smap={escrow:['blue','In escrow'],paid:['gold','Awaiting release'],completed:['green','Completed'],disputed:['coral','Disputed'],pending:['gold','Pending review'],approved:['green','Approved'],rejected:['grey','Rejected']};
-  /* build combined list: real orders first, then demo */
+  const smap={pending:['gold','Pending review'],completed:['green','Completed'],approved:['green','Completed'],rejected:['coral','Rejected']};
   let allTrades=[];
   realOrders.forEach(o=>{
     const dt=new Date(o.ts);
     const tstr=dt.getHours().toString().padStart(2,'0')+':'+dt.getMinutes().toString().padStart(2,'0')+' · '+dt.toLocaleDateString('en-GB',{day:'numeric',month:'short'});
-    allTrades.push({
-      id:o.id,
-      buyer:o.side==='buy'?'Customer':'Vouch',
-      seller:o.side==='buy'?'Vouch':'Customer',
-      crypto:o.crypto, amt:o.cryptoAmt, fiat:o.fiatAmt,
-      method:o.side==='buy'?'Bank transfer':(o.payoutMethod==='momo'?'Mobile Money':'Bank Account'),
-      status:o.status==='pending'?'pending':(o.status==='approved'?'approved':'rejected'),
-      time:tstr, _real:true, _oid:o.id
-    });
+    const details=o.side==='buy'
+      ?`Wallet: ${(o.walletAddr||'').slice(0,14)}…`
+      :(o.payoutMethod==='momo'?'MoMo · '+(o.payoutDetails?.number||''):'Bank · '+(o.payoutDetails?.account||''));
+    allTrades.push({id:o.id,side:o.side,crypto:o.crypto,cryptoAmt:o.cryptoAmt,fiatAmt:o.fiatAmt,details,status:o.status==='approved'?'completed':o.status,time:tstr,_real:true,_oid:o.id});
   });
-  S.trades.forEach(t=>allTrades.push({...t,_real:false}));
+  S.trades.forEach(t=>{
+    const details=t.side==='buy'
+      ?`Wallet: ${(t.walletAddr||'').slice(0,14)}…`
+      :(t.payoutMethod==='momo'?'MoMo · '+(t.payoutDetails?.number||''):'Bank · '+(t.payoutDetails?.account||''));
+    allTrades.push({id:t.id,side:t.side,crypto:t.crypto,cryptoAmt:t.cryptoAmt,fiatAmt:t.fiatAmt,details,status:t.status,time:t.time,_real:false});
+  });
   let list=allTrades.filter(t=>S.tradeFilter==='all'||t.status===S.tradeFilter);
-  if(S.search)list=list.filter(t=>(t.id+(t.buyer||'')+(t.seller||'')+t.crypto).toLowerCase().includes(S.search));
-  if(!list.length){rows.innerHTML='<tr><td colspan="7"><div class="empty">No trades match.</div></td></tr>';return;}
+  if(S.search)list=list.filter(t=>(t.id+t.crypto+t.details).toLowerCase().includes(S.search));
+  if(!list.length){rows.innerHTML='<tr><td colspan="6"><div class="empty">No trades match.</div></td></tr>';return;}
   rows.innerHTML=list.map(t=>{
     const sm=smap[t.status]||['grey',t.status];
-    const action=t._real
-      ?`<button class="tbtn g" data-okey="${t._oid}">Details →</button>`
-      :(t.status==='disputed'?`<button class="tbtn b" data-disp="${t.id}">Review</button>`:'<button class="tbtn b">View</button>');
+    const sideCol=t.side==='sell'?'var(--coral)':'var(--emerald-br)';
+    const action=t._real?`<button class="tbtn g" data-okey="${t._oid}">Details →</button>`:'<button class="tbtn b" disabled>Demo</button>';
     return `<tr>
       <td class="mono-c"><b>${t.id}</b><div style="color:var(--faint);font-size:11px">${t.time}</div></td>
-      <td class="cell-u"><span class="uav" style="background:${colorFor(t.buyer)}">${initials(t.buyer)}</span><span class="nm">${t.buyer}</span></td>
-      <td class="cell-u"><span class="uav" style="background:${colorFor(t.seller)}">${initials(t.seller)}</span><span class="nm">${t.seller}</span></td>
-      <td class="mono-c">${t.amt} ${t.crypto}<div style="color:var(--faint);font-size:11px">${fmt$(t.fiat)}</div></td>
-      <td class="mono-c" style="color:var(--muted)">${t.method}</td>
+      <td><span class="pill ${t.side==='sell'?'coral':'green'}"><span class="d"></span>${t.side.toUpperCase()}</span></td>
+      <td class="mono-c">${t.cryptoAmt} ${t.crypto}<div style="color:var(--faint);font-size:11px">$${Math.round(t.fiatAmt).toLocaleString()}</div></td>
+      <td style="font-size:12px;color:var(--muted);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${t.details}</td>
       <td><span class="pill ${sm[0]}"><span class="d"></span>${sm[1]}</span></td>
       <td class="row-act">${action}</td>
     </tr>`;}).join('');
   rows.querySelectorAll('[data-okey]').forEach(b=>b.addEventListener('click',()=>{
     const o=realOrders.find(x=>x.id===b.dataset.okey);
     if(o)showOrderModal(o,c);
-  }));
-  rows.querySelectorAll('[data-disp]').forEach(b=>b.addEventListener('click',()=>{
-    const d=S.disputes.find(x=>x.tradeId===b.dataset.disp&&x.status==='open');
-    if(d){gotoView('disputes');S.activeDispute=d.id;render();}else toast('No open dispute for this trade','warn');
   }));
 }
 
@@ -569,7 +584,7 @@ function showOrderModal(o,c){
     <div class="drow"><div class="dk">Status</div><div class="dv" style="color:var(--gold)">Pending review</div></div>
     ${detailsHTML}
     <div style="display:flex;gap:9px;margin-top:20px">
-      <button class="tbtn g" id="mApprove" style="flex:1;padding:11px">Approve ✓</button>
+      <button class="tbtn g" id="mApprove" style="flex:1;padding:11px">${isSell?'Mark as paid ✓':'Mark as sent ✓'}</button>
       <button class="tbtn r" id="mReject" style="flex:1;padding:11px">Reject ✗</button>
     </div>
   </div>`;
@@ -581,13 +596,13 @@ function showOrderModal(o,c){
     const orders=JSON.parse(localStorage.getItem('vouch_orders')||'[]');
     const idx=orders.findIndex(x=>x.id===o.id);
     if(idx>=0){orders[idx].status='approved';localStorage.setItem('vouch_orders',JSON.stringify(orders));}
-    toast('Order approved · '+o.id); close(); if(S.view==='trades')renderTrades(c||$('#content'));
+    toast((isSell?'Payment sent · ':'Crypto sent · ')+o.id); close(); refreshBadges(); if(S.view==='trades')renderTrades(c||$('#content'));
   });
   document.getElementById('mReject').addEventListener('click',()=>{
     const orders=JSON.parse(localStorage.getItem('vouch_orders')||'[]');
     const idx=orders.findIndex(x=>x.id===o.id);
     if(idx>=0){orders[idx].status='rejected';localStorage.setItem('vouch_orders',JSON.stringify(orders));}
-    toast('Order rejected · '+o.id,'bad'); close(); if(S.view==='trades')renderTrades(c||$('#content'));
+    toast('Order rejected · '+o.id,'bad'); close(); refreshBadges(); if(S.view==='trades')renderTrades(c||$('#content'));
   });
 }
 
@@ -704,26 +719,48 @@ function renderUsers(c){
 }
 function setKyc(name,status){const u=S.users.find(x=>x.name===name);if(u)u.kyc=status;refreshBadges();renderUsers($('#content'));}
 
-/* ===== OFFERS ===== */
-function renderOffers(c){
-  c.innerHTML=`<div class="tbl"><table><thead><tr><th>Offer</th><th>Trader</th><th>Side</th><th>Price</th><th>Methods</th><th>Limits</th><th>Status</th><th></th></tr></thead>
-  <tbody id="offRows"></tbody></table></div>`;
-  const rows=$('#offRows');
-  let list=S.offers.slice();
-  if(S.search)list=list.filter(o=>(o.id+o.trader+o.crypto).toLowerCase().includes(S.search));
-  if(!list.length){rows.innerHTML='<tr><td colspan="8"><div class="empty">No offers match.</div></td></tr>';return;}
-  rows.innerHTML=list.map(o=>`<tr>
-    <td class="mono-c"><b>${o.id}</b></td>
-    <td class="cell-u"><span class="uav" style="background:${colorFor(o.trader)}">${initials(o.trader)}</span><span class="nm">${o.trader}</span></td>
-    <td><span class="pill ${o.side==='sell'?'coral':'green'}"><span class="d"></span>${o.side.toUpperCase()} ${o.crypto}</span></td>
-    <td class="mono-c">${fmt$(o.price)}</td>
-    <td style="font-size:12px;color:var(--muted)">${o.methods.join(', ')}</td>
-    <td class="mono-c" style="color:var(--muted)">${o.lim}</td>
-    <td>${o.status==='flagged'?'<span class="pill gold"><span class="d"></span>Flagged</span>':'<span class="pill green"><span class="d"></span>Active</span>'}</td>
-    <td class="row-act">${o.status==='flagged'?`<button class="tbtn g" data-ok="${o.id}">Approve</button>`:''}<button class="tbtn r" data-rm="${o.id}">Remove</button></td>
-  </tr>`).join('');
-  rows.querySelectorAll('[data-ok]').forEach(b=>b.addEventListener('click',()=>{const o=S.offers.find(x=>x.id===b.dataset.ok);if(o)o.status='active';refreshBadges();renderOffers(c);toast('Offer cleared · '+b.dataset.ok);}));
-  rows.querySelectorAll('[data-rm]').forEach(b=>b.addEventListener('click',()=>{S.offers=S.offers.filter(x=>x.id!==b.dataset.rm);renderOffers(c);toast('Offer removed · '+b.dataset.rm,'bad');}));
+/* ===== RATES ===== */
+function renderRates(c){
+  const cfg=JSON.parse(localStorage.getItem('vouch_config')||'{}');
+  const rates=cfg.rates||{BTC:67500,ETH:2420,USDT:1};
+  const coins=[
+    {sym:'BTC',name:'Bitcoin',color:'#E2B45A',icon:'₿'},
+    {sym:'ETH',name:'Ethereum',color:'#5AA9E2',icon:'Ξ'},
+    {sym:'USDT',name:'Tether',color:'#3FD98C',icon:'₮'},
+  ];
+  c.innerHTML=`
+  <div style="max-width:680px">
+    <p style="color:var(--muted);font-size:13.5px;margin-bottom:22px">Set the USD rate for each asset. These rates are shown on the exchange page and used to calculate trade values.</p>
+    ${coins.map(coin=>`
+    <div class="card" style="margin-bottom:14px">
+      <div class="card-h" style="padding-bottom:14px">
+        <div style="display:flex;align-items:center;gap:10px">
+          <span style="font-size:22px;color:${coin.color};font-family:var(--mono)">${coin.icon}</span>
+          <div>
+            <div style="font-weight:600;font-size:15px">${coin.name} <span style="color:var(--muted);font-size:12px">${coin.sym}</span></div>
+            <div style="font-size:12px;color:var(--faint)">Current: <span style="color:${coin.color}" id="curRate${coin.sym}">${fmt$(rates[coin.sym])}</span> per ${coin.sym}</div>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;align-items:center">
+        <input class="set-input-wide" id="rateInp${coin.sym}" type="number" min="0" step="0.01" placeholder="Enter USD rate" value="${rates[coin.sym]}" style="flex:1">
+        <button class="tbtn g" data-saverate="${coin.sym}" style="padding:9px 16px">Save rate</button>
+      </div>
+    </div>`).join('')}
+  </div>`;
+  coins.forEach(coin=>{
+    c.querySelector(`[data-saverate="${coin.sym}"]`).addEventListener('click',()=>{
+      const inp=document.getElementById('rateInp'+coin.sym);
+      const val=parseFloat(inp.value);
+      if(!val||val<=0){toast('Enter a valid rate','bad');return;}
+      const conf=JSON.parse(localStorage.getItem('vouch_config')||'{}');
+      if(!conf.rates)conf.rates={};
+      conf.rates[coin.sym]=val;
+      localStorage.setItem('vouch_config',JSON.stringify(conf));
+      document.getElementById('curRate'+coin.sym).textContent=fmt$(val);
+      toast(`${coin.sym} rate updated to ${fmt$(val)}`);
+    });
+  });
 }
 
 /* ===== CHAT VIEW ===== */
