@@ -186,7 +186,7 @@ tbody tr.click:hover{background:var(--panel-2)}
 /* ===== ORDER MODAL ===== */
 .modal-ov{position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:300;display:flex;align-items:center;justify-content:center;animation:fadein .18s}
 @keyframes fadein{from{opacity:0}to{opacity:1}}
-.modal-box{background:var(--panel-2);border:1px solid var(--line);border-radius:18px;padding:26px;max-width:440px;width:92vw;position:relative;box-shadow:0 32px 80px -24px rgba(0,0,0,.9)}
+.modal-box{background:var(--panel-2);border:1px solid var(--line);border-radius:18px;padding:26px;max-width:440px;width:92vw;position:relative;box-shadow:0 32px 80px -24px rgba(0,0,0,.9);max-height:90vh;overflow-y:auto}
 .modal-box h4{font-family:var(--display);font-weight:700;font-size:18px;margin-bottom:18px}
 .modal-close{position:absolute;top:14px;right:14px;background:none;border:none;color:var(--faint);font-size:24px;cursor:pointer;line-height:1;padding:2px 8px;transition:.15s}
 .modal-close:hover{color:var(--paper)}
@@ -522,6 +522,12 @@ function showOrderModal(o,c){
         <div class="drow"><div class="dk">Account holder</div><div class="dv">${pd.holder}</div></div>`;
   } else if(!isSell&&o.walletAddr){
     detailsHTML=`<div class="drow"><div class="dk">Destination wallet (${o.crypto})</div><div class="dv">${o.walletAddr}</div></div>`;
+  }
+  if(o.proof){
+    detailsHTML+=`<div class="drow" style="flex-direction:column;align-items:flex-start;gap:8px">
+      <div class="dk">Proof of payment</div>
+      <img src="${o.proof}" style="width:100%;max-height:220px;object-fit:contain;border-radius:8px;background:#070f0a;margin-top:2px">
+    </div>`;
   }
   const ov=document.createElement('div');
   ov.className='modal-ov';
