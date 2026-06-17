@@ -930,7 +930,7 @@ function tnow(){const d=new Date();return d.getHours().toString().padStart(2,'0'
 
 function addCustMsg(text){
   const msgs=getMsgs();
-  const m={id:Date.now().toString(36),from:'customer',text,time:tnow(),read:true,ts:Date.now()};
+  const m={id:Date.now().toString(36),from:'customer',text,time:tnow(),read:false,ts:Date.now()};
   msgs.push(m);saveMsgs(msgs);
   BC&&BC.postMessage({type:'message',m});
   return m;

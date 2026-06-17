@@ -846,6 +846,24 @@ function tick(){
   if(S.view==='overview')renderOverview($('#content'));
 }
 
+/* ===== CROSS-TAB SYNC ===== */
+window.addEventListener('storage',e=>{
+  if(e.key==='vouch_accounts'){
+    refreshBadges();
+    if(S.view==='users')renderUsers($('#content'));
+    if(S.view==='overview')renderOverview($('#content'));
+  }
+  if(e.key==='vouch_orders'){
+    refreshBadges();
+    if(S.view==='trades')renderTrades($('#content'));
+    if(S.view==='overview')renderOverview($('#content'));
+  }
+  if(e.key==='vouch_msgs'){
+    refreshBadges();
+    if(S.view==='chat')renderChatView($('#content'));
+  }
+});
+
 /* ===== INIT ===== */
 refreshBadges(); render();
 const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
