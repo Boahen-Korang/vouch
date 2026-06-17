@@ -298,13 +298,9 @@ tbody tr.click:hover{background:var(--panel-2)}
 </div>
 <div class="toasts" id="toasts"></div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
 "use strict";
-/* ===== SUPABASE ===== */
-const SUPABASE_URL  = 'https://khayyeitwpblqaffvdvm.supabase.co';
-const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtoYXl5ZWl0d3BibHFhZmZ2ZHZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2NDczMTcsImV4cCI6MjA5NzIyMzMxN30.eHtG7BxPGYrAiFEdymNNG6cu1GgtVj0SuJZ9RoMl9wU';
-const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+const API = 'https://YOUR_RENDER_URL.onrender.com';
 const $=s=>document.querySelector(s), el=(t,c)=>{const e=document.createElement(t);if(c)e.className=c;return e;};
 const fmt$=n=>'$'+Math.round(n).toLocaleString('en-US');
 const fmt$2=n=>'$'+n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
@@ -661,19 +657,19 @@ function renderDisputes(c){
 function getAccounts(){return JSON.parse(localStorage.getItem('vouch_accounts')||'[]');}
 function saveAccounts(a){localStorage.setItem('vouch_accounts',JSON.stringify(a));}
 async function syncAccountsFromSupabase(){
-  if(!sb)return;
-  const {data,error}=await sb.from('profiles').select('*');
-  if(error||!data)return;
-  const local=getAccounts();
-  const merged=data.map(p=>({
-    username:p.username, email:p.email, joined:p.joined||'—',
-  }));
-  /* merge in any local-only entries not yet in Supabase */
-  local.forEach(l=>{if(!merged.find(m=>m.email===l.email))merged.push(l);});
-  saveAccounts(merged);
-  refreshBadges();
-  if(S.view==='users')renderUsers($('#content'));
-  if(S.view==='overview')renderOverview($('#content'));
+  try{
+    const res=await fetch(API+'/api/users');
+    if(!res.ok)return;
+    const data=await res.json();
+    if(!data?.length)return;
+    const local=getAccounts();
+    const merged=data.map(p=>({username:p.username,email:p.email,joined:p.joined||'—'}));
+    local.forEach(l=>{if(!merged.find(m=>m.email===l.email))merged.push(l);});
+    saveAccounts(merged);
+    refreshBadges();
+    if(S.view==='users')renderUsers($('#content'));
+    if(S.view==='overview')renderOverview($('#content'));
+  }catch(e){}
 }
 function renderUsers(c){
   const accs=getAccounts();
@@ -893,14 +889,9 @@ function renderSettings(c){
     };
     cfg.paymentWindow=document.getElementById('fWindow').value.trim();
     localStorage.setItem('vouch_config',JSON.stringify(cfg));
-    if(sb){
-      sb.from('site_config').upsert({id:1,data:cfg}).then(({error})=>{
-        if(error)toast('Saved locally — sync failed: '+error.message,'bad');
-        else toast('Settings saved · live for all users');
-      });
-    } else {
-      toast('Settings saved · live on next trade');
-    }
+    fetch(API+'/api/config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:cfg})})
+      .then(r=>r.ok?toast('Settings saved · live for all users'):toast('Saved locally — sync failed','bad'))
+      .catch(()=>toast('Saved locally — offline','bad'));
   });
 }
 
@@ -929,9 +920,9 @@ window.addEventListener('storage',e=>{
 });
 
 /* ===== SIGN OUT ===== */
-document.getElementById('signoutBtn').addEventListener('click',async()=>{
-  if(sb) await sb.auth.signOut().catch(()=>{});
+document.getElementById('signoutBtn').addEventListener('click',()=>{
   localStorage.removeItem('vouch_session');
+  localStorage.removeItem('vouch_token');
   window.location.href='index.html';
 });
 

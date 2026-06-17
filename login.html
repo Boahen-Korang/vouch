@@ -234,12 +234,9 @@ a{color:inherit;text-decoration:none}
   </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
 "use strict";
-const SUPABASE_URL  = 'https://khayyeitwpblqaffvdvm.supabase.co';
-const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtoYXl5ZWl0d3BibHFhZmZ2ZHZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2NDczMTcsImV4cCI6MjA5NzIyMzMxN30.eHtG7BxPGYrAiFEdymNNG6cu1GgtVj0SuJZ9RoMl9wU';
-const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+const API = 'https://YOUR_RENDER_URL.onrender.com';
 const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 /* ===== background parallax ===== */
@@ -423,29 +420,25 @@ function getOtpValue(){
     const otpBtn=document.getElementById('otpBtn');
     otpBtn.classList.add('loading');
     const emailVal=pendingReg?.email||document.getElementById('email').value.trim().toLowerCase();
-    const {data,error}=await sb.auth.verifyOtp({email:emailVal,token:code,type:'signup'});
-    if(error){
+    const res=await fetch(API+'/api/auth/verify-otp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:emailVal,code})});
+    const json=await res.json();
+    if(!res.ok){
       otpBtn.classList.remove('loading');
       document.querySelectorAll('.otp-digit').forEach(i=>{i.classList.add('bad');i.value='';});
+      document.getElementById('otpErr').textContent=json.error||'Incorrect code';
       document.getElementById('otpErr').classList.add('show');
       document.querySelectorAll('.otp-digit')[0].focus();
       return;
     }
-    /* OTP verified — create profile and log in */
-    const uname=pendingReg?.username||emailVal.split('@')[0];
-    const now=new Date();
-    const joinedStr=now.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
-    const userId=data.user?.id;
-    if(userId){
-      await sb.from('profiles').upsert({id:userId,username:uname,email:emailVal,joined:joinedStr});
-    }
+    const {token,user}=json;
+    localStorage.setItem('vouch_token',token);
+    localStorage.setItem('vouch_session',JSON.stringify({username:user.username,email:user.email}));
     const accs=getLocalAccounts();
-    accs.push({username:uname,email:emailVal,joined:joinedStr});
+    accs.push({username:user.username,email:user.email,joined:user.joined});
     saveLocalAccounts(accs);
-    localStorage.setItem('vouch_session',JSON.stringify({username:uname,email:emailVal}));
     otpBtn.classList.remove('loading'); otpBtn.classList.add('done');
     otpBtn.querySelector('.lbl').textContent='Email verified ✓';
-    setTimeout(()=>doRedirect(true),700);
+    setTimeout(()=>{window.location.href='exchange.html';},700);
   });
 
   let resendSec=60;
@@ -464,7 +457,7 @@ function getOtpValue(){
   document.getElementById('resendBtn').addEventListener('click',async()=>{
     const emailVal=pendingReg?.email||document.getElementById('email').value.trim().toLowerCase();
     document.getElementById('resendBtn').disabled=true;
-    await sb.auth.resend({type:'signup',email:emailVal});
+    await fetch(API+'/api/auth/resend-otp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:emailVal})});
     startResendTimer();
   });
 })();
@@ -476,75 +469,41 @@ form.addEventListener('submit', async e=>{
 
   const emailVal=email.value.trim().toLowerCase();
   const uname=username.value.trim();
+  btn.classList.add('loading');
 
-  if(sb){
-    /* ---- Supabase auth path ---- */
-    btn.classList.add('loading');
-    if(isRegister){
-      /* check email uniqueness */
-      const {data:emailTaken}=await sb.from('profiles').select('email').eq('email',emailVal).maybeSingle();
-      if(emailTaken){
-        btn.classList.remove('loading');
-        email.classList.add('bad');
-        showFormErr('An account with this email already exists. Log in instead.');
-        return;
-      }
-      /* check username uniqueness */
-      const {data:taken}=await sb.from('profiles').select('username').eq('username',uname).maybeSingle();
-      if(taken){
-        btn.classList.remove('loading');
-        username.classList.add('bad'); usernameErr.classList.add('show');
-        usernameErr.textContent='Username already taken';
-        return;
-      }
-      const {data,error}=await sb.auth.signUp({email:emailVal,password:pw.value});
-      if(error){btn.classList.remove('loading');showFormErr(error.message);return;}
-      btn.classList.remove('loading');
-      /* store pending registration data and show OTP step */
-      pendingReg={userId:data.user?.id,username:uname,email:emailVal};
-      showOtpStep(emailVal);
-    } else {
-      const {data,error}=await sb.auth.signInWithPassword({email:emailVal,password:pw.value});
-      if(error){
-        btn.classList.remove('loading');
-        if(error.message.toLowerCase().includes('invalid')){
-          pw.classList.add('bad'); pwErr.textContent='Incorrect password'; pwErr.classList.add('show');
-        } else { showFormErr(error.message); }
-        return;
-      }
-      const {data:profile}=await sb.from('profiles').select('*').eq('id',data.user.id).maybeSingle();
-      const resolvedName=profile?.username||emailVal.split('@')[0];
-      localStorage.setItem('vouch_session',JSON.stringify({username:resolvedName,email:emailVal}));
-      /* update local accounts cache */
-      const accs=getLocalAccounts();
-      const idx=accs.findIndex(a=>a.email===emailVal);
-      const entry={username:resolvedName,email:emailVal,joined:profile?.joined||'—'};
-      if(idx>=0)accs[idx]=entry; else accs.push(entry);
-      saveLocalAccounts(accs);
-      doRedirect(false);
+  if(isRegister){
+    const res=await fetch(API+'/api/auth/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:uname,email:emailVal,password:pw.value})});
+    const json=await res.json();
+    btn.classList.remove('loading');
+    if(!res.ok){
+      if(json.error?.toLowerCase().includes('email')){email.classList.add('bad');showFormErr(json.error);}
+      else if(json.error?.toLowerCase().includes('username')){username.classList.add('bad');usernameErr.textContent=json.error;usernameErr.classList.add('show');}
+      else showFormErr(json.error||'Registration failed');
+      return;
     }
+    pendingReg={username:uname,email:emailVal};
+    showOtpStep(emailVal);
   } else {
-    /* ---- localStorage fallback (Supabase not configured) ---- */
-    const accounts=getLocalAccounts();
-    if(isRegister){
-      if(accounts.find(a=>a.email===emailVal)){
-        email.classList.add('bad');
-        showFormErr('An account with this email already exists. Log in instead.');
-        return;
-      }
-      const now=new Date();
-      const joinedStr=now.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
-      accounts.push({username:uname,email:emailVal,password:pw.value,joined:joinedStr});
-      saveLocalAccounts(accounts);
-      localStorage.setItem('vouch_session',JSON.stringify({username:uname,email:emailVal}));
-    } else {
-      const account=accounts.find(a=>a.email===emailVal);
-      if(!account){email.classList.add('bad');showFormErr('No account found with this email. Create one instead.');return;}
-      if(account.password!==pw.value){pw.classList.add('bad');pwErr.textContent='Incorrect password';pwErr.classList.add('show');return;}
-      localStorage.setItem('vouch_session',JSON.stringify({username:account.username,email:emailVal}));
+    const res=await fetch(API+'/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:emailVal,password:pw.value})});
+    const json=await res.json();
+    btn.classList.remove('loading');
+    if(!res.ok){
+      if(json.error?.toLowerCase().includes('password')){pw.classList.add('bad');pwErr.textContent=json.error;pwErr.classList.add('show');}
+      else showFormErr(json.error||'Login failed');
+      return;
     }
-    btn.classList.add('loading');
-    setTimeout(()=>doRedirect(isRegister),1400);
+    const {token,user}=json;
+    localStorage.setItem('vouch_token',token);
+    localStorage.setItem('vouch_session',JSON.stringify({username:user.username,email:user.email}));
+    const accs=getLocalAccounts();
+    const idx=accs.findIndex(a=>a.email===user.email);
+    const entry={username:user.username,email:user.email,joined:user.joined};
+    if(idx>=0)accs[idx]=entry; else accs.push(entry);
+    saveLocalAccounts(accs);
+    btn.classList.add('done');
+    btn.querySelector('.lbl').textContent='Welcome back ✓';
+    btn.querySelector('.ar').style.display='none';
+    setTimeout(()=>{window.location.href='exchange.html';},700);
   }
 });
 </script>

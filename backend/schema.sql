@@ -1,0 +1,22 @@
+CREATE TABLE IF NOT EXISTS users (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  username VARCHAR(50) UNIQUE NOT NULL,
+  email VARCHAR(255) UNIQUE NOT NULL,
+  password_hash VARCHAR(255) NOT NULL,
+  email_verified BOOLEAN DEFAULT FALSE,
+  joined VARCHAR(50),
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS otps (
+  email VARCHAR(255) PRIMARY KEY,
+  code VARCHAR(6) NOT NULL,
+  username VARCHAR(50),
+  password_hash VARCHAR(255),
+  expires_at TIMESTAMP NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS site_config (
+  id INTEGER PRIMARY KEY,
+  data JSONB DEFAULT '{}'
+);

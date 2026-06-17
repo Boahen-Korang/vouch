@@ -292,7 +292,6 @@ button{font-family:inherit;cursor:pointer}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 </head>
 <body>
 <div class="app">
@@ -382,9 +381,7 @@ const CONFIG = {
   paymentWindow: 15,                     // minutes
 };
 /* load admin-configured wallet/payment details */
-const SUPABASE_URL  = 'https://khayyeitwpblqaffvdvm.supabase.co';
-const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtoYXl5ZWl0d3BibHFhZmZ2ZHZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2NDczMTcsImV4cCI6MjA5NzIyMzMxN30.eHtG7BxPGYrAiFEdymNNG6cu1GgtVj0SuJZ9RoMl9wU';
-const sb = (typeof supabase !== 'undefined') ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON) : null;
+const API = 'https://YOUR_RENDER_URL.onrender.com';
 
 function applyConfig(cfg){
   if(!cfg)return;
@@ -398,18 +395,19 @@ function applyConfig(cfg){
 applyConfig(JSON.parse(localStorage.getItem('vouch_config')||'{}'));
 // fetch latest from Supabase — store promise so step 2 can await it
 let configReady=Promise.resolve();
-if(sb){
-  configReady=(async function(){
-    try{
-      const {data}=await sb.from('site_config').select('data').eq('id',1).maybeSingle();
-      if(data?.data){
-        localStorage.setItem('vouch_config',JSON.stringify(data.data));
-        applyConfig(data.data);
+configReady=(async function(){
+  try{
+    const res=await fetch(API+'/api/config');
+    if(res.ok){
+      const data=await res.json();
+      if(data&&Object.keys(data).length){
+        localStorage.setItem('vouch_config',JSON.stringify(data));
+        applyConfig(data);
         if(S.step===0)renderStep1();
       }
-    }catch(e){}
-  })();
-}
+    }
+  }catch(e){}
+})();
 
 /* ===== CRYPTOS ===== */
 const CRYPTOS = {
@@ -1030,9 +1028,9 @@ function priceTick(){
 }
 
 /* ===== SIGN OUT ===== */
-document.getElementById('signoutBtn').addEventListener('click',async()=>{
-  if(sb) await sb.auth.signOut().catch(()=>{});
+document.getElementById('signoutBtn').addEventListener('click',()=>{
   localStorage.removeItem('vouch_session');
+  localStorage.removeItem('vouch_token');
   window.location.href='login.html';
 });
 
