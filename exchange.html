@@ -288,6 +288,7 @@ button{font-family:inherit;cursor:pointer}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 </head>
 <body>
 <div class="app">
@@ -374,11 +375,31 @@ const CONFIG = {
   paymentWindow: 15,                     // minutes
 };
 /* load admin-configured wallet/payment details */
-(function(){
-  const cfg=JSON.parse(localStorage.getItem('vouch_config')||'{}');
+const SUPABASE_URL  = 'https://khayyeitwpblqaffvdvm.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtoYXl5ZWl0d3BibHFhZmZ2ZHZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2NDczMTcsImV4cCI6MjA5NzIyMzMxN30.eHtG7BxPGYrAiFEdymNNG6cu1GgtVj0SuJZ9RoMl9wU';
+const sb = (typeof supabase !== 'undefined') ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON) : null;
+
+function applyConfig(cfg){
+  if(!cfg)return;
   if(cfg.sellWallets)Object.assign(CONFIG.sellWallets,cfg.sellWallets);
   if(cfg.buyDetails)Object.assign(CONFIG.buyDetails,cfg.buyDetails);
   if(cfg.rates)Object.assign(CONFIG.rates,cfg.rates);
+  if(cfg.paymentWindow)CONFIG.paymentWindow=parseInt(cfg.paymentWindow)||15;
+  if(cfg.momoDetails)CONFIG.momoDetails=cfg.momoDetails;
+}
+// apply cached config immediately so page renders fast
+applyConfig(JSON.parse(localStorage.getItem('vouch_config')||'{}'));
+// then fetch latest from Supabase and re-render if anything changed
+(async function(){
+  if(!sb)return;
+  try{
+    const {data}=await sb.from('site_config').select('data').eq('id',1).maybeSingle();
+    if(data?.data){
+      localStorage.setItem('vouch_config',JSON.stringify(data.data));
+      applyConfig(data.data);
+      if(S.step===0)renderStep1(); // refresh step 1 if user hasn't progressed
+    }
+  }catch(e){}
 })();
 
 /* ===== CRYPTOS ===== */

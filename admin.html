@@ -891,7 +891,14 @@ function renderSettings(c){
     };
     cfg.paymentWindow=document.getElementById('fWindow').value.trim();
     localStorage.setItem('vouch_config',JSON.stringify(cfg));
-    toast('Settings saved · live on next trade');
+    if(sb){
+      sb.from('site_config').upsert({id:1,data:cfg}).then(({error})=>{
+        if(error)toast('Saved locally — sync failed: '+error.message,'bad');
+        else toast('Settings saved · live for all users');
+      });
+    } else {
+      toast('Settings saved · live on next trade');
+    }
   });
 }
 
