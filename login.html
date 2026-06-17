@@ -182,6 +182,8 @@ a{color:inherit;text-decoration:none}
           <div class="err" id="pwConfirmErr">Passwords don't match</div>
         </div>
 
+        <div class="err" id="formErr" style="margin-bottom:12px;font-size:13px"></div>
+
         <div class="row" id="rowRemember">
           <label class="remember">
             <input type="checkbox" id="remember">
@@ -301,12 +303,18 @@ toggleModeBtn.addEventListener('click', e => {
   [emailErr, pwErr, usernameErr, pwConfirmErr].forEach(el => el.classList.remove('show'));
 });
 
-/* ===== validation + fake submit ===== */
+/* ===== accounts storage ===== */
+const ACCS_KEY='vouch_accounts';
+function getAccounts(){return JSON.parse(localStorage.getItem(ACCS_KEY)||'[]');}
+function saveAccounts(a){localStorage.setItem(ACCS_KEY,JSON.stringify(a));}
+
+/* ===== validation + submit ===== */
 const form=document.getElementById('loginForm'), btn=document.getElementById('loginBtn');
 const email=document.getElementById('email'), username=document.getElementById('username');
 const pwConfirm=document.getElementById('pwConfirm');
 const emailErr=document.getElementById('emailErr'), pwErr=document.getElementById('pwErr');
 const usernameErr=document.getElementById('usernameErr'), pwConfirmErr=document.getElementById('pwConfirmErr');
+const formErr=document.getElementById('formErr');
 
 function valid(){
   let ok=true;
@@ -328,10 +336,47 @@ function valid(){
 [email,pw,username,pwConfirm].forEach(el=>el.addEventListener('input',()=>{
   el.classList.remove('bad');
   ({[email.id]:emailErr,[pw.id]:pwErr,[username.id]:usernameErr,[pwConfirm.id]:pwConfirmErr})[el.id]?.classList.remove('show');
+  formErr.classList.remove('show');
 }));
+
+function showFormErr(msg){formErr.textContent=msg;formErr.classList.add('show');}
+
 form.addEventListener('submit',e=>{
   e.preventDefault();
+  formErr.classList.remove('show');
   if(!valid()) return;
+
+  const accounts=getAccounts();
+  const emailVal=email.value.trim().toLowerCase();
+
+  if(isRegister){
+    /* check duplicate email */
+    if(accounts.find(a=>a.email===emailVal)){
+      email.classList.add('bad');
+      showFormErr('An account with this email already exists. Log in instead.');
+      return;
+    }
+    /* save new account */
+    accounts.push({username:username.value.trim(), email:emailVal, password:pw.value});
+    saveAccounts(accounts);
+    localStorage.setItem('vouch_session',JSON.stringify({username:username.value.trim(),email:emailVal}));
+  } else {
+    /* find account */
+    const account=accounts.find(a=>a.email===emailVal);
+    if(!account){
+      email.classList.add('bad');
+      showFormErr('No account found with this email. Create one instead.');
+      return;
+    }
+    if(account.password!==pw.value){
+      pw.classList.add('bad');
+      pwErr.textContent='Incorrect password';
+      pwErr.classList.add('show');
+      return;
+    }
+    localStorage.setItem('vouch_session',JSON.stringify({username:account.username,email:emailVal}));
+  }
+
   btn.classList.add('loading');
   setTimeout(()=>{
     btn.classList.remove('loading'); btn.classList.add('done');
