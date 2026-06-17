@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VOUCH — Admin Access</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=Hanken+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#060E09; --panel:#0D1F14; --line:#1A3022; --line-soft:#152A1C;
+  --paper:#ECEEE7; --muted:#8FA89A; --faint:#506358;
+  --emerald:#23A86E; --emerald-br:#3FD98C; --emerald-glow:rgba(63,217,140,.3); --emerald-tint:rgba(22,56,38,.5);
+  --coral:#FF6B4A; --gold:#E2B45A;
+  --display:'Bricolage Grotesque',sans-serif; --body:'Hanken Grotesk',sans-serif; --mono:'Space Mono',monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--paper);font-family:var(--body);-webkit-font-smoothing:antialiased;min-height:100vh;display:grid;place-items:center;position:relative;overflow:hidden}
+::selection{background:var(--coral);color:#060E09}
+a{color:inherit;text-decoration:none}
+
+/* grid bg */
+body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+  background-image:linear-gradient(rgba(63,217,140,.055) 1px,transparent 1px),linear-gradient(90deg,rgba(63,217,140,.04) 1px,transparent 1px);
+  background-size:56px 56px;
+  -webkit-mask-image:radial-gradient(ellipse 70% 70% at 50% 50%,#000 30%,transparent 100%);
+  mask-image:radial-gradient(ellipse 70% 70% at 50% 50%,#000 30%,transparent 100%)}
+body::after{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:radial-gradient(600px 600px at 50% 50%,rgba(63,217,140,.07),transparent 65%)}
+
+.back{position:fixed;top:22px;left:22px;z-index:30;font-family:var(--mono);font-size:11px;color:var(--faint);display:inline-flex;align-items:center;gap:7px;transition:.2s}
+.back:hover{color:var(--muted)}
+.back .ar{transition:transform .2s}.back:hover .ar{transform:translateX(-3px)}
+
+/* card */
+.card{position:relative;z-index:10;width:min(92vw,380px);background:linear-gradient(160deg,rgba(13,31,20,.95),rgba(6,14,9,.95));border:1px solid var(--line);border-radius:22px;padding:36px 34px 30px;box-shadow:0 40px 80px -30px rgba(0,0,0,.9),0 0 60px -30px var(--emerald-glow),inset 0 1px 0 rgba(255,255,255,.03)}
+
+.badge{display:inline-flex;align-items:center;gap:7px;font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);border:1px solid rgba(226,180,90,.25);background:rgba(226,180,90,.07);padding:5px 12px;border-radius:20px;margin:0 auto 22px;display:flex;width:fit-content}
+.badge .d{width:6px;height:6px;border-radius:50%;background:var(--gold);animation:blink 2s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+
+.logo{display:flex;align-items:center;gap:9px;font-family:var(--display);font-weight:800;font-size:20px;letter-spacing:-.02em;justify-content:center;margin-bottom:6px}
+.logo .mark{width:22px;height:22px;border-radius:7px;background:var(--paper);position:relative;display:grid;place-items:center}
+.logo .mark::before{content:'';width:8px;height:8px;border-radius:50%;border:2.3px solid var(--coral);box-sizing:border-box}
+.logo .mark::after{content:'';position:absolute;width:8px;height:8px;border-radius:50%;border:2.3px solid var(--emerald);transform:translateX(5px)}
+
+h1{font-family:var(--display);font-weight:700;font-size:22px;letter-spacing:-.02em;text-align:center;margin-bottom:6px}
+.sub{color:var(--muted);font-size:13.5px;text-align:center;margin-bottom:24px}
+
+.field{margin-bottom:14px}
+.field label{display:block;font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);margin-bottom:7px}
+.input-wrap{position:relative}
+.field input{width:100%;background:rgba(6,14,9,.8);border:1.5px solid var(--line);border-radius:11px;padding:12px 14px;color:var(--paper);font-family:var(--body);font-size:14.5px;transition:.2s;outline:none}
+.field input::placeholder{color:var(--faint)}
+.field input:focus{border-color:var(--emerald-br);box-shadow:0 0 0 3px var(--emerald-tint)}
+.field input.bad{border-color:var(--coral);box-shadow:0 0 0 3px rgba(255,107,74,.12)}
+.toggle-pw{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--faint);cursor:pointer;font-family:var(--mono);font-size:10px;padding:4px 6px}
+.toggle-pw:hover{color:var(--emerald-br)}
+.err{color:var(--coral);font-size:12px;margin-top:5px;display:none}
+.err.show{display:block}
+
+.btn-login{width:100%;background:var(--emerald);color:#03100A;font-family:var(--body);font-weight:700;font-size:15px;border:none;border-radius:11px;padding:13px;cursor:pointer;transition:.22s;display:flex;align-items:center;justify-content:center;gap:9px;position:relative;margin-top:6px}
+.btn-login:hover{background:var(--emerald-br);transform:translateY(-2px);box-shadow:0 12px 30px -10px var(--emerald-glow)}
+.btn-login:active{transform:translateY(0)}
+.btn-login.loading{pointer-events:none;color:transparent}
+.btn-login .spin{position:absolute;width:18px;height:18px;border:2.5px solid rgba(3,16,10,.3);border-top-color:#03100A;border-radius:50%;display:none;animation:spin .7s linear infinite}
+.btn-login.loading .spin{display:block}
+.btn-login.done{background:var(--emerald-br);color:#03100A;pointer-events:none}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.warn{margin-top:14px;background:rgba(255,107,74,.08);border:1px solid rgba(255,107,74,.25);border-radius:10px;padding:11px 14px;font-family:var(--mono);font-size:11.5px;color:var(--coral);text-align:center;display:none}
+.warn.show{display:block}
+
+.foot{text-align:center;margin-top:22px;font-family:var(--mono);font-size:10.5px;color:var(--faint)}
+.foot a{color:var(--faint)}.foot a:hover{color:var(--muted)}
+</style>
+</head>
+<body>
+<a href="index.html" class="back"><span class="ar">←</span> Back</a>
+
+<div class="card">
+  <div class="badge"><span class="d"></span>Restricted access</div>
+  <div class="logo"><span class="mark"></span>vouch</div>
+  <h1>Admin login</h1>
+  <p class="sub">Authorised personnel only</p>
+
+  <form id="adminForm" novalidate>
+    <div class="field">
+      <label for="email">Email</label>
+      <div class="input-wrap"><input type="email" id="email" placeholder="admin@example.com" autocomplete="email"></div>
+      <div class="err" id="emailErr">Enter a valid email address</div>
+    </div>
+    <div class="field">
+      <label for="pw">Password</label>
+      <div class="input-wrap">
+        <input type="password" id="pw" placeholder="••••••••" autocomplete="current-password">
+        <button type="button" class="toggle-pw" id="togglePw">SHOW</button>
+      </div>
+      <div class="err" id="pwErr">Enter your password</div>
+    </div>
+    <div class="warn" id="authWarn">Incorrect credentials. Access denied.</div>
+    <button type="submit" class="btn-login" id="loginBtn">
+      <span class="lbl">Access dashboard</span>
+      <span class="ar">→</span>
+      <span class="spin"></span>
+    </button>
+  </form>
+
+  <p class="foot"><a href="index.html">vouch.com</a> · © 2026 Vouch Technologies Ltd.</p>
+</div>
+
+<script>
+const ADMIN_EMAIL = 'groovyalpha@gmail.com';
+const ADMIN_PW = 'Groovy4!';
+
+const form = document.getElementById('adminForm');
+const btn = document.getElementById('loginBtn');
+const email = document.getElementById('email');
+const pw = document.getElementById('pw');
+const emailErr = document.getElementById('emailErr');
+const pwErr = document.getElementById('pwErr');
+const authWarn = document.getElementById('authWarn');
+
+document.getElementById('togglePw').addEventListener('click', () => {
+  pw.type = pw.type === 'password' ? 'text' : 'password';
+  document.getElementById('togglePw').textContent = pw.type === 'password' ? 'SHOW' : 'HIDE';
+});
+
+[email, pw].forEach(el => el.addEventListener('input', () => {
+  el.classList.remove('bad');
+  (el === email ? emailErr : pwErr).classList.remove('show');
+  authWarn.classList.remove('show');
+}));
+
+form.addEventListener('submit', e => {
+  e.preventDefault();
+  let ok = true;
+  const eok = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value.trim());
+  email.classList.toggle('bad', !eok); emailErr.classList.toggle('show', !eok); ok = ok && eok;
+  const pok = pw.value.length > 0;
+  pw.classList.toggle('bad', !pok); pwErr.classList.toggle('show', !pok); ok = ok && pok;
+  if (!ok) return;
+
+  const correct = email.value.trim() === ADMIN_EMAIL && pw.value === ADMIN_PW;
+  if (!correct) { authWarn.classList.add('show'); email.classList.add('bad'); pw.classList.add('bad'); return; }
+
+  btn.classList.add('loading');
+  setTimeout(() => {
+    btn.classList.remove('loading'); btn.classList.add('done');
+    btn.querySelector('.lbl').textContent = 'Access granted ✓';
+    btn.querySelector('.ar').style.display = 'none';
+    setTimeout(() => { window.location.href = 'admin.html'; }, 600);
+  }, 1200);
+});
+</script>
+</body>
+</html>
