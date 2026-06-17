@@ -657,6 +657,7 @@ function renderDisputes(c){
 function getAccounts(){return JSON.parse(localStorage.getItem('vouch_accounts')||'[]');}
 function saveAccounts(a){localStorage.setItem('vouch_accounts',JSON.stringify(a));}
 async function syncAccountsFromSupabase(){
+  if(API.includes('YOUR_RENDER_URL'))return;
   try{
     const res=await fetch(API+'/api/users');
     if(!res.ok)return;
@@ -889,9 +890,13 @@ function renderSettings(c){
     };
     cfg.paymentWindow=document.getElementById('fWindow').value.trim();
     localStorage.setItem('vouch_config',JSON.stringify(cfg));
-    fetch(API+'/api/config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:cfg})})
-      .then(r=>r.ok?toast('Settings saved · live for all users'):toast('Saved locally — sync failed','bad'))
-      .catch(()=>toast('Saved locally — offline','bad'));
+    if(!API.includes('YOUR_RENDER_URL')){
+      fetch(API+'/api/config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:cfg})})
+        .then(r=>r.ok?toast('Settings saved · live for all users'):toast('Saved locally — sync failed','bad'))
+        .catch(()=>toast('Saved locally — offline','bad'));
+    } else {
+      toast('Settings saved locally');
+    }
   });
 }
 

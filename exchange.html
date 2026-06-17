@@ -395,19 +395,21 @@ function applyConfig(cfg){
 applyConfig(JSON.parse(localStorage.getItem('vouch_config')||'{}'));
 // fetch latest from Supabase — store promise so step 2 can await it
 let configReady=Promise.resolve();
-configReady=(async function(){
-  try{
-    const res=await fetch(API+'/api/config');
-    if(res.ok){
-      const data=await res.json();
-      if(data&&Object.keys(data).length){
-        localStorage.setItem('vouch_config',JSON.stringify(data));
-        applyConfig(data);
-        if(S.step===0)renderStep1();
+if(!API.includes('YOUR_RENDER_URL')){
+  configReady=(async function(){
+    try{
+      const res=await fetch(API+'/api/config');
+      if(res.ok){
+        const data=await res.json();
+        if(data&&Object.keys(data).length){
+          localStorage.setItem('vouch_config',JSON.stringify(data));
+          applyConfig(data);
+          if(S.step===0)renderStep1();
+        }
       }
-    }
-  }catch(e){}
-})();
+    }catch(e){}
+  })();
+}
 
 /* ===== CRYPTOS ===== */
 const CRYPTOS = {

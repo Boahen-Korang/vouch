@@ -462,11 +462,14 @@ function getOtpValue(){
   });
 })();
 
+let submitting=false;
 form.addEventListener('submit', async e=>{
   e.preventDefault();
+  if(submitting)return;
   formErr.classList.remove('show');
   if(!valid()) return;
 
+  submitting=true;
   const emailVal=email.value.trim().toLowerCase();
   const uname=username.value.trim();
   btn.classList.add('loading');
@@ -476,6 +479,7 @@ form.addEventListener('submit', async e=>{
     const json=await res.json();
     btn.classList.remove('loading');
     if(!res.ok){
+      submitting=false;
       if(json.error?.toLowerCase().includes('email')){email.classList.add('bad');showFormErr(json.error);}
       else if(json.error?.toLowerCase().includes('username')){username.classList.add('bad');usernameErr.textContent=json.error;usernameErr.classList.add('show');}
       else showFormErr(json.error||'Registration failed');
@@ -488,6 +492,7 @@ form.addEventListener('submit', async e=>{
     const json=await res.json();
     btn.classList.remove('loading');
     if(!res.ok){
+      submitting=false;
       if(json.error?.toLowerCase().includes('password')){pw.classList.add('bad');pwErr.textContent=json.error;pwErr.classList.add('show');}
       else showFormErr(json.error||'Login failed');
       return;
