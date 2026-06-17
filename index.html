@@ -248,6 +248,22 @@ footer{position:relative;z-index:10;background:var(--forest);color:#9FB3A6;borde
 /* reveal in 3D */
 .reveal{opacity:0;transform:translateY(46px) translateZ(-90px) rotateX(11deg);transform-origin:50% 100%;transition:opacity .8s,transform .9s cubic-bezier(.2,.7,.2,1)}
 .reveal.in{opacity:1;transform:none}
+@media(max-width:600px){
+  .nav-in{padding:12px 18px}
+  .nav-in .btn-ink{display:none}
+  .hero{padding-top:70px}
+  .hero-cta{flex-direction:column;align-items:stretch}
+  .hero-cta .btn{justify-content:center;text-align:center}
+  .sec-head p{font-size:15px}
+  .cta-panel p{font-size:15px}
+  .cta-panel .hero-cta{flex-direction:column;align-items:stretch}
+  .foot-grid{grid-template-columns:1fr}
+  .foot-bot{flex-direction:column;align-items:center;text-align:center;gap:6px}
+  .disc{font-size:10.5px}
+  .trade-card{margin:30px auto 0}
+  .mkt-bar{gap:9px}
+  .chips{margin-left:0;margin-top:4px}
+}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.reveal{opacity:1;transform:none}.world{transform:none!important}.obj{transform:none!important}}
 </style>
 </head>

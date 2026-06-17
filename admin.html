@@ -184,9 +184,26 @@ tbody tr.click:hover{background:var(--panel-2)}
 @media(max-width:900px){
   .layout{grid-template-columns:1fr}
   .side{position:static;height:auto;flex-direction:column;border-right:none;border-bottom:1px solid var(--line)}
-  .nav{flex-direction:row;overflow-x:auto;padding:8px}.nav-sec{display:none}.nav-item{white-space:nowrap}
+  .nav{flex-direction:row;overflow-x:auto;padding:8px;scrollbar-width:none}.nav::-webkit-scrollbar{display:none}.nav-sec{display:none}.nav-item{white-space:nowrap}
   .side-bot{display:none}
   .search{width:130px}
+}
+@media(max-width:600px){
+  .kpis{grid-template-columns:1fr}
+  .tbl{overflow-x:auto}
+  table{min-width:560px}
+  .content{padding:14px 14px 60px}
+  .topbar{padding:12px 14px;gap:10px}
+  .pt{font-size:18px}
+  .search{width:100px;font-size:12px}
+  .live{display:none}
+  .disp-summary{grid-template-columns:1fr}
+  .resolve{padding:14px}
+  .card{padding:14px}
+  .kpi{padding:14px 16px}
+  .kpi .v{font-size:22px}
+  .nav-item{padding:9px 11px;font-size:13px;gap:8px}
+  .nav-item svg{width:16px;height:16px}
 }
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>

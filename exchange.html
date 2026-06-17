@@ -219,6 +219,24 @@ button{font-family:inherit}
 .toast .d{width:8px;height:8px;border-radius:50%;background:var(--emerald-br)}
 .toast.warn .d{background:var(--gold)}
 @keyframes tin{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@media(max-width:520px){
+  .tb-in{gap:10px;padding:11px 14px}
+  .pricepill{display:none}
+  .tabs{overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+  .tabs::-webkit-scrollbar{display:none}
+  .tabs button{padding:8px 11px;font-size:13px;white-space:nowrap}
+  .page{padding:16px 14px 80px}
+  .controls{gap:8px}
+  .ctrl select,.ctrl input{font-size:13px;padding:9px 12px}
+  .offer{grid-template-columns:1fr}
+  .o-act{grid-column:unset}
+  .o-act .btn{width:100%;justify-content:center}
+  .offers-head{display:none}
+  .order{grid-template-columns:auto 1fr auto}
+  .order .pm,.order .amt{display:none}
+  .wallet-top{flex-direction:column;align-items:stretch}
+  .wallet-total .v{font-size:28px}
+}
 @media(prefers-reduced-motion:reduce){*{animation:none!important}}
 </style>
 </head>
