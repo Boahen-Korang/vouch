@@ -478,6 +478,34 @@ form.addEventListener('submit', async e=>{
   const uname=username.value.trim();
   btn.classList.add('loading');
 
+  /* ── local fallback when Render backend not yet configured ── */
+  if(API.includes('YOUR_RENDER_URL')){
+    const accs=getLocalAccounts();
+    if(isRegister){
+      if(accs.some(a=>a.email===emailVal)){
+        submitting=false;btn.classList.remove('loading');
+        email.classList.add('bad');showFormErr('An account with that email already exists');return;
+      }
+      if(accs.some(a=>a.username===uname)){
+        submitting=false;btn.classList.remove('loading');
+        username.classList.add('bad');usernameErr.textContent='Username already taken';usernameErr.classList.add('show');return;
+      }
+      const joined=new Date().toLocaleDateString('en-GB',{month:'short',year:'numeric'});
+      accs.push({username:uname,email:emailVal,_pw:pw.value,joined});
+      saveLocalAccounts(accs);
+      localStorage.setItem('vouch_session',JSON.stringify({username:uname,email:emailVal}));
+      doRedirect(true);return;
+    } else {
+      const acc=accs.find(a=>a.email===emailVal&&a._pw===pw.value);
+      if(!acc){
+        submitting=false;btn.classList.remove('loading');
+        pw.classList.add('bad');pwErr.textContent='Incorrect email or password';pwErr.classList.add('show');return;
+      }
+      localStorage.setItem('vouch_session',JSON.stringify({username:acc.username,email:acc.email}));
+      doRedirect(false);return;
+    }
+  }
+
   const wakeMsg=document.getElementById('wakeMsg');
   const wakeTimer=setTimeout(()=>{wakeMsg.style.display='';},5000);
   const cleanup=()=>{clearTimeout(wakeTimer);wakeMsg.style.display='none';};
