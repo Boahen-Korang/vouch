@@ -205,6 +205,34 @@ tbody tr.click:hover{background:var(--panel-2)}
   .nav-item{padding:9px 11px;font-size:13px;gap:8px}
   .nav-item svg{width:16px;height:16px}
 }
+/* ===== CHAT ADMIN ===== */
+.chat-layout{display:grid;grid-template-columns:260px 1fr;gap:0;height:calc(100vh - 130px);min-height:400px;background:var(--panel);border:1px solid var(--line);border-radius:15px;overflow:hidden}
+.chat-sidebar{border-right:1px solid var(--line);display:flex;flex-direction:column}
+.chat-sb-head{padding:14px 16px;border-bottom:1px solid var(--line);font-family:var(--display);font-weight:700;font-size:15px}
+.chat-conv{display:flex;align-items:center;gap:11px;padding:12px 16px;cursor:pointer;border-bottom:1px solid var(--line-soft);transition:.15s}
+.chat-conv:hover{background:var(--panel-2)}.chat-conv.on{background:var(--panel-2);box-shadow:inset 2px 0 0 var(--emerald-br)}
+.chat-conv .cav{width:36px;height:36px;border-radius:10px;background:var(--emerald);display:grid;place-items:center;font-family:var(--display);font-weight:700;font-size:14px;color:#04130C;flex-shrink:0}
+.chat-conv .cnm{font-weight:600;font-size:13.5px}.chat-conv .cprev{font-size:12px;color:var(--faint);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:130px}
+.chat-conv .ctime{margin-left:auto;font-family:var(--mono);font-size:10px;color:var(--faint);flex-shrink:0}
+.chat-conv .cunread{width:18px;height:18px;border-radius:50%;background:var(--coral);color:#fff;font-family:var(--mono);font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.chat-main{display:flex;flex-direction:column}
+.chat-main-head{padding:14px 18px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:11px;flex-shrink:0}
+.chat-main-head .cav{width:36px;height:36px;border-radius:10px;background:var(--emerald);display:grid;place-items:center;font-family:var(--display);font-weight:700;font-size:14px;color:#04130C}
+.chat-main-head .info .nm{font-weight:700;font-size:14px}.chat-main-head .info .st{font-family:var(--mono);font-size:10.5px;color:var(--emerald-br);display:flex;align-items:center;gap:5px}
+.chat-main-head .info .st::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--emerald-br)}
+.chat-msgs{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:9px}
+.am{max-width:75%;padding:9px 13px;border-radius:13px;font-size:13.5px;line-height:1.45;word-break:break-word}
+.am.cust{background:var(--bg);border:1px solid var(--line);color:var(--paper);align-self:flex-start;border-bottom-left-radius:4px}
+.am.adm{background:var(--emerald);color:#04130C;align-self:flex-end;border-bottom-right-radius:4px;font-weight:500}
+.am .at{font-family:var(--mono);font-size:9px;opacity:.6;margin-top:3px;display:block}
+.am.sys-a{align-self:center;background:transparent;color:var(--faint);font-family:var(--mono);font-size:10.5px;padding:3px 0;border-radius:0;max-width:100%;text-align:center}
+.chat-input-row{padding:12px 16px;border-top:1px solid var(--line);display:flex;gap:9px;flex-shrink:0}
+.chat-input-row input{flex:1;background:var(--bg);border:1.5px solid var(--line);border-radius:10px;padding:10px 14px;color:var(--paper);font-family:var(--body);font-size:14px;outline:none;transition:.2s}
+.chat-input-row input:focus{border-color:var(--emerald-br)}
+.chat-send-btn{background:var(--emerald);border:none;color:#04130C;border-radius:10px;width:42px;height:42px;display:grid;place-items:center;flex-shrink:0;transition:.2s}
+.chat-send-btn:hover{background:var(--emerald-br)}
+.chat-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;color:var(--faint);font-family:var(--mono);font-size:13px;gap:10px}
+@media(max-width:700px){.chat-layout{grid-template-columns:1fr;height:auto}.chat-sidebar{display:none}}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
@@ -221,6 +249,7 @@ tbody tr.click:hover{background:var(--panel-2)}
       <div class="nav-sec">People &amp; supply</div>
       <button class="nav-item" data-v="users"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/></svg>Users &amp; KYC<span class="badge gold" id="bKyc">0</span></button>
       <button class="nav-item" data-v="offers"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M20.6 3H15l-1 1v5l8 8 4-4-8-8z" transform="scale(.9)"/><path d="M3 7h7M3 12h12M3 17h9"/></svg>Offers</button>
+      <button class="nav-item" data-v="chat"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Chat<span class="badge" id="bChat" style="display:none">0</span></button>
       <button class="nav-item" data-v="settings"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-2.7 1.1V21a2 2 0 1 1-4 0v-.1A1.6 1.6 0 0 0 7 19.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0-1-2.7H3a2 2 0 1 1 0-4h.1A1.6 1.6 0 0 0 4.7 7l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.8.3H9.4a1.6 1.6 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 2.7 1.1l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.8V9.4a1.6 1.6 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1z"/></svg>Settings</button>
     </nav>
     <div class="side-bot"><div class="av">AO</div><div><div class="nm">Ama Owusu</div><div class="rl">Operations admin</div></div><a href="index.html">↗ Site</a></div>
@@ -309,17 +338,27 @@ const S={
 };
 
 /* ===== BADGES ===== */
+const CHAT_KEY='vouch_msgs';
+const BC=typeof BroadcastChannel!=='undefined'?new BroadcastChannel('vouch_chat'):null;
+function getMsgs(){return JSON.parse(localStorage.getItem(CHAT_KEY)||'[]');}
+function saveMsgs(m){localStorage.setItem(CHAT_KEY,JSON.stringify(m));}
+function tnow(){const d=new Date();return d.getHours().toString().padStart(2,'0')+':'+d.getMinutes().toString().padStart(2,'0');}
+function unreadCount(){return getMsgs().filter(m=>m.from==='customer'&&!m.read).length;}
+
 function refreshBadges(){
   const d=S.disputes.filter(x=>x.status==='open').length;
   const k=S.users.filter(u=>u.kyc==='pending').length;
+  const ch=unreadCount();
   $('#bDisp').textContent=d; $('#bDisp').style.display=d?'':'none';
   $('#bKyc').textContent=k; $('#bKyc').style.display=k?'':'none';
+  $('#bChat').textContent=ch; $('#bChat').style.display=ch?'':'none';
 }
+if(BC){BC.onmessage=e=>{if(e.data&&e.data.type==='message'){refreshBadges();if(S.view==='chat')renderChatView($('#content'));}};}
 
 /* ===== NAV ===== */
 const TITLES={overview:['Overview','Platform health at a glance'],trades:['Trades','Monitor every escrow trade in real time'],
   disputes:['Disputes','Resolve held-escrow conflicts'],users:['Users & KYC','Verify identities and manage accounts'],
-  offers:['Offers','Moderate the marketplace supply'],settings:['Settings','Platform configuration']};
+  offers:['Offers','Moderate the marketplace supply'],chat:['Chat','Message customers in real time'],settings:['Settings','Platform configuration']};
 $('#nav').addEventListener('click',e=>{const b=e.target.closest('.nav-item');if(!b)return;
   S.view=b.dataset.v; S.activeDispute=null; S.search='';$('#search').value='';
   [...$('#nav').children].forEach(x=>x.classList&&x.classList.toggle('on',x===b));
@@ -335,6 +374,7 @@ function render(){
   else if(S.view==='disputes')S.activeDispute?renderDisputeDetail(c):renderDisputes(c);
   else if(S.view==='users')renderUsers(c);
   else if(S.view==='offers')renderOffers(c);
+  else if(S.view==='chat')renderChatView(c);
   else renderSettings(c);
 }
 
@@ -583,6 +623,63 @@ function renderOffers(c){
   </tr>`).join('');
   rows.querySelectorAll('[data-ok]').forEach(b=>b.addEventListener('click',()=>{const o=S.offers.find(x=>x.id===b.dataset.ok);if(o)o.status='active';refreshBadges();renderOffers(c);toast('Offer cleared · '+b.dataset.ok);}));
   rows.querySelectorAll('[data-rm]').forEach(b=>b.addEventListener('click',()=>{S.offers=S.offers.filter(x=>x.id!==b.dataset.rm);renderOffers(c);toast('Offer removed · '+b.dataset.rm,'bad');}));
+}
+
+/* ===== CHAT VIEW ===== */
+function renderChatView(c){
+  const msgs=getMsgs();
+  /* mark customer messages as read */
+  saveMsgs(msgs.map(m=>{if(m.from==='customer')m.read=true;return m;}));
+  refreshBadges();
+  const lastMsg=msgs.length?msgs[msgs.length-1]:null;
+  const unread=msgs.filter(m=>m.from==='customer'&&!m.read).length;
+  c.innerHTML=`<div class="chat-layout">
+    <div class="chat-sidebar">
+      <div class="chat-sb-head">Conversations</div>
+      ${msgs.length||true?`<div class="chat-conv on">
+        <div class="cav">U</div>
+        <div style="min-width:0">
+          <div class="cnm">Customer</div>
+          <div class="cprev">${lastMsg&&lastMsg.from!=='system'?lastMsg.text:'Start of conversation'}</div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px">
+          <span class="ctime">${lastMsg?lastMsg.time:''}</span>
+          ${unread?`<span class="cunread">${unread}</span>`:''}
+        </div>
+      </div>`:'<div style="padding:18px;font-family:var(--mono);font-size:12px;color:var(--faint)">No conversations yet.</div>'}
+    </div>
+    <div class="chat-main">
+      <div class="chat-main-head">
+        <div class="cav">U</div>
+        <div class="info"><div class="nm">Customer</div><div class="st">Active now</div></div>
+      </div>
+      <div class="chat-msgs" id="chatMsgs">
+        ${msgs.length?msgs.map(m=>{
+          if(m.from==='system')return`<div class="am sys-a">${m.text}</div>`;
+          return`<div class="am ${m.from==='customer'?'cust':'adm'}">${m.text}<span class="at">${m.time}</span></div>`;
+        }).join(''):'<div class="chat-empty"><svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.5" opacity=".3"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>No messages yet. Waiting for customers.</div>'}
+      </div>
+      <div class="chat-input-row">
+        <input id="adminMsgIn" placeholder="Reply to customer…" autocomplete="off">
+        <button class="chat-send-btn" id="adminSendBtn"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg></button>
+      </div>
+    </div>
+  </div>`;
+  /* scroll to bottom */
+  const msgsEl=document.getElementById('chatMsgs');
+  if(msgsEl)msgsEl.scrollTop=msgsEl.scrollHeight;
+  function sendAdminMsg(){
+    const inp=document.getElementById('adminMsgIn');if(!inp)return;
+    const text=inp.value.trim();if(!text)return;
+    inp.value='';
+    const allMsgs=getMsgs();
+    const m={id:Date.now().toString(36),from:'admin',text,time:tnow(),read:false,ts:Date.now()};
+    allMsgs.push(m);saveMsgs(allMsgs);
+    BC&&BC.postMessage({type:'message',m});
+    renderChatView(c);
+  }
+  document.getElementById('adminSendBtn').addEventListener('click',sendAdminMsg);
+  document.getElementById('adminMsgIn').addEventListener('keydown',e=>{if(e.key==='Enter')sendAdminMsg();});
 }
 
 /* ===== SETTINGS ===== */
