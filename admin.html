@@ -270,7 +270,7 @@ tbody tr.click:hover{background:var(--panel-2)}
       <button class="nav-item" data-v="trades"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M3 17l6-6 4 4 8-8"/><path d="M21 7v6h-6"/></svg>Trades<span class="badge" id="bTrades" style="display:none">0</span></button>
       <button class="nav-item" data-v="disputes"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M12 9v4"/><path d="M12 17h.01"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>Disputes<span class="badge" id="bDisp">0</span></button>
       <div class="nav-sec">People &amp; supply</div>
-      <button class="nav-item" data-v="users"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/></svg>Users &amp; KYC<span class="badge gold" id="bKyc">0</span></button>
+      <button class="nav-item" data-v="users"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/></svg>Users</button>
       <button class="nav-item" data-v="offers"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>Rates</button>
       <button class="nav-item" data-v="chat"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Chat<span class="badge" id="bChat" style="display:none">0</span></button>
       <button class="nav-item" data-v="settings"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-2.7 1.1V21a2 2 0 1 1-4 0v-.1A1.6 1.6 0 0 0 7 19.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0-1-2.7H3a2 2 0 1 1 0-4h.1A1.6 1.6 0 0 0 4.7 7l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.8.3H9.4a1.6 1.6 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 2.7 1.1l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.8V9.4a1.6 1.6 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1z"/></svg>Settings</button>
@@ -315,7 +315,7 @@ function toast(msg,kind){const t=el('div','toast'+(kind?' '+kind:''));t.innerHTM
 const S={
   view:'overview', search:'',
   trades:[], disputes:[], offers:[],
-  tradeFilter:'all', dispFilter:'open', userFilter:'all', chatUser:null,
+  tradeFilter:'all', dispFilter:'open', chatUser:null,
 };
 
 /* ===== BADGES ===== */
@@ -329,11 +329,11 @@ function unreadCount(){return getMsgs().filter(m=>m.from==='customer'&&!m.read).
 function refreshBadges(){
   const d=S.disputes.filter(x=>x.status==='open').length;
   const accs=JSON.parse(localStorage.getItem('vouch_accounts')||'[]');
-  const k=accs.filter(a=>a.kyc==='pending').length;
+
   const ch=unreadCount();
   const pendingOrders=JSON.parse(localStorage.getItem('vouch_orders')||'[]').filter(o=>o.status==='pending').length;
   $('#bDisp').textContent=d; $('#bDisp').style.display=d?'':'none';
-  $('#bKyc').textContent=k; $('#bKyc').style.display=k?'':'none';
+
   $('#bChat').textContent=ch; $('#bChat').style.display=ch?'':'none';
   $('#bTrades').textContent=pendingOrders; $('#bTrades').style.display=pendingOrders?'':'none';
 }
@@ -345,7 +345,7 @@ if(BC){BC.onmessage=e=>{
 
 /* ===== NAV ===== */
 const TITLES={overview:['Overview','Platform health at a glance'],trades:['Trades','Review and action customer orders'],
-  disputes:['Disputes','Resolve held-escrow conflicts'],users:['Users & KYC','Verify identities and manage accounts'],
+  disputes:['Disputes','Resolve flagged orders'],users:['Users','Manage registered accounts'],
   offers:['Rates','Live BTC · ETH · USDT exchange rates'],chat:['Chat','Message customers in real time'],settings:['Settings','Platform configuration']};
 $('#nav').addEventListener('click',e=>{const b=e.target.closest('.nav-item');if(!b)return;
   S.view=b.dataset.v; S.search='';$('#search').value='';if(S.view!=='chat')S.chatUser=null;
@@ -404,7 +404,6 @@ function renderOverview(c){
       <div class="statusbars">
         ${attn('Pending orders',pending,'#E2B45A','trades')}
         ${attn('Open disputes',realOrders.filter(o=>o.status==='disputed').length,'#FF6B4A','disputes')}
-        ${attn('Pending KYC reviews',JSON.parse(localStorage.getItem('vouch_accounts')||'[]').filter(a=>a.kyc==='pending').length,'#9B7AD6','users')}
       </div></div>
   </div>`;
   drawVolChart();
@@ -645,7 +644,7 @@ async function syncAccountsFromSupabase(){
   if(error||!data)return;
   const local=getAccounts();
   const merged=data.map(p=>({
-    username:p.username, email:p.email, joined:p.joined||'—', kyc:p.kyc||'unverified',
+    username:p.username, email:p.email, joined:p.joined||'—',
   }));
   /* merge in any local-only entries not yet in Supabase */
   local.forEach(l=>{if(!merged.find(m=>m.email===l.email))merged.push(l);});
@@ -657,32 +656,18 @@ async function syncAccountsFromSupabase(){
 function renderUsers(c){
   const accs=getAccounts();
   const allOrders=JSON.parse(localStorage.getItem('vouch_orders')||'[]');
-  const pendingKyc=accs.filter(a=>a.kyc==='pending').length;
-  const verifiedCount=accs.filter(a=>a.kyc==='verified').length;
   c.innerHTML=`
-  <div class="toolbar" style="flex-wrap:wrap;gap:10px">
-    <div class="ftabs" id="uFilter">
-      <button data-f="all" class="${S.userFilter==='all'?'on':''}">All (${accs.length})</button>
-      <button data-f="pending" class="${S.userFilter==='pending'?'on':''}">Pending${pendingKyc?` (${pendingKyc})`:''}</button>
-      <button data-f="verified" class="${S.userFilter==='verified'?'on':''}">Verified${verifiedCount?` (${verifiedCount})`:''}</button>
-      <button data-f="unverified" class="${S.userFilter==='unverified'?'on':''}">Unverified</button>
-      <button data-f="banned" class="${S.userFilter==='banned'?'on':''}">Banned</button>
-    </div>
-  </div>
-  <div class="tbl"><table><thead><tr><th>User</th><th>Email</th><th>Joined</th><th>Trades</th><th>KYC</th><th></th></tr></thead>
+  <div class="tbl"><table><thead><tr><th>User</th><th>Email</th><th>Joined</th><th>Trades</th></tr></thead>
   <tbody id="userRows"></tbody></table></div>`;
-  $('#uFilter').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;S.userFilter=b.dataset.f;renderUsers(c);});
   const rows=$('#userRows');
   let list=accs.map(a=>{
     const uOrders=allOrders.filter(o=>o.username===a.username||o.user===a.username);
-    return {name:a.username,email:a.email,joined:a.joined||'—',kyc:a.kyc||'unverified',
+    return {name:a.username,email:a.email,joined:a.joined||'—',
       total:uOrders.length,
       done:uOrders.filter(o=>o.status==='completed'||o.status==='approved'||o.status==='dispute-resolved').length};
   });
-  list=list.filter(u=>S.userFilter==='all'||u.kyc===S.userFilter);
   if(S.search)list=list.filter(u=>(u.name+u.email).toLowerCase().includes(S.search));
-  if(!list.length){rows.innerHTML=`<tr><td colspan="6"><div class="empty">${accs.length?'No users match.':'No registered users yet.'}</div></td></tr>`;return;}
-  const kmap={verified:['green','Verified'],pending:['gold','Pending review'],unverified:['grey','Unverified'],banned:['coral','Banned']};
+  if(!list.length){rows.innerHTML=`<tr><td colspan="4"><div class="empty">${accs.length?'No users match.':'No registered users yet.'}</div></td></tr>`;return;}
   rows.innerHTML=list.map(u=>`<tr>
     <td class="cell-u"><span class="uav" style="background:${colorFor(u.name)}">${initials(u.name)}</span>
       <div><div class="nm">${u.name}</div></div></td>
@@ -692,23 +677,7 @@ function renderUsers(c){
       <div style="font-size:13px;color:var(--paper)">${u.total||'—'}</div>
       ${u.total>0?`<div style="font-size:11px;color:var(--faint)">${u.done} done</div>`:''}
     </td>
-    <td><span class="pill ${kmap[u.kyc][0]}"><span class="d"></span>${kmap[u.kyc][1]}</span></td>
-    <td class="row-act">
-      ${u.kyc==='pending'?`<button class="tbtn g" data-app="${u.name}">Approve</button><button class="tbtn r" data-rej="${u.name}">Reject</button>`:
-        u.kyc==='banned'?`<button class="tbtn b" data-unban="${u.name}">Unban</button>`:
-        `<button class="tbtn r" data-ban="${u.name}">Ban</button>`}
-    </td></tr>`).join('');
-  rows.querySelectorAll('[data-app]').forEach(b=>b.addEventListener('click',()=>{setKyc(b.dataset.app,'verified');toast('KYC approved · '+b.dataset.app+' is now verified');}));
-  rows.querySelectorAll('[data-rej]').forEach(b=>b.addEventListener('click',()=>{setKyc(b.dataset.rej,'unverified');toast('KYC rejected · '+b.dataset.rej,'warn');}));
-  rows.querySelectorAll('[data-ban]').forEach(b=>b.addEventListener('click',()=>{setKyc(b.dataset.ban,'banned');toast(b.dataset.ban+' has been banned','bad');}));
-  rows.querySelectorAll('[data-unban]').forEach(b=>b.addEventListener('click',()=>{setKyc(b.dataset.unban,'unverified');toast(b.dataset.unban+' unbanned','warn');}));
-}
-function setKyc(name,status){
-  const accs=getAccounts();
-  const idx=accs.findIndex(a=>a.username===name);
-  if(idx>=0){accs[idx].kyc=status;saveAccounts(accs);}
-  if(sb)sb.from('profiles').update({kyc:status}).eq('username',name);
-  refreshBadges();renderUsers($('#content'));
+  </tr>`).join('');
 }
 
 /* ===== RATES ===== */
@@ -863,7 +832,6 @@ function renderSettings(c){
       <div class="set-row"><div><div class="k">Buyer fee</div><div class="d">Fee charged to buyers on completion</div></div><input class="set-input" id="fBuyer" value="0.00%"></div>
     </div>
     <div class="card" style="margin-bottom:14px"><div class="card-h"><h3>Risk controls</h3></div>
-      <div class="set-row"><div><div class="k">Require KYC before first trade</div><div class="d">Block unverified accounts from trading</div></div><button class="toggle-sw on" data-t></button></div>
       <div class="set-row"><div><div class="k">Auto-flag offers off-market</div><div class="d">Flag offers priced beyond ±5% of spot</div></div><button class="toggle-sw on" data-t></button></div>
       <div class="set-row"><div><div class="k">Auto-escalate stale disputes</div><div class="d">Route disputes idle &gt; 6h to a senior admin</div></div><button class="toggle-sw" data-t></button></div>
       <div class="set-row"><div><div class="k">Payment window</div><div class="d">Default time a buyer has to pay</div></div><input class="set-input" id="fWindow" value="15 min"></div>

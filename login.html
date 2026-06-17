@@ -362,10 +362,10 @@ form.addEventListener('submit', async e=>{
       if(error){btn.classList.remove('loading');showFormErr(error.message);return;}
       const now=new Date();
       const joinedStr=now.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
-      await sb.from('profiles').insert({id:data.user.id,username:uname,email:emailVal,joined:joinedStr,kyc:'unverified'});
+      await sb.from('profiles').insert({id:data.user.id,username:uname,email:emailVal,joined:joinedStr});
       /* update local cache */
       const accs=getLocalAccounts();
-      accs.push({username:uname,email:emailVal,joined:joinedStr,kyc:'unverified'});
+      accs.push({username:uname,email:emailVal,joined:joinedStr});
       saveLocalAccounts(accs);
       localStorage.setItem('vouch_session',JSON.stringify({username:uname,email:emailVal}));
       doRedirect(true);
@@ -384,7 +384,7 @@ form.addEventListener('submit', async e=>{
       /* update local accounts cache */
       const accs=getLocalAccounts();
       const idx=accs.findIndex(a=>a.email===emailVal);
-      const entry={username:resolvedName,email:emailVal,joined:profile?.joined||'—',kyc:profile?.kyc||'unverified'};
+      const entry={username:resolvedName,email:emailVal,joined:profile?.joined||'—'};
       if(idx>=0)accs[idx]=entry; else accs.push(entry);
       saveLocalAccounts(accs);
       doRedirect(false);
@@ -400,7 +400,7 @@ form.addEventListener('submit', async e=>{
       }
       const now=new Date();
       const joinedStr=now.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
-      accounts.push({username:uname,email:emailVal,password:pw.value,joined:joinedStr,kyc:'unverified'});
+      accounts.push({username:uname,email:emailVal,password:pw.value,joined:joinedStr});
       saveLocalAccounts(accounts);
       localStorage.setItem('vouch_session',JSON.stringify({username:uname,email:emailVal}));
     } else {
