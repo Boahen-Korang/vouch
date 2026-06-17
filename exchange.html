@@ -944,8 +944,8 @@ function goToStep3(){
       ${stepsHTML(2)}
       <div class="center-card">
         <div class="spin-ring" id="spinRing"></div>
-        <h3>Payment received</h3>
-        <p>We're verifying your payment. The spinner will stop once our team approves your order.</p>
+        <h3 id="step3Msg">Payment received</h3>
+        <p id="step3Sub">Verifying your payment…</p>
         <div style="font-family:var(--mono);font-size:12px;color:var(--faint)">Ref: ${S.tradeRef}</div>
       </div>
     </div>`;
@@ -971,6 +971,14 @@ function goToStep3(){
     if(BC)BC.postMessage({type:'order',order:_e});
   }
   renderTopbar();
+
+  /* after a few seconds swap to "wait a few minutes" message */
+  setTimeout(()=>{
+    const msg=document.getElementById('step3Msg');
+    const sub=document.getElementById('step3Sub');
+    if(msg)msg.textContent='Payment made';
+    if(sub)sub.textContent='Wait a few minutes while we process your order.';
+  },4000);
 
   /* listen for admin approval via BroadcastChannel (same browser) */
   if(BC){
