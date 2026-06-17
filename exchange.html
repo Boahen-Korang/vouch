@@ -372,6 +372,7 @@ const CONFIG = {
     name:    '',
     account: '',
   },
+  momoDetails: { network:'', number:'', name:'' },
   sellWallets: {                         // user sends crypto/asset → platform
     SOL:  '',
     BTC:  'bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh',
@@ -677,14 +678,26 @@ function renderStep2(){
           <div class="wallet-err" id="walletErr">Enter a valid ${S.crypto} wallet address</div>
         </div>
         <button class="btn-main buy" id="doneBtn" disabled style="opacity:.4;margin-bottom:24px">Enter your wallet address first</button>
-        <!-- BUY Phase B: bank details + proof (revealed after Done) -->
+        <!-- BUY Phase B: payment method + proof (revealed after Done) -->
         <div id="phase2" style="display:none">
           <div style="font-family:var(--mono);font-size:10.5px;color:var(--faint);letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px">Now pay this amount to:</div>
-          <div class="pay-summary">
-            <div class="ps-row"><span class="k">Amount</span><span class="v">${fmtLocal(S.fiatAmt)} <button class="copy-btn" data-c="${(S.fiatAmt*S.fiatRate).toFixed(2)}">copy</button></span></div>
-            <div class="ps-row"><span class="k">Bank</span><span class="v">${details.bank}</span></div>
-            <div class="ps-row"><span class="k">Account name</span><span class="v">${details.name}</span></div>
-            <div class="ps-row"><span class="k">Account no.</span><span class="v">${details.account} <button class="copy-btn" data-c="${details.account}">copy</button></span></div>
+          <div class="payout-tog" id="buyPayTog" style="margin-bottom:14px">
+            <button data-m="bank" class="on"><span class="ic">🏦</span>Bank Transfer</button>
+            <button data-m="momo"><span class="ic">📱</span>Mobile Money</button>
+          </div>
+          <div id="buyPayDetails">
+            <div class="pay-summary" id="buyBankDetails">
+              <div class="ps-row"><span class="k">Amount</span><span class="v">${fmtLocal(S.fiatAmt)} <button class="copy-btn" data-c="${(S.fiatAmt*S.fiatRate).toFixed(2)}">copy</button></span></div>
+              <div class="ps-row"><span class="k">Bank</span><span class="v">${details.bank}</span></div>
+              <div class="ps-row"><span class="k">Account name</span><span class="v">${details.name}</span></div>
+              <div class="ps-row"><span class="k">Account no.</span><span class="v">${details.account} <button class="copy-btn" data-c="${details.account}">copy</button></span></div>
+            </div>
+            <div class="pay-summary" id="buyMomoDetails" style="display:none">
+              <div class="ps-row"><span class="k">Amount</span><span class="v">${fmtLocal(S.fiatAmt)} <button class="copy-btn" data-c="${(S.fiatAmt*S.fiatRate).toFixed(2)}">copy</button></span></div>
+              <div class="ps-row"><span class="k">Network</span><span class="v">${CONFIG.momoDetails?.network||'MTN'}</span></div>
+              <div class="ps-row"><span class="k">MoMo number</span><span class="v">${CONFIG.momoDetails?.number||''} <button class="copy-btn" data-c="${CONFIG.momoDetails?.number||''}">copy</button></span></div>
+              <div class="ps-row"><span class="k">Account name</span><span class="v">${CONFIG.momoDetails?.name||''}</span></div>
+            </div>
           </div>
           ${proofHTML}
           <button class="btn-main buy" id="paidBtn" disabled style="opacity:.4">Upload proof to continue</button>
@@ -741,6 +754,17 @@ function renderStep2(){
       navigator.clipboard&&navigator.clipboard.writeText(b.dataset.c).catch(()=>{});
       b.textContent='copied ✓'; setTimeout(()=>b.textContent='copy',1400);
     }));
+    const buyPayTog=document.getElementById('buyPayTog');
+    if(buyPayTog){
+      buyPayTog.addEventListener('click',e=>{
+        const b=e.target.closest('button'); if(!b)return;
+        [...buyPayTog.children].forEach(x=>x.classList.toggle('on',x===b));
+        const isMomo=b.dataset.m==='momo';
+        document.getElementById('buyBankDetails').style.display=isMomo?'none':'';
+        document.getElementById('buyMomoDetails').style.display=isMomo?'':'none';
+        S.buyPayMethod=b.dataset.m;
+      });
+    }
     document.getElementById('proofFile').addEventListener('change',function(){
       const file=this.files[0]; if(!file)return;
       const reader=new FileReader();
@@ -806,7 +830,7 @@ function renderStep2(){
     doneBtn.addEventListener('click',()=>{
       S.destWallet=wIn.value.trim();
       lockDoneBtn('✓ Wallet confirmed — now pay below');
-      revealPhase2({id:S.tradeRef,side:'buy',crypto:S.crypto,cryptoAmt:S.cryptoAmt,fiatAmt:S.fiatAmt,fiatCurrency:S.fiatCurrency,fiatRate:S.fiatRate,ts:Date.now(),status:'pending',walletAddr:S.destWallet,username:getChatUsername()});
+      revealPhase2({id:S.tradeRef,side:'buy',crypto:S.crypto,cryptoAmt:S.cryptoAmt,fiatAmt:S.fiatAmt,fiatCurrency:S.fiatCurrency,fiatRate:S.fiatRate,ts:Date.now(),status:'pending',walletAddr:S.destWallet,buyPayMethod:S.buyPayMethod||'bank',username:getChatUsername()});
     });
   } else {
     /* SELL: payout details → Done → platform wallet */
