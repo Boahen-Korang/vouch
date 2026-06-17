@@ -135,6 +135,22 @@ button{font-family:inherit;cursor:pointer}
 .wallet-err{font-family:var(--mono);font-size:11px;color:var(--coral);margin-top:5px;display:none}
 .wallet-err.show{display:block}
 
+/* payout method (sell) */
+.payout-field{margin-bottom:16px}
+.payout-field label{font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);display:block;margin-bottom:8px}
+.payout-tog{display:flex;gap:8px;margin-bottom:12px}
+.payout-tog button{flex:1;background:var(--bg);border:1.5px solid var(--line);border-radius:9px;padding:10px 8px;font-family:var(--mono);font-size:12px;font-weight:700;color:var(--muted);transition:.2s;display:flex;flex-direction:column;align-items:center;gap:4px}
+.payout-tog button .ic{font-size:18px}
+.payout-tog button.on{border-color:var(--emerald-br);color:var(--emerald-br);background:var(--emerald-tint)}
+.payout-inputs{display:flex;flex-direction:column;gap:10px}
+.pf{display:flex;flex-direction:column;gap:6px}
+.pf label{font-family:var(--mono);font-size:10px;letter-spacing:.05em;text-transform:uppercase;color:var(--faint)}
+.pf input,.pf select{background:var(--bg);border:1.5px solid var(--line);border-radius:10px;padding:11px 13px;color:var(--paper);font-family:var(--body);font-size:14px;outline:none;transition:.2s;-webkit-appearance:none;appearance:none}
+.pf input:focus,.pf select:focus{border-color:var(--emerald-br);box-shadow:0 0 0 3px var(--emerald-tint)}
+.pf input::placeholder{color:var(--faint)}
+.payout-err{font-family:var(--mono);font-size:11px;color:var(--coral);margin-top:4px;display:none}
+.payout-err.show{display:block}
+
 /* proof upload */
 .proof-box{border:1.5px dashed var(--line);border-radius:12px;padding:18px;text-align:center;cursor:pointer;transition:.2s;margin-bottom:14px;position:relative}
 .proof-box:hover{border-color:var(--emerald-br);background:var(--emerald-tint)}
@@ -554,8 +570,17 @@ function renderStep2(){
           <button class="wallet-paste" id="pasteWallet" type="button">paste</button>
         </div>
         <div class="wallet-err" id="walletErr">Enter a valid ${S.crypto} wallet address</div>
-      </div>`:''}
-      <div class="proof-label">Proof of payment</div>
+      </div>`:`
+      <div class="payout-field">
+        <label>How should we pay you? <span style="color:var(--coral)">*</span></label>
+        <div class="payout-tog" id="payoutTog">
+          <button data-m="momo" class="${(S.payoutMethod||'momo')==='momo'?'on':''}"><span class="ic">📱</span>Mobile Money</button>
+          <button data-m="bank" class="${S.payoutMethod==='bank'?'on':''}"><span class="ic">🏦</span>Bank Account</button>
+        </div>
+        <div class="payout-inputs" id="payoutInputs"></div>
+        <div class="payout-err" id="payoutErr">Please fill in all required fields</div>
+      </div>`}
+      <div class="proof-label">Proof of ${isBuy?'payment':'crypto transfer'}</div>
       <div class="proof-preview" id="proofPreview"><img id="proofImg" src="" alt="proof"><button class="pr-rm" id="proofRm">✕ Remove</button></div>
       <div class="proof-box" id="proofBox">
         <input type="file" id="proofFile" accept="image/*">
@@ -572,15 +597,18 @@ function renderStep2(){
     navigator.clipboard&&navigator.clipboard.writeText(b.dataset.c).catch(()=>{});
     b.textContent='copied ✓'; setTimeout(()=>b.textContent='copy',1400);
   }));
-  /* wallet address (buy only) */
+  /* payout / wallet gate */
   const isBuyFlow=S.side==='buy';
   let walletOk=!isBuyFlow;
+  let payoutOk=isBuyFlow;
   let proofOk=false;
   function checkReady(){
     const btn=document.getElementById('paidBtn'); if(!btn)return;
-    const ready=walletOk&&proofOk;
+    const ready=walletOk&&payoutOk&&proofOk;
     btn.disabled=!ready; btn.style.opacity=ready?'1':'.4';
-    btn.textContent=ready?'Payment made ✓':(!walletOk?'Enter wallet address':'Upload proof to continue');
+    btn.textContent=ready?'Payment made ✓':
+      (!walletOk?'Enter wallet address':
+      (!payoutOk?'Enter payout details':'Upload proof to continue'));
   }
   if(isBuyFlow){
     const wIn=document.getElementById('destWallet');
@@ -598,6 +626,60 @@ function renderStep2(){
       navigator.clipboard&&navigator.clipboard.readText().then(t=>{wIn.value=t.trim();validateWallet();}).catch(()=>{});
     });
     if(S.destWallet){wIn.value=S.destWallet;validateWallet();}
+  }
+
+  /* payout method (sell only) */
+  if(!isBuyFlow){
+    S.payoutMethod=S.payoutMethod||'momo';
+    function momoHTML(){
+      return `<div class="pf"><label>Network</label>
+        <select id="momoNet"><option value="mtn" ${S.momoNet==='mtn'?'selected':''}>MTN Mobile Money</option><option value="vodafone" ${S.momoNet==='vodafone'?'selected':''}>Vodafone Cash</option><option value="airteltigo" ${S.momoNet==='airteltigo'?'selected':''}>AirtelTigo Money</option></select></div>
+        <div class="pf"><label>MoMo number</label><input id="momoNum" type="tel" placeholder="024 000 0000" value="${S.momoNum||''}"></div>
+        <div class="pf"><label>Account name</label><input id="momoName" type="text" placeholder="Full name on account" value="${S.momoName||''}"></div>`;
+    }
+    function bankHTML(){
+      return `<div class="pf"><label>Bank name</label><input id="bankName" type="text" placeholder="e.g. GCB, Absa, Ecobank" value="${S.bankName||''}"></div>
+        <div class="pf"><label>Account number</label><input id="bankAcc" type="text" placeholder="0000000000" value="${S.bankAcc||''}"></div>
+        <div class="pf"><label>Account name</label><input id="bankHolder" type="text" placeholder="Full name on account" value="${S.bankHolder||''}"></div>`;
+    }
+    function renderPayoutInputs(){
+      const wrap=document.getElementById('payoutInputs'); if(!wrap)return;
+      wrap.innerHTML=S.payoutMethod==='momo'?momoHTML():bankHTML();
+      attachPayoutListeners();
+    }
+    function validatePayout(){
+      let ok=false;
+      if(S.payoutMethod==='momo'){
+        const num=(document.getElementById('momoNum')||{}).value||'';
+        const nm=(document.getElementById('momoName')||{}).value||'';
+        S.momoNet=(document.getElementById('momoNet')||{}).value||'mtn';
+        S.momoNum=num; S.momoName=nm;
+        ok=num.replace(/\s/g,'').length>=9&&nm.trim().length>=2;
+      } else {
+        const bn=(document.getElementById('bankName')||{}).value||'';
+        const ba=(document.getElementById('bankAcc')||{}).value||'';
+        const bh=(document.getElementById('bankHolder')||{}).value||'';
+        S.bankName=bn; S.bankAcc=ba; S.bankHolder=bh;
+        ok=bn.trim().length>=2&&ba.replace(/\s/g,'').length>=6&&bh.trim().length>=2;
+      }
+      const err=document.getElementById('payoutErr');
+      if(err)err.classList.toggle('show',!ok);
+      payoutOk=ok; checkReady();
+    }
+    function attachPayoutListeners(){
+      ['momoNum','momoName','bankName','bankAcc','bankHolder'].forEach(id=>{
+        const el=document.getElementById(id); if(el)el.addEventListener('input',validatePayout);
+      });
+      const sel=document.getElementById('momoNet'); if(sel)sel.addEventListener('change',validatePayout);
+      validatePayout();
+    }
+    document.getElementById('payoutTog').addEventListener('click',e=>{
+      const b=e.target.closest('button'); if(!b)return;
+      S.payoutMethod=b.dataset.m;
+      [...document.getElementById('payoutTog').children].forEach(x=>x.classList.toggle('on',x===b));
+      renderPayoutInputs();
+    });
+    renderPayoutInputs();
   }
 
   /* proof of payment upload */
