@@ -633,7 +633,7 @@ const io=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){e.tar
 document.querySelectorAll('.reveal').forEach((el,i)=>{el.style.transitionDelay=(i%3*70)+'ms';io.observe(el);});
 
 /* pre-warm Render backend so login is fast when user clicks Browse Offers */
-(function(){const A='https://YOUR_RENDER_URL.onrender.com';if(!A.includes('YOUR_RENDER_URL'))fetch(A+'/api/health').catch(()=>{});})();
+(function(){fetch('https://vouch-8xbj.onrender.com/api/health').catch(()=>{});})();
 </script>
 </body>
 </html>
