@@ -805,37 +805,55 @@ function renderSettings(c){
   const cfg=JSON.parse(localStorage.getItem('vouch_config')||'{}');
   const sw=cfg.sellWallets||{};
   const bd=cfg.buyDetails||{};
+  const mm=cfg.momoDetails||{};
   c.innerHTML=`<div style="max-width:680px">
+
     <div class="card" style="margin-bottom:14px">
-      <div class="card-h"><h3>Sell wallet addresses</h3><span class="sub">Where customers send crypto when selling</span></div>
-      <div class="set-row"><div><div class="k">BTC address</div><div class="d">Bitcoin receive address</div></div>
+      <div class="card-h"><h3>Sell — wallet addresses</h3><span class="sub">Where customers send crypto / assets when selling</span></div>
+      <div class="set-row"><div><div class="k">BTC</div><div class="d">Bitcoin receive address</div></div>
         <input class="set-input-wide" id="wBTC" placeholder="bc1q…" value="${sw.BTC||''}"></div>
-      <div class="set-row"><div><div class="k">ETH address</div><div class="d">Ethereum (ERC-20) receive address</div></div>
+      <div class="set-row"><div><div class="k">ETH</div><div class="d">Ethereum (ERC-20) address</div></div>
         <input class="set-input-wide" id="wETH" placeholder="0x…" value="${sw.ETH||''}"></div>
-      <div class="set-row"><div><div class="k">USDT address</div><div class="d">Tether (TRC-20 / ERC-20) address</div></div>
+      <div class="set-row"><div><div class="k">USDT</div><div class="d">Tether (TRC-20 / ERC-20) address</div></div>
         <input class="set-input-wide" id="wUSDT" placeholder="0x… or T…" value="${sw.USDT||''}"></div>
+      <div class="set-row"><div><div class="k">SOL</div><div class="d">Solana receive address</div></div>
+        <input class="set-input-wide" id="wSOL" placeholder="…" value="${sw.SOL||''}"></div>
+      <div class="set-row"><div><div class="k">EUR</div><div class="d">Bank / IBAN for Euro transfers</div></div>
+        <input class="set-input-wide" id="wEUR" placeholder="IBAN or account…" value="${sw.EUR||''}"></div>
+      <div class="set-row"><div><div class="k">XAU</div><div class="d">Gold vault / delivery instructions</div></div>
+        <input class="set-input-wide" id="wXAU" placeholder="Vault ID or address…" value="${sw.XAU||''}"></div>
     </div>
+
     <div class="card" style="margin-bottom:14px">
-      <div class="card-h"><h3>Buy payment details</h3><span class="sub">Bank account customers pay into when buying</span></div>
+      <div class="card-h"><h3>Buy — bank details</h3><span class="sub">Bank account customers pay into when buying with fiat</span></div>
       <div class="set-row"><div><div class="k">Bank name</div><div class="d">Your bank</div></div>
         <input class="set-input-wide" id="bBank" placeholder="e.g. Standard Chartered" value="${bd.bank||''}"></div>
       <div class="set-row"><div><div class="k">Account name</div><div class="d">Name on the account</div></div>
         <input class="set-input-wide" id="bAccName" placeholder="Vouch Technologies Ltd" value="${bd.name||''}"></div>
       <div class="set-row"><div><div class="k">Account number</div><div class="d">Account / IBAN</div></div>
         <input class="set-input-wide" id="bAcc" placeholder="0000 0000 0000" value="${bd.account||''}"></div>
-      <div class="set-row"><div><div class="k">Sort code / routing</div><div class="d">Sort code or routing number</div></div>
-        <input class="set-input-wide" id="bSort" placeholder="12-34-56" value="${bd.sort||''}"></div>
     </div>
-    <div class="card" style="margin-bottom:14px"><div class="card-h"><h3>Fees</h3></div>
-      <div class="set-row"><div><div class="k">Maker fee</div><div class="d">Charged to the trader posting an offer</div></div><input class="set-input" id="fMaker" value="0.20%"></div>
-      <div class="set-row"><div><div class="k">Taker fee</div><div class="d">Charged to the trader accepting an offer</div></div><input class="set-input" id="fTaker" value="0.55%"></div>
-      <div class="set-row"><div><div class="k">Buyer fee</div><div class="d">Fee charged to buyers on completion</div></div><input class="set-input" id="fBuyer" value="0.00%"></div>
+
+    <div class="card" style="margin-bottom:14px">
+      <div class="card-h"><h3>Buy — mobile money details</h3><span class="sub">MoMo account customers pay into when buying</span></div>
+      <div class="set-row"><div><div class="k">Network</div><div class="d">Mobile money provider</div></div>
+        <select class="set-input-wide" id="mmNetwork" style="cursor:pointer">
+          <option value="MTN" ${(mm.network||'MTN')==='MTN'?'selected':''}>MTN Mobile Money</option>
+          <option value="Vodafone" ${mm.network==='Vodafone'?'selected':''}>Vodafone Cash</option>
+          <option value="AirtelTigo" ${mm.network==='AirtelTigo'?'selected':''}>AirtelTigo Money</option>
+        </select></div>
+      <div class="set-row"><div><div class="k">MoMo number</div><div class="d">Number customers send payment to</div></div>
+        <input class="set-input-wide" id="mmNumber" placeholder="024 000 0000" value="${mm.number||''}"></div>
+      <div class="set-row"><div><div class="k">Account name</div><div class="d">Name registered on the MoMo account</div></div>
+        <input class="set-input-wide" id="mmName" placeholder="Vouch Technologies Ltd" value="${mm.name||''}"></div>
     </div>
+
     <div class="card" style="margin-bottom:14px"><div class="card-h"><h3>Risk controls</h3></div>
-      <div class="set-row"><div><div class="k">Auto-flag offers off-market</div><div class="d">Flag offers priced beyond ±5% of spot</div></div><button class="toggle-sw on" data-t></button></div>
+      <div class="set-row"><div><div class="k">Auto-flag off-market orders</div><div class="d">Flag orders priced beyond ±5% of spot</div></div><button class="toggle-sw on" data-t></button></div>
       <div class="set-row"><div><div class="k">Auto-escalate stale disputes</div><div class="d">Route disputes idle &gt; 6h to a senior admin</div></div><button class="toggle-sw" data-t></button></div>
-      <div class="set-row"><div><div class="k">Payment window</div><div class="d">Default time a buyer has to pay</div></div><input class="set-input" id="fWindow" value="15 min"></div>
+      <div class="set-row"><div><div class="k">Payment window</div><div class="d">Default time a customer has to pay</div></div><input class="set-input" id="fWindow" value="${cfg.paymentWindow||'15 min'}"></div>
     </div>
+
     <button class="tbtn g" id="saveBtn" style="padding:12px 24px;font-size:14px">Save changes</button>
   </div>`;
   c.querySelectorAll('[data-t]').forEach(b=>b.addEventListener('click',()=>b.classList.toggle('on')));
@@ -845,13 +863,21 @@ function renderSettings(c){
       BTC:document.getElementById('wBTC').value.trim(),
       ETH:document.getElementById('wETH').value.trim(),
       USDT:document.getElementById('wUSDT').value.trim(),
+      SOL:document.getElementById('wSOL').value.trim(),
+      EUR:document.getElementById('wEUR').value.trim(),
+      XAU:document.getElementById('wXAU').value.trim(),
     };
     cfg.buyDetails={
       bank:document.getElementById('bBank').value.trim(),
       name:document.getElementById('bAccName').value.trim(),
       account:document.getElementById('bAcc').value.trim(),
-      sort:document.getElementById('bSort').value.trim(),
     };
+    cfg.momoDetails={
+      network:document.getElementById('mmNetwork').value,
+      number:document.getElementById('mmNumber').value.trim(),
+      name:document.getElementById('mmName').value.trim(),
+    };
+    cfg.paymentWindow=document.getElementById('fWindow').value.trim();
     localStorage.setItem('vouch_config',JSON.stringify(cfg));
     toast('Settings saved · live on next trade');
   });
