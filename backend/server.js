@@ -64,8 +64,14 @@ app.post('/api/auth/register', async (req, res) => {
     await sendOtpEmail(email, code);
     res.json({ success: true });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Server error' });
+    console.error('REGISTER ERROR:', err.message);
+    if (err.message?.includes('relation') || err.message?.includes('does not exist'))
+      return res.status(500).json({ error: 'Database tables not set up — run schema.sql on Render PostgreSQL' });
+    if (err.message?.includes('EAUTH') || err.message?.includes('Invalid login') || err.message?.includes('credentials'))
+      return res.status(500).json({ error: 'Email config error — check GMAIL_USER and GMAIL_APP_PASSWORD in Render env vars' });
+    if (err.message?.includes('connect') || err.message?.includes('ECONNREFUSED') || err.message?.includes('password authentication'))
+      return res.status(500).json({ error: 'Database connection failed — check DATABASE_URL in Render env vars' });
+    res.status(500).json({ error: 'Server error: ' + err.message });
   }
 });
 
