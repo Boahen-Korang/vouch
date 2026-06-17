@@ -112,8 +112,10 @@ h1{font-family:var(--display);font-weight:700;font-size:22px;letter-spacing:-.02
 </div>
 
 <script>
-const ADMIN_EMAIL = 'groovyalpha@gmail.com';
-const ADMIN_PW = 'Groovy4!';
+const ADMINS = [
+  { email: 'groovyalpha@gmail.com',   pw: 'Groovy4!' },
+  { email: 'desmondagrah1@gmail.com', pw: '0543201109Agrah' },
+];
 
 const form = document.getElementById('adminForm');
 const btn = document.getElementById('loginBtn');
@@ -143,7 +145,7 @@ form.addEventListener('submit', e => {
   pw.classList.toggle('bad', !pok); pwErr.classList.toggle('show', !pok); ok = ok && pok;
   if (!ok) return;
 
-  const correct = email.value.trim() === ADMIN_EMAIL && pw.value === ADMIN_PW;
+  const correct = ADMINS.some(a => a.email === email.value.trim() && a.pw === pw.value);
   if (!correct) { authWarn.classList.add('show'); email.classList.add('bad'); pw.classList.add('bad'); return; }
 
   btn.classList.add('loading');
