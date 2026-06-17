@@ -10,10 +10,16 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
+const dbUrl = process.env.DATABASE_URL || '';
+console.log('DATABASE_URL set:', !!dbUrl);
+console.log('DATABASE_URL prefix:', dbUrl.slice(0, 30) + '...');
+
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
+  connectionString: dbUrl,
   ssl: { rejectUnauthorized: false },
 });
+
+pool.query('SELECT 1').then(() => console.log('DB connected OK')).catch(e => console.error('DB connection failed:', e.message));
 
 const mailer = nodemailer.createTransport({
   service: 'gmail',
