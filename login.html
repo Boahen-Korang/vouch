@@ -115,19 +115,6 @@ a{color:inherit;text-decoration:none}
   .back{top:16px;left:16px;font-size:11px}
   .btn-login{font-size:14px;padding:13px}
 }
-
-/* ===== OTP STEP ===== */
-.otp-wrap{display:flex;gap:10px;justify-content:center;margin:22px 0}
-.otp-wrap input{width:46px;height:56px;text-align:center;font-family:var(--mono);font-size:22px;font-weight:700;background:rgba(6,14,9,.8);border:1.5px solid var(--line);border-radius:12px;color:var(--paper);outline:none;transition:.2s;-moz-appearance:textfield}
-.otp-wrap input:focus{border-color:var(--emerald-br);box-shadow:0 0 0 3px var(--emerald-tint)}
-.otp-wrap input::-webkit-outer-spin-button,.otp-wrap input::-webkit-inner-spin-button{-webkit-appearance:none}
-.otp-wrap input.bad{border-color:var(--coral)}
-.otp-sub{font-size:13px;color:var(--muted);text-align:center;line-height:1.6;margin-bottom:4px}
-.otp-email{color:var(--emerald-br);font-weight:600}
-.otp-resend{text-align:center;margin-top:14px;font-size:13px;color:var(--faint)}
-.otp-resend button{background:none;border:none;color:var(--emerald-br);font-family:var(--body);font-size:13px;font-weight:600;cursor:pointer;padding:0}
-.otp-resend button:hover{text-decoration:underline}
-.otp-resend button:disabled{color:var(--faint);cursor:default;text-decoration:none}
 @media(prefers-reduced-motion:reduce){*{animation:none!important}.float{transition:none!important}.world{transform:none!important}}
 </style>
 </head>
@@ -189,7 +176,6 @@ a{color:inherit;text-decoration:none}
         </div>
 
         <div class="err" id="formErr" style="margin-bottom:12px;font-size:13px"></div>
-        <div id="wakeMsg" style="display:none;color:var(--muted);font-size:12px;text-align:center;margin-bottom:10px">Server is starting up, please wait a moment…</div>
 
         <div class="row" id="rowRemember">
           <label class="remember">
@@ -208,25 +194,6 @@ a{color:inherit;text-decoration:none}
       </form>
 
 
-      <!-- OTP verification panel (shown after registration) -->
-      <div id="otpPanel" style="display:none">
-        <div class="otp-sub">We sent a 6-digit code to<br><span class="otp-email" id="otpEmail"></span></div>
-        <div class="otp-wrap" id="otpBoxes">
-          <input type="number" maxlength="1" inputmode="numeric" class="otp-digit">
-          <input type="number" maxlength="1" inputmode="numeric" class="otp-digit">
-          <input type="number" maxlength="1" inputmode="numeric" class="otp-digit">
-          <input type="number" maxlength="1" inputmode="numeric" class="otp-digit">
-          <input type="number" maxlength="1" inputmode="numeric" class="otp-digit">
-          <input type="number" maxlength="1" inputmode="numeric" class="otp-digit">
-        </div>
-        <div class="err" id="otpErr" style="text-align:center;margin-bottom:12px">Incorrect code — please try again</div>
-        <button class="btn-login" id="otpBtn" disabled style="opacity:.4">
-          <span class="lbl">Verify email</span>
-          <span class="spin"></span>
-        </button>
-        <div class="otp-resend"><span>Didn't receive it? </span><button id="resendBtn" disabled>Resend code</button> <span id="resendTimer"></span></div>
-      </div>
-
       <p class="signup" id="signupLine">New to Vouch? <a href="#" id="toggleMode">Create an account</a></p>
       <div class="trust">
         <svg viewBox="0 0 24 24" fill="none" stroke="var(--faint)" stroke-width="2" stroke-linecap="round"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
@@ -236,11 +203,16 @@ a{color:inherit;text-decoration:none}
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
-"use strict";
-const API = 'https://vouch-8xbj.onrender.com';
-/* pre-warm Render backend — free tier sleeps after 15 min of inactivity */
-if(!API.includes('YOUR_RENDER_URL')) fetch(API+'/api/health').catch(()=>{});
+/* ===== SUPABASE CONFIG — replace with your project values ===== */
+const SUPABASE_URL  = 'https://khayyeitwpblqaffvdvm.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtoYXl5ZWl0d3BibHFhZmZ2ZHZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2NDczMTcsImV4cCI6MjA5NzIyMzMxN30.eHtG7BxPGYrAiFEdymNNG6cu1GgtVj0SuJZ9RoMl9wU';
+const sb = (SUPABASE_URL !== 'YOUR_SUPABASE_URL')
+  ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON)
+  : null;
+</script>
+<script>
 const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 /* ===== background parallax ===== */
@@ -367,196 +339,87 @@ function doRedirect(isReg){
 }
 
 
-/* ===== OTP STEP ===== */
-let pendingReg=null;
-
-function showOtpStep(emailVal){
-  document.getElementById('loginForm').style.display='none';
-  document.getElementById('signupLine').style.display='none';
-  document.getElementById('otpPanel').style.display='';
-  document.getElementById('otpEmail').textContent=emailVal;
-  document.querySelectorAll('.otp-digit')[0].focus();
-  startResendTimer();
-}
-
-function getOtpValue(){
-  return [...document.querySelectorAll('.otp-digit')].map(i=>i.value).join('');
-}
-
-(function setupOtp(){
-  document.addEventListener('DOMContentLoaded',()=>{},false);
-
-  /* auto-advance between digit boxes */
-  document.getElementById('otpBoxes').addEventListener('input',e=>{
-    const inputs=[...document.querySelectorAll('.otp-digit')];
-    const idx=inputs.indexOf(e.target);
-    const v=e.target.value.replace(/\D/g,'');
-    e.target.value=v.slice(-1);
-    if(v&&idx<5)inputs[idx+1].focus();
-    const code=getOtpValue();
-    const otpBtn=document.getElementById('otpBtn');
-    otpBtn.disabled=code.length<6;
-    otpBtn.style.opacity=code.length<6?'.4':'1';
-    document.querySelectorAll('.otp-digit').forEach(i=>i.classList.remove('bad'));
-    document.getElementById('otpErr').classList.remove('show');
-  });
-
-  document.getElementById('otpBoxes').addEventListener('keydown',e=>{
-    const inputs=[...document.querySelectorAll('.otp-digit')];
-    const idx=inputs.indexOf(e.target);
-    if(e.key==='Backspace'&&!e.target.value&&idx>0)inputs[idx-1].focus();
-    if(e.key==='ArrowLeft'&&idx>0)inputs[idx-1].focus();
-    if(e.key==='ArrowRight'&&idx<5)inputs[idx+1].focus();
-  });
-
-  /* paste handler — fill all boxes from clipboard */
-  document.getElementById('otpBoxes').addEventListener('paste',e=>{
-    e.preventDefault();
-    const txt=(e.clipboardData||window.clipboardData).getData('text').replace(/\D/g,'').slice(0,6);
-    const inputs=[...document.querySelectorAll('.otp-digit')];
-    txt.split('').forEach((c,i)=>{if(inputs[i])inputs[i].value=c;});
-    const otpBtn=document.getElementById('otpBtn');
-    otpBtn.disabled=txt.length<6; otpBtn.style.opacity=txt.length<6?'.4':'1';
-  });
-
-  document.getElementById('otpBtn').addEventListener('click',async()=>{
-    const code=getOtpValue(); if(code.length<6)return;
-    const otpBtn=document.getElementById('otpBtn');
-    otpBtn.classList.add('loading');
-    const emailVal=pendingReg?.email||document.getElementById('email').value.trim().toLowerCase();
-    const res=await fetch(API+'/api/auth/verify-otp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:emailVal,code})});
-    const json=await res.json();
-    if(!res.ok){
-      otpBtn.classList.remove('loading');
-      document.querySelectorAll('.otp-digit').forEach(i=>{i.classList.add('bad');i.value='';});
-      document.getElementById('otpErr').textContent=json.error||'Incorrect code';
-      document.getElementById('otpErr').classList.add('show');
-      document.querySelectorAll('.otp-digit')[0].focus();
-      return;
-    }
-    const {token,user}=json;
-    localStorage.setItem('vouch_token',token);
-    localStorage.setItem('vouch_session',JSON.stringify({username:user.username,email:user.email}));
-    const accs=getLocalAccounts();
-    accs.push({username:user.username,email:user.email,joined:user.joined});
-    saveLocalAccounts(accs);
-    otpBtn.classList.remove('loading'); otpBtn.classList.add('done');
-    otpBtn.querySelector('.lbl').textContent='Email verified ✓';
-    setTimeout(()=>{window.location.href='exchange.html';},700);
-  });
-
-  let resendSec=60;
-  function startResendTimer(){
-    resendSec=60;
-    const btn=document.getElementById('resendBtn');
-    const timer=document.getElementById('resendTimer');
-    btn.disabled=true;
-    const iv=setInterval(()=>{
-      resendSec--;
-      timer.textContent='('+resendSec+'s)';
-      if(resendSec<=0){clearInterval(iv);btn.disabled=false;timer.textContent='';}
-    },1000);
-  }
-
-  document.getElementById('resendBtn').addEventListener('click',async()=>{
-    const emailVal=pendingReg?.email||document.getElementById('email').value.trim().toLowerCase();
-    document.getElementById('resendBtn').disabled=true;
-    await fetch(API+'/api/auth/resend-otp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:emailVal})});
-    startResendTimer();
-  });
-})();
-
-let submitting=false;
 form.addEventListener('submit', async e=>{
   e.preventDefault();
-  if(submitting)return;
   formErr.classList.remove('show');
   if(!valid()) return;
 
-  submitting=true;
   const emailVal=email.value.trim().toLowerCase();
   const uname=username.value.trim();
-  btn.classList.add('loading');
 
-  /* ── local fallback when Render backend not yet configured ── */
-  if(API.includes('YOUR_RENDER_URL')){
-    const accs=getLocalAccounts();
+  if(sb){
+    /* ---- Supabase auth path ---- */
+    btn.classList.add('loading');
     if(isRegister){
-      if(accs.some(a=>a.email===emailVal)){
-        submitting=false;btn.classList.remove('loading');
-        email.classList.add('bad');showFormErr('An account with that email already exists');return;
+      /* check email uniqueness */
+      const {data:emailTaken}=await sb.from('profiles').select('email').eq('email',emailVal).maybeSingle();
+      if(emailTaken){
+        btn.classList.remove('loading');
+        email.classList.add('bad');
+        showFormErr('An account with this email already exists. Log in instead.');
+        return;
       }
-      if(accs.some(a=>a.username===uname)){
-        submitting=false;btn.classList.remove('loading');
-        username.classList.add('bad');usernameErr.textContent='Username already taken';usernameErr.classList.add('show');return;
+      /* check username uniqueness */
+      const {data:taken}=await sb.from('profiles').select('username').eq('username',uname).maybeSingle();
+      if(taken){
+        btn.classList.remove('loading');
+        username.classList.add('bad'); usernameErr.classList.add('show');
+        usernameErr.textContent='Username already taken';
+        return;
       }
-      const joined=new Date().toLocaleDateString('en-GB',{month:'short',year:'numeric'});
-      accs.push({username:uname,email:emailVal,_pw:pw.value,joined});
+      const {data,error}=await sb.auth.signUp({email:emailVal,password:pw.value});
+      if(error){btn.classList.remove('loading');showFormErr(error.message);return;}
+      const now=new Date();
+      const joinedStr=now.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+      await sb.from('profiles').insert({id:data.user.id,username:uname,email:emailVal,joined:joinedStr});
+      /* update local cache */
+      const accs=getLocalAccounts();
+      accs.push({username:uname,email:emailVal,joined:joinedStr});
       saveLocalAccounts(accs);
       localStorage.setItem('vouch_session',JSON.stringify({username:uname,email:emailVal}));
-      doRedirect(true);return;
+      doRedirect(true);
     } else {
-      const acc=accs.find(a=>a.email===emailVal&&a._pw===pw.value);
-      if(!acc){
-        submitting=false;btn.classList.remove('loading');
-        pw.classList.add('bad');pwErr.textContent='Incorrect email or password';pwErr.classList.add('show');return;
+      const {data,error}=await sb.auth.signInWithPassword({email:emailVal,password:pw.value});
+      if(error){
+        btn.classList.remove('loading');
+        if(error.message.toLowerCase().includes('invalid')){
+          pw.classList.add('bad'); pwErr.textContent='Incorrect password'; pwErr.classList.add('show');
+        } else { showFormErr(error.message); }
+        return;
       }
-      localStorage.setItem('vouch_session',JSON.stringify({username:acc.username,email:acc.email}));
-      doRedirect(false);return;
+      const {data:profile}=await sb.from('profiles').select('*').eq('id',data.user.id).maybeSingle();
+      const resolvedName=profile?.username||emailVal.split('@')[0];
+      localStorage.setItem('vouch_session',JSON.stringify({username:resolvedName,email:emailVal}));
+      /* update local accounts cache */
+      const accs=getLocalAccounts();
+      const idx=accs.findIndex(a=>a.email===emailVal);
+      const entry={username:resolvedName,email:emailVal,joined:profile?.joined||'—'};
+      if(idx>=0)accs[idx]=entry; else accs.push(entry);
+      saveLocalAccounts(accs);
+      doRedirect(false);
     }
-  }
-
-  const wakeMsg=document.getElementById('wakeMsg');
-  const wakeTimer=setTimeout(()=>{wakeMsg.style.display='';},5000);
-  const cleanup=()=>{clearTimeout(wakeTimer);wakeMsg.style.display='none';};
-
-  if(isRegister){
-    let res,json;
-    try{
-      res=await fetch(API+'/api/auth/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:uname,email:emailVal,password:pw.value})});
-      json=await res.json();
-    }catch(e){
-      cleanup();submitting=false;btn.classList.remove('loading');
-      showFormErr('Network error: '+e.message);return;
-    }
-    cleanup();btn.classList.remove('loading');
-    if(!res.ok){
-      submitting=false;
-      if(json.error?.toLowerCase().includes('email')){email.classList.add('bad');showFormErr(json.error);}
-      else if(json.error?.toLowerCase().includes('username')){username.classList.add('bad');usernameErr.textContent=json.error;usernameErr.classList.add('show');}
-      else showFormErr(json.error||'Registration failed');
-      return;
-    }
-    pendingReg={username:uname,email:emailVal};
-    showOtpStep(emailVal);
   } else {
-    let res,json;
-    try{
-      res=await fetch(API+'/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:emailVal,password:pw.value})});
-      json=await res.json();
-    }catch(e){
-      cleanup();submitting=false;btn.classList.remove('loading');
-      showFormErr('Network error: '+e.message);return;
+    /* ---- localStorage fallback (Supabase not configured) ---- */
+    const accounts=getLocalAccounts();
+    if(isRegister){
+      if(accounts.find(a=>a.email===emailVal)){
+        email.classList.add('bad');
+        showFormErr('An account with this email already exists. Log in instead.');
+        return;
+      }
+      const now=new Date();
+      const joinedStr=now.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+      accounts.push({username:uname,email:emailVal,password:pw.value,joined:joinedStr});
+      saveLocalAccounts(accounts);
+      localStorage.setItem('vouch_session',JSON.stringify({username:uname,email:emailVal}));
+    } else {
+      const account=accounts.find(a=>a.email===emailVal);
+      if(!account){email.classList.add('bad');showFormErr('No account found with this email. Create one instead.');return;}
+      if(account.password!==pw.value){pw.classList.add('bad');pwErr.textContent='Incorrect password';pwErr.classList.add('show');return;}
+      localStorage.setItem('vouch_session',JSON.stringify({username:account.username,email:emailVal}));
     }
-    cleanup();btn.classList.remove('loading');
-    if(!res.ok){
-      submitting=false;
-      if(json.error?.toLowerCase().includes('password')){pw.classList.add('bad');pwErr.textContent=json.error;pwErr.classList.add('show');}
-      else showFormErr(json.error||'Login failed');
-      return;
-    }
-    const {token,user}=json;
-    localStorage.setItem('vouch_token',token);
-    localStorage.setItem('vouch_session',JSON.stringify({username:user.username,email:user.email}));
-    const accs=getLocalAccounts();
-    const idx=accs.findIndex(a=>a.email===user.email);
-    const entry={username:user.username,email:user.email,joined:user.joined};
-    if(idx>=0)accs[idx]=entry; else accs.push(entry);
-    saveLocalAccounts(accs);
-    btn.classList.add('done');
-    btn.querySelector('.lbl').textContent='Welcome back ✓';
-    btn.querySelector('.ar').style.display='none';
-    setTimeout(()=>{window.location.href='exchange.html';},700);
+    btn.classList.add('loading');
+    setTimeout(()=>doRedirect(isRegister),1400);
   }
 });
 </script>
