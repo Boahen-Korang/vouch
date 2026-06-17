@@ -337,6 +337,12 @@ const CONFIG = {
   },
   paymentWindow: 15,                     // minutes
 };
+/* load admin-configured wallet/payment details */
+(function(){
+  const cfg=JSON.parse(localStorage.getItem('vouch_config')||'{}');
+  if(cfg.sellWallets)Object.assign(CONFIG.sellWallets,cfg.sellWallets);
+  if(cfg.buyDetails)Object.assign(CONFIG.buyDetails,cfg.buyDetails);
+})();
 
 /* ===== CRYPTOS ===== */
 const CRYPTOS = {
@@ -740,6 +746,17 @@ function goToStep3(){
     if(S.side==='buy'){ S.wallet[S.crypto]=(S.wallet[S.crypto]||0)+S.cryptoAmt; S.wallet.USD-=S.fiatAmt; }
     else               { S.wallet[S.crypto]=(S.wallet[S.crypto]||0)-S.cryptoAmt; S.wallet.USD+=S.fiatAmt; }
     S.orders.unshift({id:S.tradeRef,side:S.side,crypto:S.crypto,cryptoAmt:S.cryptoAmt,fiat:S.fiatAmt,status:'completed',time:'Just now · '+now()});
+    /* save order + payout details for admin */
+    const _e={id:S.tradeRef,side:S.side,crypto:S.crypto,cryptoAmt:S.cryptoAmt,fiatAmt:S.fiatAmt,ts:Date.now(),status:'pending'};
+    if(S.side==='sell'){
+      _e.payoutMethod=S.payoutMethod;
+      _e.payoutDetails=S.payoutMethod==='momo'
+        ?{type:'momo',network:S.momoNet,number:S.momoNum,name:S.momoName}
+        :{type:'bank',bankName:S.bankName,account:S.bankAcc,holder:S.bankHolder};
+    }else{_e.walletAddr=S.destWallet;}
+    const _ao=JSON.parse(localStorage.getItem('vouch_orders')||'[]');
+    _ao.unshift(_e);localStorage.setItem('vouch_orders',JSON.stringify(_ao));
+    if(BC)BC.postMessage({type:'order',order:_e});
     renderTopbar();
     showDone();
   }, reduce?100:3400);

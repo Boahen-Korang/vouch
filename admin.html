@@ -165,7 +165,6 @@ tbody tr.click:hover{background:var(--panel-2)}
 .tmsg .who{font-family:var(--mono);font-size:9.5px;opacity:.7;display:block;margin-bottom:3px}
 
 /* settings */
-.set-row{display:flex;align-items:center;justify-content:space-between;padding:16px 0;border-bottom:1px solid var(--line-soft)}
 .set-row:last-child{border-bottom:none}
 .set-row .k{font-weight:600;font-size:14px}.set-row .d{font-size:12.5px;color:var(--muted);margin-top:3px}
 .set-input{background:var(--bg);border:1px solid var(--line);border-radius:9px;color:var(--paper);font-family:var(--mono);font-size:13px;padding:9px 12px;width:110px;outline:none;text-align:right}
@@ -180,6 +179,22 @@ tbody tr.click:hover{background:var(--panel-2)}
 .toast .d{width:8px;height:8px;border-radius:50%;background:var(--emerald-br)}
 .toast.warn .d{background:var(--gold)}.toast.bad .d{background:var(--coral)}
 @keyframes tin{from{opacity:0;transform:translateX(14px)}to{opacity:1;transform:none}}
+
+/* ===== ORDER MODAL ===== */
+.modal-ov{position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:300;display:flex;align-items:center;justify-content:center;animation:fadein .18s}
+@keyframes fadein{from{opacity:0}to{opacity:1}}
+.modal-box{background:var(--panel-2);border:1px solid var(--line);border-radius:18px;padding:26px;max-width:440px;width:92vw;position:relative;box-shadow:0 32px 80px -24px rgba(0,0,0,.9)}
+.modal-box h4{font-family:var(--display);font-weight:700;font-size:18px;margin-bottom:18px}
+.modal-close{position:absolute;top:14px;right:14px;background:none;border:none;color:var(--faint);font-size:24px;cursor:pointer;line-height:1;padding:2px 8px;transition:.15s}
+.modal-close:hover{color:var(--paper)}
+.drow{padding:11px 0;border-bottom:1px solid var(--line-soft);display:flex;flex-direction:column;gap:3px}
+.drow:last-child{border-bottom:none}
+.drow .dk{font-family:var(--mono);font-size:10px;letter-spacing:.05em;text-transform:uppercase;color:var(--faint)}
+.drow .dv{font-family:var(--mono);font-size:13px;word-break:break-all;color:var(--paper)}
+/* settings wide input */
+.set-row{display:flex;align-items:center;justify-content:space-between;padding:16px 0;border-bottom:1px solid var(--line-soft);gap:10px;flex-wrap:wrap}
+.set-input-wide{background:var(--bg);border:1px solid var(--line);border-radius:9px;color:var(--paper);font-family:var(--mono);font-size:12px;padding:9px 12px;width:100%;max-width:340px;outline:none;transition:.15s}
+.set-input-wide:focus{border-color:var(--emerald-br)}
 
 @media(max-width:900px){
   .layout{grid-template-columns:1fr}
@@ -353,7 +368,11 @@ function refreshBadges(){
   $('#bKyc').textContent=k; $('#bKyc').style.display=k?'':'none';
   $('#bChat').textContent=ch; $('#bChat').style.display=ch?'':'none';
 }
-if(BC){BC.onmessage=e=>{if(e.data&&e.data.type==='message'){refreshBadges();if(S.view==='chat')renderChatView($('#content'));}};}
+if(BC){BC.onmessage=e=>{
+  if(!e.data)return;
+  if(e.data.type==='message'){refreshBadges();if(S.view==='chat')renderChatView($('#content'));}
+  if(e.data.type==='order'){refreshBadges();if(S.view==='trades')renderTrades($('#content'));}
+};}
 
 /* ===== NAV ===== */
 const TITLES={overview:['Overview','Platform health at a glance'],trades:['Trades','Monitor every escrow trade in real time'],
@@ -464,30 +483,112 @@ function drawVolChart(){
 
 /* ===== TRADES ===== */
 function renderTrades(c){
+  const realOrders=JSON.parse(localStorage.getItem('vouch_orders')||'[]');
+  const pending=realOrders.filter(o=>o.status==='pending').length;
   c.innerHTML=`
   <div class="toolbar"><div class="ftabs" id="tFilter">
     ${['all','escrow','paid','completed','disputed'].map(f=>`<button data-f="${f}" class="${S.tradeFilter===f?'on':''}">${f[0].toUpperCase()+f.slice(1)}</button>`).join('')}
+    <button data-f="pending" class="${S.tradeFilter==='pending'?'on':''}">Pending review${pending?` (${pending})`:''}${pending?'<span class="badge" style="background:var(--coral)">'+pending+'</span>':''}</button>
   </div></div>
   <div class="tbl"><table><thead><tr><th>Trade</th><th>Buyer</th><th>Seller</th><th>Amount</th><th>Method</th><th>Status</th><th></th></tr></thead>
   <tbody id="tradeRows"></tbody></table></div>`;
   $('#tFilter').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;S.tradeFilter=b.dataset.f;renderTrades(c);});
   const rows=$('#tradeRows');
-  let list=S.trades.filter(t=>S.tradeFilter==='all'||t.status===S.tradeFilter);
-  if(S.search)list=list.filter(t=>(t.id+t.buyer+t.seller+t.crypto).toLowerCase().includes(S.search));
+  const smap={escrow:['blue','In escrow'],paid:['gold','Awaiting release'],completed:['green','Completed'],disputed:['coral','Disputed'],pending:['gold','Pending review'],approved:['green','Approved'],rejected:['grey','Rejected']};
+  /* build combined list: real orders first, then demo */
+  let allTrades=[];
+  realOrders.forEach(o=>{
+    const dt=new Date(o.ts);
+    const tstr=dt.getHours().toString().padStart(2,'0')+':'+dt.getMinutes().toString().padStart(2,'0')+' · '+dt.toLocaleDateString('en-GB',{day:'numeric',month:'short'});
+    allTrades.push({
+      id:o.id,
+      buyer:o.side==='buy'?'Customer':'Vouch',
+      seller:o.side==='buy'?'Vouch':'Customer',
+      crypto:o.crypto, amt:o.cryptoAmt, fiat:o.fiatAmt,
+      method:o.side==='buy'?'Bank transfer':(o.payoutMethod==='momo'?'Mobile Money':'Bank Account'),
+      status:o.status==='pending'?'pending':(o.status==='approved'?'approved':'rejected'),
+      time:tstr, _real:true, _oid:o.id
+    });
+  });
+  S.trades.forEach(t=>allTrades.push({...t,_real:false}));
+  let list=allTrades.filter(t=>S.tradeFilter==='all'||t.status===S.tradeFilter);
+  if(S.search)list=list.filter(t=>(t.id+(t.buyer||'')+(t.seller||'')+t.crypto).toLowerCase().includes(S.search));
   if(!list.length){rows.innerHTML='<tr><td colspan="7"><div class="empty">No trades match.</div></td></tr>';return;}
-  const smap={escrow:['blue','In escrow'],paid:['gold','Awaiting release'],completed:['green','Completed'],disputed:['coral','Disputed']};
-  rows.innerHTML=list.map(t=>`<tr>
-    <td class="mono-c"><b>${t.id}</b><div style="color:var(--faint);font-size:11px">${t.time}</div></td>
-    <td class="cell-u"><span class="uav" style="background:${colorFor(t.buyer)}">${initials(t.buyer)}</span><span class="nm">${t.buyer}</span></td>
-    <td class="cell-u"><span class="uav" style="background:${colorFor(t.seller)}">${initials(t.seller)}</span><span class="nm">${t.seller}</span></td>
-    <td class="mono-c">${t.amt} ${t.crypto}<div style="color:var(--faint);font-size:11px">${fmt$(t.fiat)}</div></td>
-    <td class="mono-c" style="color:var(--muted)">${t.method}</td>
-    <td><span class="pill ${smap[t.status][0]}"><span class="d"></span>${smap[t.status][1]}</span></td>
-    <td class="row-act">${t.status==='disputed'?'<button class="tbtn b" data-disp="'+t.id+'">Review</button>':'<button class="tbtn b">View</button>'}</td>
-  </tr>`).join('');
+  rows.innerHTML=list.map(t=>{
+    const sm=smap[t.status]||['grey',t.status];
+    const action=t._real
+      ?`<button class="tbtn g" data-okey="${t._oid}">Details →</button>`
+      :(t.status==='disputed'?`<button class="tbtn b" data-disp="${t.id}">Review</button>`:'<button class="tbtn b">View</button>');
+    return `<tr>
+      <td class="mono-c"><b>${t.id}</b><div style="color:var(--faint);font-size:11px">${t.time}</div></td>
+      <td class="cell-u"><span class="uav" style="background:${colorFor(t.buyer)}">${initials(t.buyer)}</span><span class="nm">${t.buyer}</span></td>
+      <td class="cell-u"><span class="uav" style="background:${colorFor(t.seller)}">${initials(t.seller)}</span><span class="nm">${t.seller}</span></td>
+      <td class="mono-c">${t.amt} ${t.crypto}<div style="color:var(--faint);font-size:11px">${fmt$(t.fiat)}</div></td>
+      <td class="mono-c" style="color:var(--muted)">${t.method}</td>
+      <td><span class="pill ${sm[0]}"><span class="d"></span>${sm[1]}</span></td>
+      <td class="row-act">${action}</td>
+    </tr>`;}).join('');
+  rows.querySelectorAll('[data-okey]').forEach(b=>b.addEventListener('click',()=>{
+    const o=realOrders.find(x=>x.id===b.dataset.okey);
+    if(o)showOrderModal(o,c);
+  }));
   rows.querySelectorAll('[data-disp]').forEach(b=>b.addEventListener('click',()=>{
     const d=S.disputes.find(x=>x.tradeId===b.dataset.disp&&x.status==='open');
-    if(d){gotoView('disputes');S.activeDispute=d.id;render();}else toast('No open dispute for this trade','warn');}));
+    if(d){gotoView('disputes');S.activeDispute=d.id;render();}else toast('No open dispute for this trade','warn');
+  }));
+}
+
+function showOrderModal(o,c){
+  const isSell=o.side==='sell';
+  const dt=new Date(o.ts);
+  const timeStr=dt.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})+' · '+dt.getHours().toString().padStart(2,'0')+':'+dt.getMinutes().toString().padStart(2,'0');
+  let detailsHTML='';
+  if(isSell&&o.payoutDetails){
+    const pd=o.payoutDetails;
+    const nets={mtn:'MTN Mobile Money',vodafone:'Vodafone Cash',airteltigo:'AirtelTigo Money'};
+    detailsHTML=pd.type==='momo'
+      ?`<div class="drow"><div class="dk">Payout type</div><div class="dv">Mobile Money</div></div>
+         <div class="drow"><div class="dk">Network</div><div class="dv">${nets[pd.network]||pd.network}</div></div>
+         <div class="drow"><div class="dk">MoMo number</div><div class="dv">${pd.number}</div></div>
+         <div class="drow"><div class="dk">Account name</div><div class="dv">${pd.name}</div></div>`
+      :`<div class="drow"><div class="dk">Payout type</div><div class="dv">Bank Account</div></div>
+        <div class="drow"><div class="dk">Bank</div><div class="dv">${pd.bankName}</div></div>
+        <div class="drow"><div class="dk">Account number</div><div class="dv">${pd.account}</div></div>
+        <div class="drow"><div class="dk">Account holder</div><div class="dv">${pd.holder}</div></div>`;
+  } else if(!isSell&&o.walletAddr){
+    detailsHTML=`<div class="drow"><div class="dk">Destination wallet (${o.crypto})</div><div class="dv">${o.walletAddr}</div></div>`;
+  }
+  const ov=document.createElement('div');
+  ov.className='modal-ov';
+  ov.innerHTML=`<div class="modal-box">
+    <button class="modal-close" id="mClose">×</button>
+    <h4><span style="color:${isSell?'var(--coral)':'var(--emerald-br)'}">${isSell?'SELL':'BUY'}</span> · ${o.id}</h4>
+    <div class="drow"><div class="dk">Crypto</div><div class="dv">${o.cryptoAmt} ${o.crypto}</div></div>
+    <div class="drow"><div class="dk">Fiat value</div><div class="dv">$${Math.round(o.fiatAmt).toLocaleString('en-US')}</div></div>
+    <div class="drow"><div class="dk">Submitted</div><div class="dv">${timeStr}</div></div>
+    <div class="drow"><div class="dk">Status</div><div class="dv" style="color:var(--gold)">Pending review</div></div>
+    ${detailsHTML}
+    <div style="display:flex;gap:9px;margin-top:20px">
+      <button class="tbtn g" id="mApprove" style="flex:1;padding:11px">Approve ✓</button>
+      <button class="tbtn r" id="mReject" style="flex:1;padding:11px">Reject ✗</button>
+    </div>
+  </div>`;
+  document.body.appendChild(ov);
+  const close=()=>ov.remove();
+  ov.addEventListener('click',e=>{if(e.target===ov)close();});
+  document.getElementById('mClose').addEventListener('click',close);
+  document.getElementById('mApprove').addEventListener('click',()=>{
+    const orders=JSON.parse(localStorage.getItem('vouch_orders')||'[]');
+    const idx=orders.findIndex(x=>x.id===o.id);
+    if(idx>=0){orders[idx].status='approved';localStorage.setItem('vouch_orders',JSON.stringify(orders));}
+    toast('Order approved · '+o.id); close(); if(S.view==='trades')renderTrades(c||$('#content'));
+  });
+  document.getElementById('mReject').addEventListener('click',()=>{
+    const orders=JSON.parse(localStorage.getItem('vouch_orders')||'[]');
+    const idx=orders.findIndex(x=>x.id===o.id);
+    if(idx>=0){orders[idx].status='rejected';localStorage.setItem('vouch_orders',JSON.stringify(orders));}
+    toast('Order rejected · '+o.id,'bad'); close(); if(S.view==='trades')renderTrades(c||$('#content'));
+  });
 }
 
 /* ===== DISPUTES ===== */
@@ -684,7 +785,30 @@ function renderChatView(c){
 
 /* ===== SETTINGS ===== */
 function renderSettings(c){
+  const cfg=JSON.parse(localStorage.getItem('vouch_config')||'{}');
+  const sw=cfg.sellWallets||{};
+  const bd=cfg.buyDetails||{};
   c.innerHTML=`<div style="max-width:680px">
+    <div class="card" style="margin-bottom:14px">
+      <div class="card-h"><h3>Sell wallet addresses</h3><span class="sub">Where customers send crypto when selling</span></div>
+      <div class="set-row"><div><div class="k">BTC address</div><div class="d">Bitcoin receive address</div></div>
+        <input class="set-input-wide" id="wBTC" placeholder="bc1q…" value="${sw.BTC||''}"></div>
+      <div class="set-row"><div><div class="k">ETH address</div><div class="d">Ethereum (ERC-20) receive address</div></div>
+        <input class="set-input-wide" id="wETH" placeholder="0x…" value="${sw.ETH||''}"></div>
+      <div class="set-row"><div><div class="k">USDT address</div><div class="d">Tether (TRC-20 / ERC-20) address</div></div>
+        <input class="set-input-wide" id="wUSDT" placeholder="0x… or T…" value="${sw.USDT||''}"></div>
+    </div>
+    <div class="card" style="margin-bottom:14px">
+      <div class="card-h"><h3>Buy payment details</h3><span class="sub">Bank account customers pay into when buying</span></div>
+      <div class="set-row"><div><div class="k">Bank name</div><div class="d">Your bank</div></div>
+        <input class="set-input-wide" id="bBank" placeholder="e.g. Standard Chartered" value="${bd.bank||''}"></div>
+      <div class="set-row"><div><div class="k">Account name</div><div class="d">Name on the account</div></div>
+        <input class="set-input-wide" id="bAccName" placeholder="Vouch Technologies Ltd" value="${bd.name||''}"></div>
+      <div class="set-row"><div><div class="k">Account number</div><div class="d">Account / IBAN</div></div>
+        <input class="set-input-wide" id="bAcc" placeholder="0000 0000 0000" value="${bd.account||''}"></div>
+      <div class="set-row"><div><div class="k">Sort code / routing</div><div class="d">Sort code or routing number</div></div>
+        <input class="set-input-wide" id="bSort" placeholder="12-34-56" value="${bd.sort||''}"></div>
+    </div>
     <div class="card" style="margin-bottom:14px"><div class="card-h"><h3>Fees</h3></div>
       <div class="set-row"><div><div class="k">Maker fee</div><div class="d">Charged to the trader posting an offer</div></div><input class="set-input" id="fMaker" value="0.20%"></div>
       <div class="set-row"><div><div class="k">Taker fee</div><div class="d">Charged to the trader accepting an offer</div></div><input class="set-input" id="fTaker" value="0.55%"></div>
@@ -699,7 +823,22 @@ function renderSettings(c){
     <button class="tbtn g" id="saveBtn" style="padding:12px 24px;font-size:14px">Save changes</button>
   </div>`;
   c.querySelectorAll('[data-t]').forEach(b=>b.addEventListener('click',()=>b.classList.toggle('on')));
-  $('#saveBtn').addEventListener('click',()=>toast('Settings saved'));
+  $('#saveBtn').addEventListener('click',()=>{
+    const cfg=JSON.parse(localStorage.getItem('vouch_config')||'{}');
+    cfg.sellWallets={
+      BTC:document.getElementById('wBTC').value.trim(),
+      ETH:document.getElementById('wETH').value.trim(),
+      USDT:document.getElementById('wUSDT').value.trim(),
+    };
+    cfg.buyDetails={
+      bank:document.getElementById('bBank').value.trim(),
+      name:document.getElementById('bAccName').value.trim(),
+      account:document.getElementById('bAcc').value.trim(),
+      sort:document.getElementById('bSort').value.trim(),
+    };
+    localStorage.setItem('vouch_config',JSON.stringify(cfg));
+    toast('Settings saved · live on next trade');
+  });
 }
 
 /* ===== LIVE FLICKER ===== */
