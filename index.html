@@ -6,7 +6,8 @@
 <title>VOUCH — Step into the marketplace</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=Hanken+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="preload" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=Hanken+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=Hanken+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet"></noscript>
 <style>
 :root{
   --paper:#ECEEE7; --paper-2:#F4F5F0; --card:#FBFBF8;
@@ -630,6 +631,9 @@ document.getElementById('repGrid').innerHTML=TRADERS.map(t=>`
 /* ===== reveal ===== */
 const io=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}});},{threshold:.12});
 document.querySelectorAll('.reveal').forEach((el,i)=>{el.style.transitionDelay=(i%3*70)+'ms';io.observe(el);});
+
+/* pre-warm Render backend so login is fast when user clicks Browse Offers */
+(function(){const A='https://YOUR_RENDER_URL.onrender.com';if(!A.includes('YOUR_RENDER_URL'))fetch(A+'/api/health').catch(()=>{});})();
 </script>
 </body>
 </html>

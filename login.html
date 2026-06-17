@@ -6,7 +6,8 @@
 <title>VOUCH — Log in</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=Hanken+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="preload" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=Hanken+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=Hanken+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet"></noscript>
 <style>
 :root{
   --bg:#0A1610; --panel:#13271C; --line:#234234; --line-soft:#1C3527;
@@ -188,6 +189,7 @@ a{color:inherit;text-decoration:none}
         </div>
 
         <div class="err" id="formErr" style="margin-bottom:12px;font-size:13px"></div>
+        <div id="wakeMsg" style="display:none;color:var(--muted);font-size:12px;text-align:center;margin-bottom:10px">Server is starting up, please wait a moment…</div>
 
         <div class="row" id="rowRemember">
           <label class="remember">
@@ -237,6 +239,8 @@ a{color:inherit;text-decoration:none}
 <script>
 "use strict";
 const API = 'https://YOUR_RENDER_URL.onrender.com';
+/* pre-warm Render backend — free tier sleeps after 15 min of inactivity */
+if(!API.includes('YOUR_RENDER_URL')) fetch(API+'/api/health').catch(()=>{});
 const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 /* ===== background parallax ===== */
@@ -474,10 +478,20 @@ form.addEventListener('submit', async e=>{
   const uname=username.value.trim();
   btn.classList.add('loading');
 
+  const wakeMsg=document.getElementById('wakeMsg');
+  const wakeTimer=setTimeout(()=>{wakeMsg.style.display='';},5000);
+  const cleanup=()=>{clearTimeout(wakeTimer);wakeMsg.style.display='none';};
+
   if(isRegister){
-    const res=await fetch(API+'/api/auth/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:uname,email:emailVal,password:pw.value})});
-    const json=await res.json();
-    btn.classList.remove('loading');
+    let res,json;
+    try{
+      res=await fetch(API+'/api/auth/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:uname,email:emailVal,password:pw.value})});
+      json=await res.json();
+    }catch(e){
+      cleanup();submitting=false;btn.classList.remove('loading');
+      showFormErr('Connection error — check your internet and try again');return;
+    }
+    cleanup();btn.classList.remove('loading');
     if(!res.ok){
       submitting=false;
       if(json.error?.toLowerCase().includes('email')){email.classList.add('bad');showFormErr(json.error);}
@@ -488,9 +502,15 @@ form.addEventListener('submit', async e=>{
     pendingReg={username:uname,email:emailVal};
     showOtpStep(emailVal);
   } else {
-    const res=await fetch(API+'/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:emailVal,password:pw.value})});
-    const json=await res.json();
-    btn.classList.remove('loading');
+    let res,json;
+    try{
+      res=await fetch(API+'/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:emailVal,password:pw.value})});
+      json=await res.json();
+    }catch(e){
+      cleanup();submitting=false;btn.classList.remove('loading');
+      showFormErr('Connection error — check your internet and try again');return;
+    }
+    cleanup();btn.classList.remove('loading');
     if(!res.ok){
       submitting=false;
       if(json.error?.toLowerCase().includes('password')){pw.classList.add('bad');pwErr.textContent=json.error;pwErr.classList.add('show');}
