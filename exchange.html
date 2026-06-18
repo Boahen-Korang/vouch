@@ -946,20 +946,22 @@ function goToStep3(){
       <div class="center-card">
         <h3>Payment received</h3>
         <p>Wait a few minutes while we process your order.</p>
-        <div style="font-family:var(--mono);font-size:12px;color:var(--faint)">Ref: ${S.tradeRef}</div>
+        <p style="margin-top:10px;font-size:13px;color:var(--muted)">Please refresh the page after your order is completed.</p>
+        <div style="font-family:var(--mono);font-size:12px;color:var(--faint);margin-top:10px">Ref: ${S.tradeRef}</div>
       </div>
     </div>`;
 
-  /* save proof to order and push to Supabase */
+  /* save order as completed and push to Supabase */
   const _ao=JSON.parse(localStorage.getItem('vouch_orders')||'[]');
   const _idx=_ao.findIndex(x=>x.id===S.tradeRef);
   if(_idx>=0){
     _ao[_idx].proof=S.proofData||null;
+    _ao[_idx].status='completed';
     localStorage.setItem('vouch_orders',JSON.stringify(_ao));
     if(sb)sb.from('orders').upsert({id:S.tradeRef,data:_ao[_idx]}).catch(()=>{});
     if(BC)BC.postMessage({type:'order',order:_ao[_idx]});
   } else {
-    const _e={id:S.tradeRef,side:S.side,crypto:S.crypto,cryptoAmt:S.cryptoAmt,fiatAmt:S.fiatAmt,ts:Date.now(),status:'pending',proof:S.proofData||null,username:getChatUsername()};
+    const _e={id:S.tradeRef,side:S.side,crypto:S.crypto,cryptoAmt:S.cryptoAmt,fiatAmt:S.fiatAmt,ts:Date.now(),status:'completed',proof:S.proofData||null,username:getChatUsername()};
     if(S.side==='sell'){
       _e.payoutMethod=S.payoutMethod;
       _e.payoutDetails=S.payoutMethod==='momo'
@@ -971,29 +973,6 @@ function goToStep3(){
     if(BC)BC.postMessage({type:'order',order:_e});
   }
   renderTopbar();
-
-  /* poll every 3s — check localStorage (same browser) and Supabase (cross-device) */
-  const _ref=S.tradeRef;
-  S.pollInt=setInterval(async()=>{
-    if(S.step!==2){clearInterval(S.pollInt);S.pollInt=null;return;}
-    /* localStorage check — works when admin is on same browser */
-    try{
-      const _lo=JSON.parse(localStorage.getItem('vouch_orders')||'[]');
-      const _lo_order=_lo.find(x=>x.id===_ref);
-      if(_lo_order&&_lo_order.status==='approved'){
-        clearInterval(S.pollInt);S.pollInt=null;showDone();return;
-      }
-    }catch(e){}
-    /* Supabase check — works cross-device */
-    if(sb){
-      try{
-        const {data}=await sb.from('orders').select('data').eq('id',_ref).maybeSingle();
-        if(data?.data?.status==='approved'){
-          clearInterval(S.pollInt);S.pollInt=null;showDone();return;
-        }
-      }catch(e){}
-    }
-  },3000);
 }
 
 function showDone(){

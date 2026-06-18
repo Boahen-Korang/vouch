@@ -506,8 +506,7 @@ function renderTrades(c){
   rows.innerHTML=list.map(t=>{
     const sm=smap[t.status]||['grey',t.status];
     const sideCol=t.side==='sell'?'var(--coral)':'var(--emerald-br)';
-    const action=`${t.status==='pending'?`<button class="tbtn g approve-btn" data-oid="${t._oid}" style="margin-bottom:5px;width:100%">Approve ✓</button>`:''}
-      <button class="tbtn b" data-okey="${t._oid}">Details →</button>`;
+    const action=`<button class="tbtn b" data-okey="${t._oid}">Details →</button>`;
     return `<tr>
       <td class="mono-c"><b>${t.id}</b><div style="color:var(--faint);font-size:11px">${t.time}</div></td>
       <td><span class="pill ${t.side==='sell'?'coral':'green'}"><span class="d"></span>${t.side.toUpperCase()}</span></td>
@@ -519,9 +518,6 @@ function renderTrades(c){
   rows.querySelectorAll('[data-okey]').forEach(b=>b.addEventListener('click',()=>{
     const o=realOrders.find(x=>x.id===b.dataset.okey);
     if(o)showOrderModal(o,c);
-  }));
-  rows.querySelectorAll('.approve-btn').forEach(b=>b.addEventListener('click',()=>{
-    approveOrder(b.dataset.oid,c);
   }));
 }
 
@@ -592,7 +588,6 @@ function showOrderModal(o,c){
     <div class="drow"><div class="dk">Status</div><div class="dv" style="color:${o.status==='approved'||o.status==='completed'?'var(--emerald-br)':o.status==='rejected'?'var(--coral)':'var(--gold)'}">${o.status==='approved'||o.status==='completed'?'Approved ✓':o.status==='rejected'?'Rejected':'Pending review'}</div></div>
     ${detailsHTML}
     <div style="display:flex;gap:9px;margin-top:20px;flex-wrap:wrap">
-      ${o.status==='pending'?`<button class="tbtn g" id="mApprove" style="flex:1;padding:11px;min-width:120px">Approve ✓</button>`:''}
       <button class="tbtn r" id="mReject" style="flex:1;padding:11px;min-width:100px">Reject ✗</button>
       ${o.status==='pending'?`<button class="tbtn b" id="mDispute" style="width:100%;padding:10px;margin-top:2px">Flag as dispute</button>`:''}
     </div>
@@ -601,8 +596,6 @@ function showOrderModal(o,c){
   const close=()=>ov.remove();
   ov.addEventListener('click',e=>{if(e.target===ov)close();});
   document.getElementById('mClose').addEventListener('click',close);
-  const mApprove=document.getElementById('mApprove');
-  if(mApprove)mApprove.addEventListener('click',()=>{approveOrder(o.id,c);close();});
   document.getElementById('mReject').addEventListener('click',()=>{
     const orders=JSON.parse(localStorage.getItem('vouch_orders')||'[]');
     const idx=orders.findIndex(x=>x.id===o.id);
