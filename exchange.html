@@ -1004,14 +1004,23 @@ function renderOrders(){
   const page=$('#page');
   page.innerHTML=`<div class="page-title">My orders</div><div class="page-sub">Your trade history.</div><div class="orders" id="oList"></div>`;
   const wrap=document.getElementById('oList');
-  if(!S.orders.length){wrap.innerHTML='<div class="empty">No orders yet.</div>';return;}
-  wrap.innerHTML=S.orders.map(o=>`<div class="order">
-    <span class="o-side ${o.side}">${o.side.toUpperCase()}</span>
-    <div><div class="who">${o.crypto} · ${o.id}</div><div class="when">${o.time}</div></div>
-    <div class="amt">${fmtC(o.cryptoAmt,o.crypto)} ${o.crypto}<div class="f">${o.fiatCurrency?((FIAT_CURRENCIES[o.fiatCurrency]||{sym:'$'}).sym+(o.fiat*(o.fiatRate||1)).toLocaleString('en-US',{maximumFractionDigits:0})):fmt$0(o.fiat)}</div></div>
-    <div class="pm">${o.crypto}</div>
-    <div><span class="status ${o.status}"><span class="d"></span>${o.status[0].toUpperCase()+o.status.slice(1)}</span></div>
-  </div>`).join('');
+  const currentUser=getChatUsername();
+  const allOrders=JSON.parse(localStorage.getItem('vouch_orders')||'[]');
+  const myOrders=allOrders.filter(o=>!o.username||o.username===currentUser);
+  if(!myOrders.length){wrap.innerHTML='<div class="empty">No orders yet.</div>';return;}
+  wrap.innerHTML=myOrders.map(o=>{
+    const fc=FIAT_CURRENCIES[o.fiatCurrency]||{sym:'$'};
+    const fiatDisplay=o.fiatAmt?fc.sym+Math.round(o.fiatAmt*(o.fiatRate||1)).toLocaleString('en-US'):o.fiat?fmt$0(o.fiat):'—';
+    const timeDisplay=o.time||( o.ts?new Date(o.ts).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}):'—' );
+    const st=o.status||'pending';
+    return `<div class="order">
+      <span class="o-side ${o.side}">${o.side.toUpperCase()}</span>
+      <div><div class="who">${o.crypto} · ${o.id}</div><div class="when">${timeDisplay}</div></div>
+      <div class="amt">${fmtC(o.cryptoAmt,o.crypto)} ${o.crypto}<div class="f">${fiatDisplay}</div></div>
+      <div class="pm">${o.crypto}</div>
+      <div><span class="status ${st}"><span class="d"></span>${st[0].toUpperCase()+st.slice(1)}</span></div>
+    </div>`;
+  }).join('');
 }
 
 
