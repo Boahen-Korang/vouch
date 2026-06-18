@@ -944,9 +944,8 @@ function goToStep3(){
     <div class="tc">
       ${stepsHTML(2)}
       <div class="center-card">
-        <div class="spin-ring" id="spinRing"></div>
-        <h3 id="step3Msg">Payment received</h3>
-        <p id="step3Sub">Verifying your payment…</p>
+        <h3>Payment received</h3>
+        <p>Wait a few minutes while we process your order.</p>
         <div style="font-family:var(--mono);font-size:12px;color:var(--faint)">Ref: ${S.tradeRef}</div>
       </div>
     </div>`;
@@ -972,16 +971,6 @@ function goToStep3(){
     if(BC)BC.postMessage({type:'order',order:_e});
   }
   renderTopbar();
-
-  /* after a few seconds stop spinner and show "wait a few minutes" */
-  setTimeout(()=>{
-    const ring=document.getElementById('spinRing');
-    const msg=document.getElementById('step3Msg');
-    const sub=document.getElementById('step3Sub');
-    if(ring)ring.style.display='none';
-    if(msg)msg.textContent='Payment made';
-    if(sub)sub.textContent='Wait a few minutes while we process your order.';
-  },4000);
 
   /* poll Supabase every 6s for cross-device approval */
   if(sb && S.tradeRef){
