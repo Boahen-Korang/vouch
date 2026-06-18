@@ -983,17 +983,6 @@ function goToStep3(){
     if(sub)sub.textContent='Wait a few minutes while we process your order.';
   },4000);
 
-  /* listen for admin approval via BroadcastChannel (same browser) */
-  if(BC){
-    BC.addEventListener('message',function _onApprove(ev){
-      if(ev.data?.type==='order' && ev.data.order?.id===S.tradeRef && ev.data.order?.status==='approved'){
-        BC.removeEventListener('message',_onApprove);
-        clearInterval(S.pollInt); S.pollInt=null;
-        showDone();
-      }
-    });
-  }
-
   /* poll Supabase every 6s for cross-device approval */
   if(sb && S.tradeRef){
     S.pollInt=setInterval(async()=>{
@@ -1144,9 +1133,14 @@ document.getElementById('cpSend').addEventListener('click',sendCustMsg);
 document.getElementById('cpInput').addEventListener('keydown',e=>{if(e.key==='Enter')sendCustMsg();});
 
 if(BC){BC.onmessage=e=>{
-  if(e.data&&e.data.type==='message'&&e.data.m.from==='admin'){
+  if(!e.data)return;
+  if(e.data.type==='message'&&e.data.m&&e.data.m.from==='admin'){
     updateFabBadge();
     if(chatOpen){markAdminRead();renderChatMsgs();}
+  }
+  if(e.data.type==='order'&&e.data.order?.id===S.tradeRef&&e.data.order?.status==='approved'){
+    clearInterval(S.pollInt);S.pollInt=null;
+    showDone();
   }
 };}
 updateFabBadge();
