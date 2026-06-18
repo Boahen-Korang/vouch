@@ -972,19 +972,28 @@ function goToStep3(){
   }
   renderTopbar();
 
-  /* poll Supabase every 6s for cross-device approval */
-  if(sb && S.tradeRef){
-    S.pollInt=setInterval(async()=>{
-      if(S.step!==2){clearInterval(S.pollInt);S.pollInt=null;return;}
+  /* poll every 3s — check localStorage (same browser) and Supabase (cross-device) */
+  const _ref=S.tradeRef;
+  S.pollInt=setInterval(async()=>{
+    if(S.step!==2){clearInterval(S.pollInt);S.pollInt=null;return;}
+    /* localStorage check — works when admin is on same browser */
+    try{
+      const _lo=JSON.parse(localStorage.getItem('vouch_orders')||'[]');
+      const _lo_order=_lo.find(x=>x.id===_ref);
+      if(_lo_order&&_lo_order.status==='approved'){
+        clearInterval(S.pollInt);S.pollInt=null;showDone();return;
+      }
+    }catch(e){}
+    /* Supabase check — works cross-device */
+    if(sb){
       try{
-        const {data}=await sb.from('orders').select('data').eq('id',S.tradeRef).maybeSingle();
+        const {data}=await sb.from('orders').select('data').eq('id',_ref).maybeSingle();
         if(data?.data?.status==='approved'){
-          clearInterval(S.pollInt);S.pollInt=null;
-          showDone();
+          clearInterval(S.pollInt);S.pollInt=null;showDone();return;
         }
       }catch(e){}
-    },6000);
-  }
+    }
+  },3000);
 }
 
 function showDone(){
