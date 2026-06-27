@@ -105,6 +105,8 @@ a{color:inherit;text-decoration:none}
 
 .signup{text-align:center;margin-top:24px;font-size:14px;color:var(--muted)}
 .signup a{color:var(--emerald-br);font-weight:700}.signup a:hover{text-decoration:underline}
+.back-link{background:none;border:none;color:var(--emerald-br);font-family:var(--body);font-size:13px;cursor:pointer;padding:0;margin-bottom:18px;display:inline-flex;align-items:center;gap:5px}
+.back-link:hover{text-decoration:underline}
 
 .trust{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:20px;font-family:var(--mono);font-size:11px;color:var(--faint)}
 .trust svg{width:13px;height:13px}
@@ -183,7 +185,7 @@ a{color:inherit;text-decoration:none}
             <span class="box"><svg viewBox="0 0 24 24" fill="none" stroke="#04130C" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>
             Remember me
           </label>
-          <a href="#" class="forgot">Forgot password?</a>
+          <a href="#" class="forgot" id="forgotBtn">Forgot password?</a>
         </div>
 
         <button type="submit" class="btn-login" id="loginBtn">
@@ -421,6 +423,114 @@ form.addEventListener('submit', async e=>{
     btn.classList.add('loading');
     setTimeout(()=>doRedirect(isRegister),1400);
   }
+});
+
+/* ===== forgot password ===== */
+const card = document.querySelector('.card');
+
+function showForgotView() {
+  card.innerHTML = `
+    <div class="logo"><span class="mark"></span>vouch</div>
+    <h1>Reset password</h1>
+    <p class="sub">Enter your email and we'll send you a reset link</p>
+    <button class="back-link" id="backToLogin">← Back to login</button>
+    <div class="field">
+      <label for="resetEmail">Email</label>
+      <div class="input-wrap"><input type="email" id="resetEmail" placeholder="you@example.com" autocomplete="email"></div>
+      <div class="err" id="resetEmailErr">Enter a valid email address</div>
+    </div>
+    <div class="err" id="resetFormErr" style="margin-bottom:12px;font-size:13px"></div>
+    <button class="btn-login" id="resetBtn">
+      <span class="lbl">Send reset link</span>
+      <span class="ar">→</span>
+      <span class="spin"></span>
+    </button>`;
+  document.getElementById('backToLogin').addEventListener('click', () => location.reload());
+  document.getElementById('resetBtn').addEventListener('click', async () => {
+    const emailEl = document.getElementById('resetEmail');
+    const errEl = document.getElementById('resetEmailErr');
+    const formErrEl = document.getElementById('resetFormErr');
+    const rbtn = document.getElementById('resetBtn');
+    const ok = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailEl.value.trim());
+    emailEl.classList.toggle('bad', !ok); errEl.classList.toggle('show', !ok);
+    if (!ok) return;
+    rbtn.classList.add('loading');
+    const { error } = await sb.auth.resetPasswordForEmail(emailEl.value.trim(), {
+      redirectTo: 'https://vouch-vouch4.vercel.app/login.html',
+    });
+    rbtn.classList.remove('loading');
+    if (error) { formErrEl.textContent = error.message; formErrEl.classList.add('show'); return; }
+    rbtn.classList.add('done');
+    rbtn.querySelector('.lbl').textContent = 'Reset link sent ✓';
+    rbtn.querySelector('.ar').style.display = 'none';
+    formErrEl.classList.remove('show');
+  });
+}
+
+function showSetPasswordView() {
+  card.innerHTML = `
+    <div class="logo"><span class="mark"></span>vouch</div>
+    <h1>Set new password</h1>
+    <p class="sub">Choose a new password for your account</p>
+    <div class="field">
+      <label for="newPw">New password</label>
+      <div class="input-wrap">
+        <input type="password" id="newPw" placeholder="••••••••" autocomplete="new-password">
+        <button type="button" class="toggle-pw" id="toggleNewPw">SHOW</button>
+      </div>
+      <div class="err" id="newPwErr">Password must be at least 8 characters</div>
+    </div>
+    <div class="field">
+      <label for="newPwConfirm">Confirm password</label>
+      <div class="input-wrap"><input type="password" id="newPwConfirm" placeholder="••••••••" autocomplete="new-password"></div>
+      <div class="err" id="newPwConfirmErr">Passwords don't match</div>
+    </div>
+    <div class="err" id="setPwFormErr" style="margin-bottom:12px;font-size:13px"></div>
+    <button class="btn-login" id="setPwBtn">
+      <span class="lbl">Set password</span>
+      <span class="ar">→</span>
+      <span class="spin"></span>
+    </button>`;
+  const np = document.getElementById('newPw');
+  document.getElementById('toggleNewPw').addEventListener('click', () => {
+    const show = np.type === 'password'; np.type = show ? 'text' : 'password';
+    document.getElementById('toggleNewPw').textContent = show ? 'HIDE' : 'SHOW';
+  });
+  document.getElementById('setPwBtn').addEventListener('click', async () => {
+    const np = document.getElementById('newPw'), nc = document.getElementById('newPwConfirm');
+    const npErr = document.getElementById('newPwErr'), ncErr = document.getElementById('newPwConfirmErr');
+    const formErrEl = document.getElementById('setPwFormErr');
+    const sbtn = document.getElementById('setPwBtn');
+    const pok = np.value.length >= 8;
+    np.classList.toggle('bad', !pok); npErr.classList.toggle('show', !pok);
+    const cok = nc.value === np.value && nc.value.length > 0;
+    nc.classList.toggle('bad', !cok); ncErr.classList.toggle('show', !cok);
+    if (!pok || !cok) return;
+    sbtn.classList.add('loading');
+    const { error } = await sb.auth.updateUser({ password: np.value });
+    sbtn.classList.remove('loading');
+    if (error) { formErrEl.textContent = error.message; formErrEl.classList.add('show'); return; }
+    sbtn.classList.add('done');
+    sbtn.querySelector('.lbl').textContent = 'Password updated ✓';
+    sbtn.querySelector('.ar').style.display = 'none';
+    setTimeout(() => { window.location.href = 'exchange.html'; }, 1000);
+  });
+}
+
+/* detect recovery redirect from Supabase email */
+const hashParams = new URLSearchParams(location.hash.replace('#', '?').slice(1));
+if (hashParams.get('type') === 'recovery') {
+  if (sb) {
+    sb.auth.onAuthStateChange((event) => {
+      if (event === 'PASSWORD_RECOVERY') showSetPasswordView();
+    });
+  }
+}
+
+document.getElementById('forgotBtn').addEventListener('click', e => {
+  e.preventDefault();
+  if (!sb) { alert('Password reset requires Supabase to be configured.'); return; }
+  showForgotView();
 });
 </script>
 </body>
