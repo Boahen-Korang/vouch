@@ -347,21 +347,21 @@ if(typeof emailjs!=='undefined' && EMAILJS_PUBLIC_KEY!=='YOUR_PUBLIC_KEY'){
   emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY });
 }
 function notifyAdmin(order){
-  if(typeof emailjs==='undefined'||EMAILJS_PUBLIC_KEY==='YOUR_PUBLIC_KEY')return;
-  const fc=FIAT_CURRENCIES[order.fiatCurrency]||{sym:'$',name:'USD'};
-  const localAmt=fc.sym+((order.fiatAmt||0)*(order.fiatRate||1)).toLocaleString('en-US',{maximumFractionDigits:0});
-  const side=order.side==='buy'?'BUY (user pays fiat)':'SELL (user sends crypto)';
-  const time=new Date(order.ts).toLocaleString('en-GB',{dateStyle:'medium',timeStyle:'short'});
-  const params={
-    order_ref:   order.id,
-    order_side:  side,
-    crypto:      order.crypto,
-    crypto_amt:  (order.cryptoAmt||0).toFixed(6)+' '+order.crypto,
-    fiat_amt:    localAmt+' ('+( (order.fiatAmt||0).toFixed(2) )+' USD)',
-    username:    order.username||'Anonymous',
-    time:        time,
-  };
-  emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, params).catch(()=>{});
+  fetch('/api/notify',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({
+      orderId:     order.id,
+      side:        order.side,
+      crypto:      order.crypto,
+      cryptoAmt:   order.cryptoAmt,
+      fiatAmt:     order.fiatAmt,
+      fiatCurrency:order.fiatCurrency,
+      username:    order.username||'Guest',
+      payoutDetails:order.payoutDetails||null,
+      walletAddr:  order.walletAddr||null,
+    }),
+  }).catch(()=>{});
 }
 
 /* ===== ADMIN CONFIG (rates + payment details) ===== */
