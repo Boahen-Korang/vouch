@@ -339,10 +339,11 @@ const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const $=s=>document.querySelector(s);
 
 /* ===== EMAIL NOTIFICATIONS ===== */
+const VOUCH_SECRET='9decbf3e1ed6310ba172eddf4f4b8a7ac0539fd0';
 function notifyAdmin(order){
   fetch('/api/notify',{
     method:'POST',
-    headers:{'Content-Type':'application/json'},
+    headers:{'Content-Type':'application/json','x-vouch-secret':VOUCH_SECRET},
     body:JSON.stringify({
       orderId:     order.id,
       side:        order.side,
@@ -995,45 +996,74 @@ function showDone(){
 }
 
 /* ===== ORDERS ===== */
-function renderOrders(){
+function buildOrderRow(o){
+  const fc=FIAT_CURRENCIES[o.fiatCurrency]||{sym:'$'};
+  const fiatDisplay=o.fiatAmt?fc.sym+Math.round(o.fiatAmt*(o.fiatRate||1)).toLocaleString('en-US'):o.fiat?fmt$0(o.fiat):'—';
+  const timeDisplay=o.time||(o.ts?new Date(o.ts).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}):'—');
+  const st=o.status||'pending';
+  const cryptoLabel=o.crypto||'—';
+  const cryptoAmtLabel=o.crypto&&CRYPTOS[o.crypto]?fmtC(o.cryptoAmt||0,o.crypto):Number(o.cryptoAmt||0).toFixed(6);
+  return `<div class="order">
+    <span class="o-side ${o.side||'buy'}">${(o.side||'buy').toUpperCase()}</span>
+    <div><div class="who">${cryptoLabel} · ${o.id}</div><div class="when">${timeDisplay}</div></div>
+    <div class="amt">${cryptoAmtLabel} ${cryptoLabel}<div class="f">${fiatDisplay}</div></div>
+    <div class="pm">${cryptoLabel}</div>
+    <div><span class="status ${st}"><span class="d"></span>${st[0].toUpperCase()+st.slice(1)}</span></div>
+  </div>`;
+}
+async function renderOrders(){
   const page=$('#page');
-  page.innerHTML=`<div class="page-title">My orders</div><div class="page-sub">Your trade history.</div><div class="orders" id="oList"></div>`;
-  const wrap=document.getElementById('oList');
+  page.innerHTML=`<div class="page-title">My orders</div><div class="page-sub">Your trade history.</div><div class="orders" id="oList"><div class="empty" style="color:var(--faint);font-family:var(--mono);font-size:12px">Loading…</div></div>`;
   const currentUser=getChatUsername();
-  const allOrders=JSON.parse(localStorage.getItem('vouch_orders')||'[]');
-  const myOrders=allOrders.filter(o=>!o.username||o.username===currentUser);
-  if(!myOrders.length){wrap.innerHTML='<div class="empty">No orders yet.</div>';return;}
-  wrap.innerHTML=myOrders.map(o=>{
-    const fc=FIAT_CURRENCIES[o.fiatCurrency]||{sym:'$'};
-    const fiatDisplay=o.fiatAmt?fc.sym+Math.round(o.fiatAmt*(o.fiatRate||1)).toLocaleString('en-US'):o.fiat?fmt$0(o.fiat):'—';
-    const timeDisplay=o.time||( o.ts?new Date(o.ts).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}):'—' );
-    const st=o.status||'pending';
-    const cryptoLabel=o.crypto||'—';
-    const cryptoAmtLabel=o.crypto&&CRYPTOS[o.crypto]?fmtC(o.cryptoAmt||0,o.crypto):Number(o.cryptoAmt||0).toFixed(6);
-    return `<div class="order">
-      <span class="o-side ${o.side||'buy'}">${(o.side||'buy').toUpperCase()}</span>
-      <div><div class="who">${cryptoLabel} · ${o.id}</div><div class="when">${timeDisplay}</div></div>
-      <div class="amt">${cryptoAmtLabel} ${cryptoLabel}<div class="f">${fiatDisplay}</div></div>
-      <div class="pm">${cryptoLabel}</div>
-      <div><span class="status ${st}"><span class="d"></span>${st[0].toUpperCase()+st.slice(1)}</span></div>
-    </div>`;
-  }).join('');
+
+  /* render from localStorage immediately */
+  function paintOrders(list){
+    const wrap=document.getElementById('oList');if(!wrap)return;
+    if(!list.length){wrap.innerHTML='<div class="empty">No orders yet.</div>';return;}
+    wrap.innerHTML=list.map(buildOrderRow).join('');
+  }
+  const local=JSON.parse(localStorage.getItem('vouch_orders')||'[]');
+  const localMine=local.filter(o=>!o.username||o.username===currentUser);
+  paintOrders(localMine);
+
+  /* then sync from Supabase */
+  if(!sb)return;
+  try{
+    const {data}=await sb.from('orders').select('id,data').order('created_at',{ascending:false});
+    if(!data)return;
+    const sbAll=data.map(r=>r.data).filter(Boolean);
+    const mine=sbAll.filter(o=>!o.username||o.username===currentUser);
+    /* merge into localStorage */
+    const all=JSON.parse(localStorage.getItem('vouch_orders')||'[]');
+    sbAll.forEach(o=>{const i=all.findIndex(x=>x.id===o.id);if(i>=0)all[i]=o;else all.unshift(o);});
+    all.sort((a,b)=>(b.ts||0)-(a.ts||0));
+    localStorage.setItem('vouch_orders',JSON.stringify(all));
+    /* also merge local-only entries into display */
+    const merged=[...mine];
+    local.forEach(l=>{if((!l.username||l.username===currentUser)&&!merged.find(m=>m.id===l.id))merged.push(l);});
+    merged.sort((a,b)=>(b.ts||0)-(a.ts||0));
+    paintOrders(merged);
+  }catch(e){}
 }
 
 
-/* ===== LIVE PRICE TICK ===== */
-function priceTick(){
-  for(const c in S.prices){
-    S.prev[c]=S.prices[c];
-    const move=(Math.random()-.48)*S.prices[c]*.003;
-    S.prices[c]=Math.max(1,S.prices[c]+move);
-  }
-  /* update conversion in step 1 */
-  if(S.tab==='trade' && S.step===0){
-    syncAmt();
-    const rl=document.getElementById('rateLabel');
-    if(rl)rl.textContent='@ '+fmtLocal(S.prices[S.crypto])+' / '+S.crypto;
-  }
+/* ===== LIVE PRICE FETCH ===== */
+async function fetchCryptoPrices(){
+  try{
+    const r=await fetch('/api/prices');
+    if(!r.ok)return;
+    const d=await r.json();
+    S.prev={...S.prices};
+    if(d.BTC) S.prices.BTC=d.BTC;
+    if(d.ETH) S.prices.ETH=d.ETH;
+    if(d.USDT)S.prices.USDT=d.USDT;
+    if(d.SOL) S.prices.SOL=d.SOL;
+    if(S.tab==='trade'&&S.step===0){
+      syncAmt();
+      const rl=document.getElementById('rateLabel');
+      if(rl)rl.textContent='@ '+fmtLocal(S.prices[S.crypto])+' / '+S.crypto;
+    }
+  }catch(e){}
 }
 
 /* ===== SIGN OUT ===== */
@@ -1049,7 +1079,23 @@ if(_hash==='orders')S.tab='orders';
 [...$('#tabs').children].forEach(x=>x.classList.toggle('on',x.dataset.tab===S.tab));
 renderTopbar(); render();
 fetchRates();
-if(!reduce)setInterval(priceTick,3000);
+fetchCryptoPrices();
+if(!reduce)setInterval(fetchCryptoPrices,90000);
+
+/* ===== SUPABASE REALTIME — order status updates ===== */
+if(sb){
+  sb.channel('vouch_order_status')
+    .on('postgres_changes',{event:'UPDATE',schema:'public',table:'orders'},payload=>{
+      const updated=payload.new?.data;
+      if(!updated||updated.id!==S.tradeRef)return;
+      const ao=JSON.parse(localStorage.getItem('vouch_orders')||'[]');
+      const idx=ao.findIndex(x=>x.id===updated.id);
+      if(idx>=0)ao[idx]=updated; else ao.unshift(updated);
+      localStorage.setItem('vouch_orders',JSON.stringify(ao));
+      if(updated.status==='approved'){clearInterval(S.pollInt);S.pollInt=null;showDone();}
+    })
+    .subscribe();
+}
 
 /* ===== CHAT WIDGET ===== */
 const CHAT_KEY='vouch_msgs';

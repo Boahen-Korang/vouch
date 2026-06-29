@@ -149,6 +149,7 @@ form.addEventListener('submit', e => {
   if (!correct) { authWarn.classList.add('show'); email.classList.add('bad'); pw.classList.add('bad'); return; }
 
   btn.classList.add('loading');
+  localStorage.setItem('vouch_admin_ts', Date.now());
   setTimeout(() => {
     btn.classList.remove('loading'); btn.classList.add('done');
     btn.querySelector('.lbl').textContent = 'Access granted ✓';

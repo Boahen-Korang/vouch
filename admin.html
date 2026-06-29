@@ -936,9 +936,10 @@ function renderSettings(c){
   });
 }
 
-/* ===== LIVE FLICKER ===== */
+/* ===== LIVE FLICKER + SUPABASE POLL ===== */
 function tick(){
   if(S.view==='overview')renderOverview($('#content'));
+  syncOrdersFromSupabase();
 }
 
 /* ===== CROSS-TAB SYNC ===== */
@@ -975,11 +976,36 @@ if(_adminHash && TITLES[_adminHash]){
   if(nb){[...$('#nav').children].forEach(x=>x.classList&&x.classList.toggle('on',x===nb));}
   $('#ptitle').childNodes[0].nodeValue=TITLES[S.view][0]; $('#psub').textContent=TITLES[S.view][1];
 }
+/* ===== SESSION EXPIRY (8h) ===== */
+(function(){
+  const t=parseInt(localStorage.getItem('vouch_admin_ts')||'0');
+  if(!t){localStorage.setItem('vouch_admin_ts',Date.now());return;}
+  if(Date.now()-t>8*60*60*1000){
+    localStorage.removeItem('vouch_admin_ts');
+    window.location.href='admin-login.html';
+  }
+})();
+
 refreshBadges(); render();
 syncAccountsFromSupabase();
 syncOrdersFromSupabase();
+
+/* ===== SUPABASE REALTIME ===== */
+if(sb){
+  sb.channel('vouch_admin_orders')
+    .on('postgres_changes',{event:'*',schema:'public',table:'orders'},()=>{
+      syncOrdersFromSupabase();
+    })
+    .subscribe();
+}
+
+/* re-sync when admin switches back to this tab */
+document.addEventListener('visibilitychange',()=>{
+  if(document.visibilityState==='visible')syncOrdersFromSupabase();
+});
+
 const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
-if(!reduce)setInterval(tick,3000);
+if(!reduce)setInterval(tick,30000);
 addEventListener('resize',()=>{if(S.view==='overview')drawVolChart();});
 </script>
 </body>
