@@ -291,7 +291,6 @@ button{font-family:inherit;cursor:pointer}
 }
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
-<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 </head>
 <body>
@@ -340,12 +339,6 @@ const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const $=s=>document.querySelector(s);
 
 /* ===== EMAIL NOTIFICATIONS ===== */
-const EMAILJS_PUBLIC_KEY  = 'UDgd2YcVwRDxziFlo';
-const EMAILJS_SERVICE_ID  = 'service_l0mj3tq';
-const EMAILJS_TEMPLATE_ID = 'template_7d8vywc';
-if(typeof emailjs!=='undefined' && EMAILJS_PUBLIC_KEY!=='YOUR_PUBLIC_KEY'){
-  emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY });
-}
 function notifyAdmin(order){
   fetch('/api/notify',{
     method:'POST',
@@ -823,6 +816,7 @@ function renderStep2(){
     const idx=ao.findIndex(x=>x.id===S.tradeRef);
     if(idx>=0)ao[idx]=adminEntry; else ao.unshift(adminEntry);
     localStorage.setItem('vouch_orders',JSON.stringify(ao));
+    if(sb)sb.from('orders').upsert({id:adminEntry.id,data:adminEntry}).catch(()=>{});
     if(BC)BC.postMessage({type:'order',order:adminEntry});
     notifyAdmin(adminEntry);
     const p2=document.getElementById('phase2');
@@ -986,13 +980,14 @@ function showDone(){
         <div class="got-amt">${isBuy?'+ ':'− '}${fmtC(S.cryptoAmt,S.crypto)} ${S.crypto}</div>
         <div class="got-sub">${isBuy?'added to your wallet':'sold · '+fmtLocal(S.fiatAmt)+' on the way'}</div>
         <p>${isBuy?'Your '+S.crypto+' has been credited to your wallet.':'Payment will arrive in your account within 1–2 business days.'}</p>
-        <button class="btn-main buy" id="walletBtn" style="margin-bottom:9px">View wallet</button>
+        <button class="btn-main buy" id="ordersBtn" style="margin-bottom:9px">View my orders</button>
         <button class="btn-ghost" id="tradeAgainBtn">Trade again</button>
       </div>
     </div>`;
   toast((isBuy?'Bought ':'Sold ')+fmtC(S.cryptoAmt,S.crypto)+' '+S.crypto);
-  document.getElementById('walletBtn').addEventListener('click',()=>{
-    S.tab='wallet'; [...$('#tabs').children].forEach(x=>x.classList.toggle('on',x.dataset.tab==='wallet')); render();
+  document.getElementById('ordersBtn').addEventListener('click',()=>{
+    S.tab='orders'; location.hash='orders';
+    [...$('#tabs').children].forEach(x=>x.classList.toggle('on',x.dataset.tab==='orders')); render();
   });
   document.getElementById('tradeAgainBtn').addEventListener('click',()=>{
     S.tab='trade'; [...$('#tabs').children].forEach(x=>x.classList.toggle('on',x.dataset.tab==='trade')); renderTrade();
@@ -1013,11 +1008,13 @@ function renderOrders(){
     const fiatDisplay=o.fiatAmt?fc.sym+Math.round(o.fiatAmt*(o.fiatRate||1)).toLocaleString('en-US'):o.fiat?fmt$0(o.fiat):'—';
     const timeDisplay=o.time||( o.ts?new Date(o.ts).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}):'—' );
     const st=o.status||'pending';
+    const cryptoLabel=o.crypto||'—';
+    const cryptoAmtLabel=o.crypto&&CRYPTOS[o.crypto]?fmtC(o.cryptoAmt||0,o.crypto):Number(o.cryptoAmt||0).toFixed(6);
     return `<div class="order">
-      <span class="o-side ${o.side}">${o.side.toUpperCase()}</span>
-      <div><div class="who">${o.crypto} · ${o.id}</div><div class="when">${timeDisplay}</div></div>
-      <div class="amt">${fmtC(o.cryptoAmt,o.crypto)} ${o.crypto}<div class="f">${fiatDisplay}</div></div>
-      <div class="pm">${o.crypto}</div>
+      <span class="o-side ${o.side||'buy'}">${(o.side||'buy').toUpperCase()}</span>
+      <div><div class="who">${cryptoLabel} · ${o.id}</div><div class="when">${timeDisplay}</div></div>
+      <div class="amt">${cryptoAmtLabel} ${cryptoLabel}<div class="f">${fiatDisplay}</div></div>
+      <div class="pm">${cryptoLabel}</div>
       <div><span class="status ${st}"><span class="d"></span>${st[0].toUpperCase()+st.slice(1)}</span></div>
     </div>`;
   }).join('');

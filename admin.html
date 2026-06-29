@@ -599,14 +599,16 @@ function showOrderModal(o,c){
   document.getElementById('mReject').addEventListener('click',()=>{
     const orders=JSON.parse(localStorage.getItem('vouch_orders')||'[]');
     const idx=orders.findIndex(x=>x.id===o.id);
-    if(idx>=0){orders[idx].status='rejected';localStorage.setItem('vouch_orders',JSON.stringify(orders));}
+    if(idx>=0){orders[idx].status='rejected';localStorage.setItem('vouch_orders',JSON.stringify(orders));
+      if(sb)sb.from('orders').upsert({id:o.id,data:orders[idx]}).catch(()=>{});}
     toast('Order rejected · '+o.id,'bad'); close(); refreshBadges(); if(S.view==='trades')renderTrades(c||$('#content'));
   });
   const mDisp=document.getElementById('mDispute');
   if(mDisp)mDisp.addEventListener('click',()=>{
     const orders=JSON.parse(localStorage.getItem('vouch_orders')||'[]');
     const idx=orders.findIndex(x=>x.id===o.id);
-    if(idx>=0){orders[idx].status='disputed';localStorage.setItem('vouch_orders',JSON.stringify(orders));}
+    if(idx>=0){orders[idx].status='disputed';localStorage.setItem('vouch_orders',JSON.stringify(orders));
+      if(sb)sb.from('orders').upsert({id:o.id,data:orders[idx]}).catch(()=>{});}
     toast('Order flagged as dispute · '+o.id,'warn'); close(); refreshBadges();
     if(S.view==='trades')renderTrades(c||$('#content'));
     if(S.view==='disputes')renderDisputes(c||$('#content'));
@@ -649,13 +651,15 @@ function renderDisputes(c){
   rows.querySelectorAll('[data-res]').forEach(b=>b.addEventListener('click',()=>{
     const orders=JSON.parse(localStorage.getItem('vouch_orders')||'[]');
     const idx=orders.findIndex(x=>x.id===b.dataset.res);
-    if(idx>=0){orders[idx].status='dispute-resolved';localStorage.setItem('vouch_orders',JSON.stringify(orders));}
+    if(idx>=0){orders[idx].status='dispute-resolved';localStorage.setItem('vouch_orders',JSON.stringify(orders));
+      if(sb)sb.from('orders').upsert({id:b.dataset.res,data:orders[idx]}).catch(()=>{});}
     toast('Dispute resolved · '+b.dataset.res); refreshBadges(); renderDisputes(c);
   }));
   rows.querySelectorAll('[data-rej]').forEach(b=>b.addEventListener('click',()=>{
     const orders=JSON.parse(localStorage.getItem('vouch_orders')||'[]');
     const idx=orders.findIndex(x=>x.id===b.dataset.rej);
-    if(idx>=0){orders[idx].status='rejected';localStorage.setItem('vouch_orders',JSON.stringify(orders));}
+    if(idx>=0){orders[idx].status='rejected';localStorage.setItem('vouch_orders',JSON.stringify(orders));
+      if(sb)sb.from('orders').upsert({id:b.dataset.rej,data:orders[idx]}).catch(()=>{});}
     toast('Order rejected · '+b.dataset.rej,'bad'); refreshBadges(); renderDisputes(c);
   }));
 }
@@ -678,6 +682,24 @@ async function syncAccountsFromSupabase(){
   if(S.view==='users')renderUsers($('#content'));
   if(S.view==='overview')renderOverview($('#content'));
 }
+async function syncOrdersFromSupabase(){
+  if(!sb)return;
+  try{
+    const {data,error}=await sb.from('orders').select('id,data').order('created_at',{ascending:false});
+    if(error||!data)return;
+    const sbOrders=data.map(r=>r.data).filter(Boolean);
+    const local=JSON.parse(localStorage.getItem('vouch_orders')||'[]');
+    const merged=[...sbOrders];
+    local.forEach(l=>{if(!merged.find(m=>m.id===l.id))merged.push(l);});
+    merged.sort((a,b)=>(b.ts||0)-(a.ts||0));
+    localStorage.setItem('vouch_orders',JSON.stringify(merged));
+    refreshBadges();
+    if(S.view==='trades')renderTrades($('#content'));
+    if(S.view==='overview')renderOverview($('#content'));
+    if(S.view==='disputes')renderDisputes($('#content'));
+  }catch(e){}
+}
+
 function renderUsers(c){
   const accs=getAccounts();
   const allOrders=JSON.parse(localStorage.getItem('vouch_orders')||'[]');
@@ -745,7 +767,14 @@ function renderRates(c){
       conf.rates[coin.sym]=val;
       localStorage.setItem('vouch_config',JSON.stringify(conf));
       document.getElementById('curRate'+coin.sym).textContent=fmt$(val);
-      toast(`${coin.sym} rate updated to ${fmt$(val)}`);
+      if(sb){
+        sb.from('site_config').upsert({id:1,data:conf}).then(({error})=>{
+          if(error)toast(`${coin.sym} saved locally — sync failed`,'bad');
+          else toast(`${coin.sym} rate updated to ${fmt$(val)} · live`);
+        });
+      } else {
+        toast(`${coin.sym} rate updated to ${fmt$(val)}`);
+      }
     });
   });
 }
@@ -948,6 +977,7 @@ if(_adminHash && TITLES[_adminHash]){
 }
 refreshBadges(); render();
 syncAccountsFromSupabase();
+syncOrdersFromSupabase();
 const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
 if(!reduce)setInterval(tick,3000);
 addEventListener('resize',()=>{if(S.view==='overview')drawVolChart();});
